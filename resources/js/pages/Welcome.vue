@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { dashboard, login, register } from '@/routes';
-import { ChevronDown } from 'lucide-vue-next';
+import { register } from '@/routes';
 
 withDefaults(
     defineProps<{

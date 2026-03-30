@@ -1,20 +1,31 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-vue-next';
 import AppLogo from '@/components/AppLogo.vue';
-import NavFooter from '@/components/NavFooter.vue';
+import { SidebarHeader } from '@/components/ui/sidebar';
+import { Link, router } from '@inertiajs/vue3';
+import {
+    LayoutGrid,
+    FileText,
+    BriefcaseBusiness,
+    ClipboardList,
+    DollarSign,
+    BrainCircuit,
+    Code,
+    Settings,
+    Globe,
+    LogOut,
+} from 'lucide-vue-next';
 import NavMain from '@/components/NavMain.vue';
-import NavUser from '@/components/NavUser.vue';
 import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
-    SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
+import { dashboard, logout } from '@/routes';
+import { edit as editProfile } from '@/routes/profile';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -23,24 +34,54 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    {
+        title: 'Resume Editor',
+        href: '#',
+        icon: FileText,
+        isActive: true,
+    },
+    {
+        title: 'Job Selection',
+        href: '#',
+        icon: BriefcaseBusiness,
+    },
+    {
+        title: 'Request Tracker',
+        href: '#',
+        icon: ClipboardList,
+    },
+    {
+        title: 'Salary',
+        href: '#',
+        icon: DollarSign,
+    },
+    {
+        title: 'Interview Preparing',
+        href: '#',
+        icon: BrainCircuit,
+    },
+    {
+        title: 'Development',
+        href: '#',
+        icon: Code,
+    },
+    {
+        title: 'Settings',
+        href: editProfile(),
+        icon: Settings,
+    },
 ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
+const { state } = useSidebar();
+
+const handleLogout = () => {
+    router.flushAll();
+};
 </script>
 
 <template>
     <Sidebar collapsible="icon" variant="inset">
+
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
@@ -58,8 +99,29 @@ const footerNavItems: NavItem[] = [
         </SidebarContent>
 
         <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
-            <NavUser />
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton size="lg" as-child>
+                        <a href="#" @click.prevent>
+                            <Globe />
+                            <span :class="state === 'collapsed' && 'hidden'">Support</span>
+                        </a>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+
+                <SidebarMenuItem>
+                    <SidebarMenuButton size="lg" as-child>
+                        <Link
+                            :href="logout()"
+                            as="button"
+                            @click="handleLogout"
+                        >
+                            <LogOut />
+                            <span :class="state === 'collapsed' && 'hidden'">Log out</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
         </SidebarFooter>
     </Sidebar>
     <slot />

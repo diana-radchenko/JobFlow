@@ -21,16 +21,28 @@ const props = withDefaults(defineProps<SidebarMenuButtonProps & {
 const { isMobile, state } = useSidebar()
 
 const delegatedProps = reactiveOmit(props, "tooltip")
+
+// Visual overrides to match the sidebar design in screenshots.
+// These override shadcn-sidebar defaults without changing the shared variants.
+const menuButtonOverrides =
+    'uppercase tracking-wider font-semibold gap-3 rounded-xl p-3'
 </script>
 
 <template>
-  <SidebarMenuButtonChild v-if="!tooltip" v-bind="{ ...delegatedProps, ...$attrs }">
+  <SidebarMenuButtonChild
+      v-if="!tooltip"
+      v-bind="{ ...delegatedProps, ...$attrs }"
+      :class="menuButtonOverrides"
+  >
     <slot />
   </SidebarMenuButtonChild>
 
   <Tooltip v-else>
     <TooltipTrigger as-child>
-      <SidebarMenuButtonChild v-bind="{ ...delegatedProps, ...$attrs }">
+      <SidebarMenuButtonChild
+          v-bind="{ ...delegatedProps, ...$attrs }"
+          :class="menuButtonOverrides"
+      >
         <slot />
       </SidebarMenuButtonChild>
     </TooltipTrigger>
