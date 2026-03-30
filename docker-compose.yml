@@ -14,11 +14,6 @@ services:
             - .env
         networks:
             - queryverify
-        healthcheck:
-            test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
-            interval: 10s
-            timeout: 5s
-            retries: 3
 
     nginx:
         build:
@@ -45,8 +40,7 @@ services:
             timeout: 10s
             retries: 3
         depends_on:
-            laravel_php_fpm:
-                condition: service_healthy
+            laravel_php_fpm
 
 networks:
     queryverify:
