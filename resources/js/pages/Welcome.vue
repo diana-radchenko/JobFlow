@@ -94,7 +94,7 @@ withDefaults(
                                 <h2 class="text-2xl font-bold text-white">JobFlow</h2>
                                 <div class="h-px w-full bg-white/20"></div>
                             </div>
-                            <Link :href="register()" class="inline-flex h-14 items-center justify-center rounded-full bg-white px-8 text-sm font-bold tracking-wide text-black uppercase transition-transform hover:scale-105 active:scale-95">
+                            <Link :href="register()" class="inline-flex h-14 items-center justify-center rounded-full bg-white px-8 text-sm font-bold tracking-wide text-black uppercase transition-transform hover:scale-103 active:scale-95">
                                 Find your perfect job
                             </Link>
                         </div>
@@ -105,7 +105,7 @@ withDefaults(
                                 <h2 class="text-2xl font-bold text-white">HRFlow</h2>
                                 <div class="h-px w-full bg-white/20"></div>
                             </div>
-                            <Link :href="register()" class="inline-flex h-14 items-center justify-center rounded-full bg-white px-8 text-sm font-bold tracking-wide text-black uppercase transition-transform hover:scale-105 active:scale-95">
+                            <Link :href="register()" class="inline-flex h-14 items-center justify-center rounded-full bg-white px-8 text-sm font-bold tracking-wide text-black uppercase transition-transform hover:scale-103 active:scale-95">
                                 Manage your best team
                             </Link>
                         </div>

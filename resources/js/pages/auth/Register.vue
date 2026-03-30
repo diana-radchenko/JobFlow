@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { BriefcaseBusiness, UserRound } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -16,6 +18,8 @@ defineOptions({
         description: 'Enter your details below to create your account',
     },
 });
+
+const selectedProfileType = ref<'candidate' | 'employer'>('candidate');
 </script>
 
 <template>
@@ -28,14 +32,76 @@ defineOptions({
         class="flex flex-col gap-6"
     >
         <div class="grid gap-6">
+            <div class="grid gap-4">
+                <div
+                    class="grid grid-cols-2 gap-4"
+                    role="radiogroup"
+                    aria-label="Account type"
+                >
+                    <button
+                        type="button"
+                        role="radio"
+                        :aria-checked="selectedProfileType === 'candidate'"
+                        :tabindex="1"
+                        autofocus
+                        data-test="register-profile-type-candidate"
+                        class="flex items-start gap-3 rounded-lg border border-input bg-background p-4 text-left transition-colors hover:bg-muted/40"
+                        :class="
+                            selectedProfileType === 'candidate'
+                                ? 'border-primary bg-primary/5'
+                                : 'border-input'
+                        "
+                        @click="selectedProfileType = 'candidate'"
+                    >
+                        <div class="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+                            <UserRound class="h-5 w-5 text-foreground" />
+                        </div>
+
+                        <div class="flex flex-col gap-1 pt-0.5">
+                            <div class="text-base font-semibold">I'm looking for a job</div>
+                            <div class="text-sm text-muted-foreground">Candidate profile</div>
+                        </div>
+                    </button>
+
+                    <button
+                        type="button"
+                        role="radio"
+                        :aria-checked="selectedProfileType === 'employer'"
+                        :tabindex="2"
+                        data-test="register-profile-type-employer"
+                        class="flex items-start gap-3 rounded-lg border border-input bg-background p-4 text-left transition-colors hover:bg-muted/40"
+                        :class="
+                            selectedProfileType === 'employer'
+                                ? 'border-primary bg-primary/5'
+                                : 'border-input'
+                        "
+                        @click="selectedProfileType = 'employer'"
+                    >
+                        <div class="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+                            <BriefcaseBusiness class="h-5 w-5 text-foreground" />
+                        </div>
+
+                        <div class="flex flex-col gap-1 pt-0.5">
+                            <div class="text-base font-semibold">I'm hiring</div>
+                            <div class="text-sm text-muted-foreground">Employer profile</div>
+                        </div>
+                    </button>
+                </div>
+
+                <input
+                    type="hidden"
+                    name="account_type"
+                    :value="selectedProfileType"
+                />
+            </div>
+
             <div class="grid gap-2">
                 <Label for="name">Name</Label>
                 <Input
                     id="name"
                     type="text"
                     required
-                    autofocus
-                    :tabindex="1"
+                    :tabindex="3"
                     autocomplete="name"
                     name="name"
                     placeholder="Full name"
@@ -49,7 +115,7 @@ defineOptions({
                     id="email"
                     type="email"
                     required
-                    :tabindex="2"
+                    :tabindex="4"
                     autocomplete="email"
                     name="email"
                     placeholder="email@example.com"
@@ -62,7 +128,7 @@ defineOptions({
                 <PasswordInput
                     id="password"
                     required
-                    :tabindex="3"
+                    :tabindex="5"
                     autocomplete="new-password"
                     name="password"
                     placeholder="Password"
@@ -75,7 +141,7 @@ defineOptions({
                 <PasswordInput
                     id="password_confirmation"
                     required
-                    :tabindex="4"
+                    :tabindex="6"
                     autocomplete="new-password"
                     name="password_confirmation"
                     placeholder="Confirm password"
@@ -86,7 +152,7 @@ defineOptions({
             <Button
                 type="submit"
                 class="mt-2 w-full"
-                tabindex="5"
+                tabindex="7"
                 :disabled="processing"
                 data-test="register-user-button"
             >
