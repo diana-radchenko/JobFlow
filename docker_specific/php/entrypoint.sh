@@ -16,7 +16,7 @@ fi
 php artisan optimize:clear
 php artisan optimize
 
-php artisan storage:link
+php artisan storage:link || true
 
 echo "Optimization success..."
 
