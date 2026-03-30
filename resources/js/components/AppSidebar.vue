@@ -27,18 +27,25 @@ import {
 import { dashboard, logout } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
 import type { NavItem } from '@/types';
+import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { computed } from 'vue';
 
-const mainNavItems: NavItem[] = [
+const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
+
+const dashboardUrl = dashboard();
+const settingsUrl = '/settings';
+
+const mainNavItems = computed<NavItem[]>(() => [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: dashboardUrl,
         icon: LayoutGrid,
+        isActive: isCurrentUrl(dashboardUrl),
     },
     {
         title: 'Resume Editor',
         href: '#',
         icon: FileText,
-        isActive: true,
     },
     {
         title: 'Job Selection',
@@ -67,16 +74,24 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Settings',
-        href: editProfile(),
+        href: settingsUrl,
         icon: Settings,
+        isActive: isCurrentOrParentUrl(settingsUrl),
     },
-];
+]);
 
-const { state } = useSidebar();
+const { state, isMobile, setOpenMobile } = useSidebar();
 
 const handleLogout = () => {
     router.flushAll();
 };
+
+function handleNavigation() {
+    // Close mobile sidebar when logo or footer links are clicked
+    if (isMobile.value) {
+        setOpenMobile(false);
+    }
+}
 </script>
 
 <template>
@@ -86,7 +101,7 @@ const handleLogout = () => {
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()">
+                        <Link :href="dashboard()" @click="handleNavigation">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>

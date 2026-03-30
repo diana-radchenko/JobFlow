@@ -16,7 +16,7 @@ const props = defineProps<{
 }>();
 
 const { isCurrentUrl } = useCurrentUrl();
-const { state } = useSidebar();
+const { state, isMobile, setOpenMobile } = useSidebar();
 
 const hasDefaultActive = computed(() =>
     props.items.some((item) => item.isActive === true),
@@ -28,6 +28,13 @@ function isMenuItemActive(item: NavItem): boolean {
     return hasDefaultActive.value
         ? item.isActive === true
         : isCurrentUrl(item.href);
+}
+
+function handleNavigation() {
+    // Close mobile sidebar when a navigation item is clicked
+    if (isMobile.value) {
+        setOpenMobile(false);
+    }
 }
 </script>
 
@@ -44,7 +51,7 @@ function isMenuItemActive(item: NavItem): boolean {
                     :is-active="isMenuItemActive(item)"
                     :tooltip="item.title"
                 >
-                    <Link :href="item.href">
+                    <Link :href="item.href" @click="handleNavigation">
                         <component :is="item.icon" />
                         <span
                             class="truncate"

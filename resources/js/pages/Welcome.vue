@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { register } from '@/routes';
+import { ref } from 'vue';
 
 withDefaults(
     defineProps<{
@@ -10,14 +11,21 @@ withDefaults(
         canRegister: true,
     },
 );
+
+const mobileMenuOpen = ref(false);
 </script>
 
 <template>
     <Head title="Welcome" />
 
     <div class="relative flex min-h-screen flex-col overflow-hidden bg-[#021526] font-sans antialiased selection:bg-white/10 selection:text-white">
-        <!-- Header -->
-        <header class="absolute top-0 left-19 z-50 flex w-full items-start justify-between">
+        <header
+            :class="[
+                'fixed top-0 left-0 lg:left-19 z-50 w-full flex items-start justify-between transition-all duration-300',
+                mobileMenuOpen ? 'bg-white backdrop-blur-sm' : ''
+            ]"
+            :style="mobileMenuOpen ? { backgroundImage: 'linear-gradient(to right, rgb(255, 255, 255), rgba(255, 255, 255, 0))' } : {}"
+        >
             <!-- Left Nav Box -->
             <nav class="hidden rounded-bl-3xl rounded-br-3xl bg-white px-8 py-5 lg:flex xl:px-12 xl:py-6">
                 <ul class="flex items-center gap-8 text-[15px] font-extrabold text-gray-700">
@@ -31,11 +39,17 @@ withDefaults(
 
             <!-- Mobile Menu Button -->
             <div class="rounded-br-2xl bg-white p-5 lg:hidden">
-                <button class="flex items-center justify-center text-black">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="flex items-center justify-center text-black">
+                    <!-- Hamburger Icon -->
+                    <svg v-if="!mobileMenuOpen" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="4" x2="20" y1="12" y2="12"/>
                         <line x1="4" x2="20" y1="6" y2="6"/>
                         <line x1="4" x2="20" y1="18" y2="18"/>
+                    </svg>
+                    <!-- Close Icon (X) -->
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" x2="6" y1="6" y2="18"/>
+                        <line x1="6" x2="18" y1="6" y2="18"/>
                     </svg>
                 </button>
             </div>
@@ -52,8 +66,35 @@ withDefaults(
             </div> -->
         </header>
 
+        <!-- Mobile Menu -->
+        <transition
+            enter-active-class="transition duration-200"
+            leave-active-class="transition duration-200"
+            enter-from-class="opacity-0"
+            leave-to-class="opacity-0"
+        >
+            <div v-if="mobileMenuOpen" class="fixed inset-0 top-16 z-40 bg-black/50 backdrop-blur-sm lg:hidden"></div>
+        </transition>
+
+        <transition
+            enter-active-class="transition duration-200"
+            leave-active-class="transition duration-200"
+            enter-from-class="-translate-x-full"
+            leave-to-class="-translate-x-full"
+        >
+            <nav v-if="mobileMenuOpen" class="fixed top-16 left-0 z-40 w-full bg-white lg:hidden">
+                <ul class="flex flex-col gap-4 p-6 text-[15px] font-extrabold text-gray-700">
+                    <li><a href="#" @click="mobileMenuOpen = false" class="block py-2 hover:text-black">Features</a></li>
+                    <li><a href="#" @click="mobileMenuOpen = false" class="block py-2 hover:text-black">Services</a></li>
+                    <li><a href="#" @click="mobileMenuOpen = false" class="block py-2 hover:text-black">Prices</a></li>
+                    <li><a href="#" @click="mobileMenuOpen = false" class="block py-2 hover:text-black">Blog</a></li>
+                    <li><a href="#" @click="mobileMenuOpen = false" class="block py-2 hover:text-black">About us</a></li>
+                </ul>
+            </nav>
+        </transition>
+
         <!-- Main Content -->
-        <main class="flex flex-1 flex-col lg:flex-row">
+        <main class="flex flex-1 flex-col lg:flex-row pt-16 lg:pt-0">
             <!-- Left Column -->
             <section class="relative flex w-full flex-col justify-center px-6 pt-32 pb-16 lg:w-[55%] lg:px-20 lg:pt-0 lg:pb-0">
                 <div class="max-w-xl">
