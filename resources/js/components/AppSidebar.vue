@@ -97,7 +97,7 @@ function handleNavigation() {
 <template>
     <Sidebar collapsible="icon" variant="inset">
 
-        <SidebarHeader>
+        <SidebarHeader class="no-hover-header">
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
@@ -141,3 +141,10 @@ function handleNavigation() {
     </Sidebar>
     <slot />
 </template>
+
+<style scoped>
+.no-hover-header :hover {
+    background-color: inherit;
+    color: inherit;
+}
+</style>

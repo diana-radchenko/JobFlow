@@ -100,18 +100,9 @@ const mobileMenuOpen = ref(false);
                 <div class="max-w-xl">
                     <!-- Logo -->
                     <div class="mb-4 flex items-center gap-4">
-                        <div class="relative flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-white/10 to-transparent p-3 ring-1 ring-white/20">
-                            <svg viewBox="0 0 24 24" class="h-full w-full" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                                    fill="none"
-                                    stroke="#fff"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </svg>
+                        <div class="relative flex h-32 items-center justify-center">
+                            <img src="/flow_bg_transparent.png" alt="Flow Icon" class="h-full w-full object-cover">
                         </div>
-                        <span class="text-3xl font-bold tracking-tight text-white">Flow Icon</span>
                     </div>
 
                     <!-- Hero Text -->
