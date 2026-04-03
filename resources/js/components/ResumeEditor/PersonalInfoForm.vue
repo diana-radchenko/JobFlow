@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronRight, Save } from 'lucide-vue-next';
+import AlertSuccess from '@/components/AlertSuccess.vue';
 
 interface Props {
     user: any;
@@ -23,6 +24,8 @@ const form = useForm({
     location: '',
 });
 
+const showSuccessAlert = ref(false);
+
 const initializeForm = () => {
     if (props.profile) {
         form.phone = props.profile.phone || '';
@@ -36,9 +39,19 @@ const props = defineProps<Props>();
 const submit = () => {
     form.post('/resume-editor/personal-info', {
         onSuccess: () => {
-            // Continue to next section after success
+            showSuccessAlert.value = true;
+            setTimeout(() => {
+                showSuccessAlert.value = false;
+            }, 3000);
         },
     });
+};
+
+const filterPhoneInput = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    // Allow only digits, +, spaces, parentheses, and hyphens for formatting
+    const filtered = input.value.replace(/[^\d+\s\(\)\-]/g, '');
+    form.phone = filtered;
 };
 
 initializeForm();
@@ -46,6 +59,11 @@ initializeForm();
 
 <template>
     <div class="space-y-6">
+        <AlertSuccess
+            v-if="showSuccessAlert"
+            title="Saved!"
+            message="Your personal information has been saved successfully."
+        />
         <Card>
             <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
@@ -94,6 +112,7 @@ initializeForm();
                             v-model="form.phone"
                             type="tel"
                             placeholder="+1 (555) 123-4567"
+                            @input="filterPhoneInput"
                         />
                     </div>
 

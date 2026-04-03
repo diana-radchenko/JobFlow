@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, Save } from 'lucide-vue-next';
+import AlertSuccess from '@/components/AlertSuccess.vue';
 
 interface Props {
     additionalInfo: any;
@@ -23,6 +24,8 @@ const form = useForm({
     notes: '',
 });
 
+const showSuccessAlert = ref(false);
+
 const initializeForm = () => {
     if (props.additionalInfo) {
         form.languages = props.additionalInfo.languages || '';
@@ -35,7 +38,14 @@ const initializeForm = () => {
 const props = defineProps<Props>();
 
 const submit = () => {
-    form.post('/resume-editor/additional-info');
+    form.post('/resume-editor/additional-info', {
+        onSuccess: () => {
+            showSuccessAlert.value = true;
+            setTimeout(() => {
+                showSuccessAlert.value = false;
+            }, 3000);
+        },
+    });
 };
 
 initializeForm();
@@ -43,6 +53,11 @@ initializeForm();
 
 <template>
     <div class="space-y-6">
+        <AlertSuccess
+            v-if="showSuccessAlert"
+            title="Saved!"
+            message="Your additional information has been saved successfully."
+        />
         <Card>
             <CardHeader>
                 <CardTitle>Additional Information</CardTitle>

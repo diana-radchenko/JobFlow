@@ -4,15 +4,22 @@ import { computed } from 'vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type Props = {
-    errors: string[];
+    errors: string[] | Record<string, string>;
     title?: string;
 };
 
 const props = withDefaults(defineProps<Props>(), {
-    title: 'Something went wrong.',
+    title: 'Error occurred.',
 });
 
-const uniqueErrors = computed(() => Array.from(new Set(props.errors)));
+const errorList = computed(() => {
+    if (Array.isArray(props.errors)) {
+        return props.errors;
+    }
+    return Object.values(props.errors);
+});
+
+const uniqueErrors = computed(() => Array.from(new Set(errorList.value)));
 </script>
 
 <template>

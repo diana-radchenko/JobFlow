@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import AlertError from '@/components/AlertError.vue';
 import ResumeEditorSidebar from '@/components/ResumeEditor/ResumeEditorSidebar.vue';
 import PersonalInfoForm from '@/components/ResumeEditor/PersonalInfoForm.vue';
 import WorkExperienceForm from '@/components/ResumeEditor/WorkExperienceForm.vue';
@@ -24,7 +25,7 @@ defineOptions({
 const page = usePage();
 const currentSection = ref<string>('personalInfo');
 
-const userData = computed(() => page.props as any);
+const props = computed(() => page.props as any);
 
 const sectionComponents: Record<string, any> = {
     personalInfo: PersonalInfoForm,
@@ -54,15 +55,22 @@ const currentComponent = computed(() => {
         <!-- Main Content -->
         <div class="flex-1 overflow-y-auto p-6">
             <div class="mx-auto max-w-2xl">
+                <!-- Error Alert -->
+                <AlertError 
+                    v-if="props.errors && Object.keys(props.errors).length > 0"
+                    :errors="props.errors"
+                    class="mb-4"
+                />
+                
                 <component 
                     :is="currentComponent"
-                    :user="userData.user"
-                    :profile="userData.profile"
-                    :work-experiences="userData.workExperiences"
-                    :educations="userData.educations"
-                    :skills="userData.skills"
-                    :projects="userData.projects"
-                    :additional-info="userData.additionalInfo"
+                    :user="props.user"
+                    :profile="props.profile"
+                    :work-experiences="props.workExperiences"
+                    :educations="props.educations"
+                    :skills="props.skills"
+                    :projects="props.projects"
+                    :additional-info="props.additionalInfo"
                     @next-section="currentSection = $event"
                 />
             </div>

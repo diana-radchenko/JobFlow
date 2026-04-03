@@ -35,7 +35,7 @@ class ResumeEditorController extends Controller
     public function updatePersonalInfo(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^\+?[0-9]*$/'],
             'linkedin_url' => 'nullable|url',
             'location' => 'nullable|string|max:255',
         ]);
