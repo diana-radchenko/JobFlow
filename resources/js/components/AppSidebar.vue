@@ -25,6 +25,7 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { dashboard, logout } from '@/routes';
+import { resumeEditor as resumeEditorRoute } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
 import type { NavItem } from '@/types';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
@@ -44,8 +45,9 @@ const mainNavItems = computed<NavItem[]>(() => [
     },
     {
         title: 'Resume Editor',
-        href: '#',
+        href: resumeEditorRoute(),
         icon: FileText,
+        isActive: isCurrentUrl(resumeEditorRoute()),
     },
     {
         title: 'Job Selection',

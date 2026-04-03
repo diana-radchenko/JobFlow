@@ -1,0 +1,255 @@
+<script setup lang="ts">
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+    User, 
+    Briefcase, 
+    BookOpen, 
+    Award, 
+    FolderOpen, 
+    Zap, 
+    Edit2,
+    ChevronLeft,
+    Download
+} from 'lucide-vue-next';
+
+interface Props {
+    user: any;
+    profile: any;
+    workExperiences: any[];
+    educations: any[];
+    skills: any[];
+    projects: any[];
+    additionalInfo: any;
+}
+
+defineProps<Props>();
+
+const emit = defineEmits<{
+    nextSection: [section: string];
+}>();
+
+const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+};
+
+const getTypeIcon = (type: string) => {
+    const icons: Record<string, any> = {
+        'project': FolderOpen,
+        'achievement': Award,
+    };
+    return icons[type] || FolderOpen;
+};
+</script>
+
+<template>
+    <div class="space-y-6">
+        <Card>
+            <CardHeader>
+                <CardTitle>Resume Summary</CardTitle>
+                <CardDescription>
+                    Review your complete resume before finalizing
+                </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-8">
+                <!-- Personal Info Section -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <User class="h-5 w-5 text-primary" />
+                        <h3 class="text-lg font-semibold">Personal Information</h3>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            @click="$emit('nextSection', 'personalInfo')"
+                            class="ml-auto"
+                        >
+                            <Edit2 class="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <p><strong>Name:</strong> {{ user.name }}</p>
+                        <p><strong>Email:</strong> {{ user.email }}</p>
+                        <p v-if="profile?.phone"><strong>Phone:</strong> {{ profile.phone }}</p>
+                        <p v-if="profile?.location"><strong>Location:</strong> {{ profile.location }}</p>
+                        <p v-if="profile?.linkedin_url">
+                            <strong>LinkedIn:</strong>
+                            <a :href="profile.linkedin_url" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">
+                                View Profile
+                            </a>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Work Experience Section -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <Briefcase class="h-5 w-5 text-primary" />
+                        <h3 class="text-lg font-semibold">Work Experience</h3>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            @click="$emit('nextSection', 'workExperience')"
+                            class="ml-auto"
+                        >
+                            <Edit2 class="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div v-if="workExperiences.length > 0" class="space-y-4">
+                        <div v-for="exp in workExperiences" :key="exp.id" class="rounded-lg border border-border p-3">
+                            <h4 class="font-semibold">{{ exp.job_title }}</h4>
+                            <p class="text-sm text-foreground/70">{{ exp.company_name }}</p>
+                            <p class="text-xs text-foreground/60 mt-1">
+                                {{ formatDate(exp.start_date) }} - 
+                                <span v-if="exp.is_current">Present</span>
+                                <span v-else>{{ formatDate(exp.end_date) }}</span>
+                            </p>
+                            <p v-if="exp.location" class="text-xs text-foreground/60">📍 {{ exp.location }}</p>
+                            <p v-if="exp.description" class="text-sm text-foreground/70 mt-2">{{ exp.description }}</p>
+                        </div>
+                    </div>
+                    <p v-else class="text-sm text-foreground/60 italic">No work experience added yet</p>
+                </div>
+
+                <!-- Education Section -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <BookOpen class="h-5 w-5 text-primary" />
+                        <h3 class="text-lg font-semibold">Education</h3>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            @click="$emit('nextSection', 'education')"
+                            class="ml-auto"
+                        >
+                            <Edit2 class="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div v-if="educations.length > 0" class="space-y-4">
+                        <div v-for="edu in educations" :key="edu.id" class="rounded-lg border border-border p-3">
+                            <h4 class="font-semibold">{{ edu.degree }}</h4>
+                            <p class="text-sm text-foreground/70">{{ edu.institution }}</p>
+                            <p v-if="edu.field_of_study" class="text-sm text-foreground/70">{{ edu.field_of_study }}</p>
+                            <p v-if="edu.start_date" class="text-xs text-foreground/60 mt-1">
+                                {{ formatDate(edu.start_date) }}
+                                <span v-if="edu.end_date">- {{ formatDate(edu.end_date) }}</span>
+                            </p>
+                            <p v-if="edu.description" class="text-sm text-foreground/70 mt-2">{{ edu.description }}</p>
+                        </div>
+                    </div>
+                    <p v-else class="text-sm text-foreground/60 italic">No education added yet</p>
+                </div>
+
+                <!-- Skills Section -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <Award class="h-5 w-5 text-primary" />
+                        <h3 class="text-lg font-semibold">Skills & Competencies</h3>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            @click="$emit('nextSection', 'skills')"
+                            class="ml-auto"
+                        >
+                            <Edit2 class="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div v-if="skills.length > 0" class="flex flex-wrap gap-2">
+                        <span
+                            v-for="skill in skills"
+                            :key="skill.id"
+                            class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary"
+                        >
+                            {{ skill.name }} • {{ skill.proficiency_level }}
+                        </span>
+                    </div>
+                    <p v-else class="text-sm text-foreground/60 italic">No skills added yet</p>
+                </div>
+
+                <!-- Projects Section -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <FolderOpen class="h-5 w-5 text-primary" />
+                        <h3 class="text-lg font-semibold">Projects & Achievements</h3>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            @click="$emit('nextSection', 'projects')"
+                            class="ml-auto"
+                        >
+                            <Edit2 class="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div v-if="projects.length > 0" class="space-y-4">
+                        <div v-for="proj in projects" :key="proj.id" class="rounded-lg border border-border p-3">
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-semibold">{{ proj.title }}</h4>
+                                <span class="text-xs px-2 py-1 rounded bg-primary/10 text-primary">
+                                    {{ proj.type }}
+                                </span>
+                            </div>
+                            <p v-if="proj.start_date" class="text-xs text-foreground/60 mt-1">
+                                {{ formatDate(proj.start_date) }}
+                                <span v-if="proj.end_date">- {{ formatDate(proj.end_date) }}</span>
+                            </p>
+                            <p v-if="proj.description" class="text-sm text-foreground/70 mt-2">{{ proj.description }}</p>
+                            <a v-if="proj.url" :href="proj.url" target="_blank" rel="noopener noreferrer" class="text-xs text-primary hover:underline mt-2 inline-block">
+                                View Project →
+                            </a>
+                        </div>
+                    </div>
+                    <p v-else class="text-sm text-foreground/60 italic">No projects added yet</p>
+                </div>
+
+                <!-- Additional Info Section -->
+                <div v-if="additionalInfo" class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <Zap class="h-5 w-5 text-primary" />
+                        <h3 class="text-lg font-semibold">Additional Information</h3>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            @click="$emit('nextSection', 'additionalInfo')"
+                            class="ml-auto"
+                        >
+                            <Edit2 class="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div v-if="additionalInfo.languages">
+                            <strong>Languages:</strong>
+                            <p class="text-foreground/70 whitespace-pre-wrap">{{ additionalInfo.languages }}</p>
+                        </div>
+                        <div v-if="additionalInfo.certifications">
+                            <strong>Certifications:</strong>
+                            <p class="text-foreground/70 whitespace-pre-wrap">{{ additionalInfo.certifications }}</p>
+                        </div>
+                        <div v-if="additionalInfo.interests">
+                            <strong>Interests:</strong>
+                            <p class="text-foreground/70 whitespace-pre-wrap">{{ additionalInfo.interests }}</p>
+                        </div>
+                        <div v-if="additionalInfo.notes">
+                            <strong>Notes:</strong>
+                            <p class="text-foreground/70 whitespace-pre-wrap">{{ additionalInfo.notes }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-between gap-3 pt-4 border-t">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        @click="$emit('nextSection', 'additionalInfo')"
+                    >
+                        <ChevronLeft class="h-4 w-4 mr-2" />
+                        Back
+                    </Button>
+                    <!-- <Button type="button" disabled class="ml-auto">
+                        <Download class="h-4 w-4 mr-2" />
+                        Download Resume (Coming Soon)
+                    </Button> -->
+                </div>
+            </CardContent>
+        </Card>
+    </div>
+</template>
