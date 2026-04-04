@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\JobSelectionController;
 use App\Http\Controllers\ResumeEditorController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -10,6 +11,8 @@ Route::inertia('/', 'Welcome', [
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+
+    Route::get('job-selection', [JobSelectionController::class, 'jobSelection'])->name('job-selection');
 
     // Resume Editor Routes
     Route::get('resume-editor', [ResumeEditorController::class, 'show'])->name('resume-editor');

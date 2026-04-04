@@ -24,7 +24,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '@/components/ui/sidebar';
-import { dashboard, logout } from '@/routes';
+import { dashboard, jobSelection as jobSelectionRoute, logout } from '@/routes';
 import { resumeEditor as resumeEditorRoute } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
 import type { NavItem } from '@/types';
@@ -51,8 +51,9 @@ const mainNavItems = computed<NavItem[]>(() => [
     },
     {
         title: 'Job Selection',
-        href: '#',
+        href: jobSelectionRoute(),
         icon: BriefcaseBusiness,
+        isActive: isCurrentUrl(jobSelectionRoute()),
     },
     {
         title: 'Request Tracker',
