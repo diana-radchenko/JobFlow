@@ -68,29 +68,26 @@ const sections = computed(() => [
 </script>
 
 <template>
-    <div class="hidden w-64 border-r border-sidebar-border bg-sidebar md:flex md:flex-col md:gap-0">
-        <div class="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-6">
-            <div class="mb-4">
-                <h3 class="text-sm font-semibold text-foreground/70">Build Your Resume</h3>
+    <div class="hidden mt-6 ml-6 mb-6 w-72 border rounded-xl bg-blueish md:flex md:flex-col md:gap-0 md:p-6">
+        <div class="flex flex-1 flex-col gap-4 overflow-y-auto">
+            <div class="mb-2">
+                <h3 class="text-sm font-semibold text-foreground/70">Summary sections</h3>
             </div>
             
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-3">
                 <button
                     v-for="section in sections"
                     :key="section.id"
                     @click="emit('selectSection', section.id)"
                     :class="[
-                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                        'flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition-all duration-200',
                         currentSection === section.id
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                            : 'text-sidebar-foreground hover:bg-sidebar-accent/10'
+                            ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-md'
+                            : 'bg-white text-sidebar-foreground hover:shadow-sm dark:bg-slate-800 dark:text-slate-100'
                     ]"
                 >
                     <component :is="section.icon" class="h-4 w-4 flex-shrink-0" />
-                    <div class="flex-1 text-left">
-                        <div class="font-medium">{{ section.label }}</div>
-                        <div class="text-xs opacity-60">{{ section.description }}</div>
-                    </div>
+                    <span>{{ section.label }}</span>
                 </button>
             </div>
         </div>
