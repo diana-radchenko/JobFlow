@@ -2,14 +2,14 @@
 import { Head, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import AlertError from '@/components/AlertError.vue';
-import ResumeEditorSidebar from '@/components/ResumeEditor/ResumeEditorSidebar.vue';
-import PersonalInfoForm from '@/components/ResumeEditor/PersonalInfoForm.vue';
-import WorkExperienceForm from '@/components/ResumeEditor/WorkExperienceForm.vue';
-import EducationForm from '@/components/ResumeEditor/EducationForm.vue';
-import SkillsForm from '@/components/ResumeEditor/SkillsForm.vue';
-import ProjectsForm from '@/components/ResumeEditor/ProjectsForm.vue';
 import AdditionalInfoForm from '@/components/ResumeEditor/AdditionalInfoForm.vue';
+import EducationForm from '@/components/ResumeEditor/EducationForm.vue';
+import PersonalInfoForm from '@/components/ResumeEditor/PersonalInfoForm.vue';
+import ProjectsForm from '@/components/ResumeEditor/ProjectsForm.vue';
+import ResumeEditorSidebar from '@/components/ResumeEditor/ResumeEditorSidebar.vue';
 import ResumeSummary from '@/components/ResumeEditor/ResumeSummary.vue';
+import SkillsForm from '@/components/ResumeEditor/SkillsForm.vue';
+import WorkExperienceForm from '@/components/ResumeEditor/WorkExperienceForm.vue';
 
 defineOptions({
     layout: {

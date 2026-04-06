@@ -17,6 +17,7 @@ class JobSelectionController extends Controller
             $query->where('location', 'like', '%'.$request->region.'%');
         }
 
+        // own is a filter, where user writes his own dynamic filter value for salary
         if ($request->filled('incomeLevel') && $request->incomeLevel !== 'does-not-matter') {
             if ($request->incomeLevel === 'own' && $request->filled('ownSalary')) {
                 $query->where('salary_start', '>=', $request->ownSalary);
@@ -30,6 +31,13 @@ class JobSelectionController extends Controller
         return Inertia::render('JobSelection', [
             'jobs' => $jobs,
             'filters' => $request->only(['incomeLevel', 'region', 'ownSalary']),
+        ]);
+    }
+
+    public function show(WorkJob $job): Response
+    {
+        return Inertia::render('JobDetail', [
+            'job' => $job,
         ]);
     }
 }

@@ -13,6 +13,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
 
     Route::get('job-selection', [JobSelectionController::class, 'jobSelection'])->name('job-selection');
+    Route::get('job-selection/{job}', [JobSelectionController::class, 'show'])->name('job-selection.show');
 
     // Resume Editor Routes
     Route::get('resume-editor', [ResumeEditorController::class, 'show'])->name('resume-editor');

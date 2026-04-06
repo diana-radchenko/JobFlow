@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { jobSelection as jobSelectionRoute } from '@/routes';
-import { ref, watch } from 'vue';
+import { Head, router, Link } from '@inertiajs/vue3';
 import { watchDebounced } from '@vueuse/core';
 import { BadgeCheck, MapPin, Sparkles, Heart } from 'lucide-vue-next';
-import { WorkJob } from '@/types/laravel-models';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { jobSelection as jobSelectionRoute } from '@/routes';
+import { show as jobSelectionShow } from '@/routes/job-selection';
+import type { WorkJob } from '@/types/laravel-models';
 
 const props = defineProps<{
     jobs: WorkJob[];
@@ -18,6 +19,8 @@ const props = defineProps<{
         ownSalary?: string;
     };
 }>();
+
+// own is a filter, where user writes his own dynamic filter value for salary (this is not a predefined value)
 
 const incomeLevel = ref(props.filters?.incomeLevel || 'does-not-matter');
 const region = ref(props.filters?.region || 'does-not-matter');
@@ -101,7 +104,7 @@ defineOptions({
         <!-- Sidebar Filters -->
         <div class="w-72 flex-shrink-0 flex flex-col gap-6">
             <!-- Income Level Filter -->
-            <div class="rounded-xl bg-blueish p-6 dark:bg-stone-800">
+            <div class="rounded-xl bg-blueish p-6 ">
                 <h3 class="mb-5 font-bold text-stone-900 dark:text-white">Income level</h3>
                 <RadioGroup v-model="incomeLevel" class="flex flex-col gap-3.5">
                     <template v-for="option in incomeLevelOptions" :key="option.id">
@@ -135,7 +138,7 @@ defineOptions({
             </div>
 
             <!-- Region Filter -->
-            <div class="rounded-xl bg-blueish p-6 dark:bg-stone-800">
+            <div class="rounded-xl bg-blueish p-6">
                 <h3 class="mb-5 font-bold text-stone-900 dark:text-white">Region</h3>
                 <RadioGroup v-model="region" class="flex flex-col gap-3.5">
                     <div 
@@ -169,10 +172,10 @@ defineOptions({
 
         <!-- Job Listings -->
         <div class="flex-1 flex flex-col gap-5">
-            <div v-for="job in jobs" :key="job.id" class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900 flex justify-between relative group">
+            <Link v-for="job in jobs" :key="job.id" :href="jobSelectionShow.url(job)" class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900 flex justify-between relative group hover:shadow-md transition-shadow">
                 <!-- Heart Icon (absolute top right) -->
                 <div class="absolute top-6 right-6">
-                    <button class="flex h-10 w-10 items-center justify-center rounded-full bg-blueish/60 hover:bg-blueish dark:bg-stone-800 dark:hover:bg-stone-700 transition-colors">
+                    <button @click.prevent class="flex h-10 w-10 items-center justify-center rounded-full bg-blueish/60 hover:bg-blueish dark:bg-stone-800 dark:hover:bg-stone-700 transition-colors">
                         <Heart class="h-5 w-5 text-stone-400" />
                     </button>
                 </div>
@@ -185,7 +188,7 @@ defineOptions({
                     <div class="flex items-center flex-wrap gap-x-4 gap-y-2 mb-3">
                         <h2 class="text-[22px] font-bold text-stone-900 dark:text-white leading-tight">{{ job.title }}</h2>
                         <div class="flex flex-wrap gap-2">
-                            <Badge v-for="(tech, index) in job.technologies.slice(0, 5)" :key="index" variant="secondary" class="bg-[#0b1c34] hover:bg-[#0b1c34]/90 text-white border-none rounded-full px-3.5 py-0.5 text-[13px] font-medium tracking-wide">
+                            <Badge v-for="(tech, index) in job.technologies.slice(0, 5)" :key="index" variant="secondary" class="bg-primary hover:bg-primary/60 text-primary-foreground border-none rounded-full px-3.5 py-0.5 text-[13px] font-medium tracking-wide">
                                 {{ tech }}
                             </Badge>
                         </div>
@@ -207,11 +210,11 @@ defineOptions({
                 </div>
 
                 <div class="flex flex-col justify-end">
-                    <Button class="bg-[#0b1c34] hover:bg-[#0b1c34]/90 text-white rounded-full px-10 py-6 font-semibold text-xs tracking-wider">
-                        CONTACTS
+                    <Button class="bg-primary hover:bg-primary/70 text-primary-foreground rounded-full px-10 py-6 font-semibold text-xs tracking-wider cursor-pointer">
+                        More
                     </Button>
                 </div>
-            </div>
+            </Link>
         </div>
     </div>
 </template>

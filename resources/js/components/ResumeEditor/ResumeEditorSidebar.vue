@@ -82,8 +82,8 @@ const sections = computed(() => [
                     :class="[
                         'flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition-all duration-200',
                         currentSection === section.id
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-md'
-                            : 'bg-white text-sidebar-foreground hover:shadow-sm dark:bg-slate-800 dark:text-slate-100'
+                            ? 'bg-sidebar-accent dark:bg-green-200 dark:text-green-900 text-sidebar-accent-foreground shadow-md'
+                            : 'bg-white text-sidebar-foreground hover:shadow-lg dark:bg-slate-800 dark:text-slate-100'
                     ]"
                 >
                     <component :is="section.icon" class="h-4 w-4 flex-shrink-0" />

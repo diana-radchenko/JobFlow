@@ -16,6 +16,7 @@ const errorList = computed(() => {
     if (Array.isArray(props.errors)) {
         return props.errors;
     }
+
     return Object.values(props.errors);
 });
 
