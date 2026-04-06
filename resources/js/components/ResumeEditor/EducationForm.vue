@@ -24,25 +24,15 @@ interface Emits {
 
 defineEmits<Emits>();
 
-const degreeOptions = [
-    'HIGHSCHOOL',
-    'CERTIFICATE',
-    'ASSOCIATE',
-    'BACHELORS',
-    'MASTERS',
-    'DOCTORATE',
-    'POSTDOC',
+const degreeOptions: string[] = [
+    'High School',
+    'Certificate',
+    'Associate',
+    'Bachelors',
+    'Masters',
+    'Doctorate',
+    'Postdoctoral Researcher',
 ];
-
-const degreeLabels: Record<string, string> = {
-    HIGHSCHOOL: 'High School',
-    CERTIFICATE: 'Certificate',
-    ASSOCIATE: 'Associate Degree',
-    BACHELORS: 'Bachelor\'s Degree',
-    MASTERS: 'Master\'s Degree',
-    DOCTORATE: 'Doctorate',
-    POSTDOC: 'Post-Doctorate',
-};
 
 const form = useForm({
     degree: '',
@@ -114,7 +104,7 @@ const formatDate = (date: string) => {
                         class="flex items-start justify-between gap-4 rounded-lg border border-border p-4"
                     >
                         <div class="flex-1">
-                            <h4 class="font-semibold text-foreground">{{ degreeLabels[edu.degree] }}</h4>
+                            <h4 class="font-semibold text-foreground">{{ edu.degree }}</h4>
                             <p class="text-sm text-foreground/70">{{ edu.institution }}</p>
                             <p v-if="edu.field_of_study" class="text-sm text-foreground/70">
                                 {{ edu.field_of_study }}
@@ -162,7 +152,7 @@ const formatDate = (date: string) => {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem v-for="deg in degreeOptions" :key="deg" :value="deg">
-                                            {{ degreeLabels[deg] }}
+                                            {{ deg }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -175,30 +165,33 @@ const formatDate = (date: string) => {
                                     id="institution"
                                     v-model="form.institution"
                                     placeholder="e.g., University of Example"
+                                    required
                                 />
                             </div>
                         </div>
 
                         <div>
                             <label for="field" class="block text-sm font-medium mb-1">
-                                Field of Study
+                                Field of Study *
                             </label>
                             <Input
                                 id="field"
                                 v-model="form.field_of_study"
                                 placeholder="e.g., Computer Science"
+                                required
                             />
                         </div>
 
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label for="start_date" class="block text-sm font-medium mb-1">
-                                    Start Date
+                                    Start Date *
                                 </label>
                                 <Input
                                     id="start_date"
                                     v-model="form.start_date"
                                     type="date"
+                                    required
                                 />
                             </div>
                             <div>
@@ -221,7 +214,7 @@ const formatDate = (date: string) => {
                                 id="description"
                                 v-model="form.description"
                                 placeholder="Additional details about your education"
-                                rows="3"
+                                :rows="3"
                             />
                         </div>
 

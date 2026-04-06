@@ -95,7 +95,7 @@ class ResumeEditorController extends Controller
     public function storeEducation(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'degree' => 'required|in:HIGHSCHOOL,CERTIFICATE,ASSOCIATE,BACHELORS,MASTERS,DOCTORATE,POSTDOC',
+            'degree' => 'required|string',
             'institution' => 'required|string|max:255',
             'field_of_study' => 'nullable|string|max:255',
             'start_date' => 'nullable|date',
@@ -111,7 +111,7 @@ class ResumeEditorController extends Controller
     public function updateEducation(Request $request, Education $education): RedirectResponse
     {
         $validated = $request->validate([
-            'degree' => 'required|in:HIGHSCHOOL,CERTIFICATE,ASSOCIATE,BACHELORS,MASTERS,DOCTORATE,POSTDOC',
+            'degree' => 'required|string',
             'institution' => 'required|string|max:255',
             'field_of_study' => 'nullable|string|max:255',
             'start_date' => 'nullable|date',
