@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -62,5 +63,17 @@ class User extends Authenticatable
     public function additionalInformation(): HasOne
     {
         return $this->hasOne(AdditionalInformation::class);
+    }
+
+    public function applications(): HasMany
+    {
+        return $this->hasMany(UserWorkJobApplication::class);
+    }
+
+    public function appliedJobs(): BelongsToMany
+    {
+        return $this->belongsToMany(WorkJob::class, 'user_work_job_applications', 'user_id', 'work_job_id')
+            ->withPivot('status')
+            ->withTimestamps();
     }
 }

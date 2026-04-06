@@ -76,7 +76,7 @@ defineOptions({
                 <div class="mb-8">
                     <h2 class="text-lg font-semibold text-stone-900 dark:text-white mb-3">Technologies</h2>
                     <div class="flex flex-wrap gap-2">
-                        <Badge v-for="(tech, index) in job.technologies" :key="index" variant="secondary" class="bg-primary hover:bg-primary/60 text-primary-foreground border-none rounded-full px-4 py-2 text-sm font-medium">
+                        <Badge v-for="(tech, index) in job.technologies" :key="index" variant="secondary" class="bg-primary hover:bg-primary/90 text-primary-foreground border-none rounded-full px-4 py-2 text-sm font-medium">
                             {{ tech }}
                         </Badge>
                     </div>
@@ -98,7 +98,7 @@ defineOptions({
 
                 <!-- Apply Button -->
                 <div class="flex gap-4 sticky bottom-0 bg-white dark:bg-stone-900 pt-6 mt-8 border-t border-stone-200 dark:border-stone-800">
-                    <Button class="flex-1 bg-primary hover:bg-primary/70 text-primary-foreground rounded-lg px-8 py-6 font-semibold text-base tracking-wide">
+                    <Button class="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg px-8 py-6 font-semibold text-base tracking-wide">
                         Apply for Position
                     </Button>
                 </div>
