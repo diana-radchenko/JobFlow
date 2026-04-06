@@ -14,6 +14,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('job-selection', [JobSelectionController::class, 'jobSelection'])->name('job-selection');
     Route::get('job-selection/{job}', [JobSelectionController::class, 'show'])->name('job-selection.show');
+    Route::post('job-selection/{job}/apply', [JobSelectionController::class, 'apply'])->name('job-selection.apply');
 
     // Resume Editor Routes
     Route::get('resume-editor', [ResumeEditorController::class, 'show'])->name('resume-editor');

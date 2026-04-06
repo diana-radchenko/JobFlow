@@ -1,14 +1,31 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { BadgeCheck, MapPin, Heart, ChevronLeft } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { jobSelection as jobSelectionRoute } from '@/routes';
+import { apply as jobSelectionApply } from '@/routes/job-selection';
 import type { WorkJob } from '@/types/laravel-models';
+import { ref } from 'vue';
+import { UserWorkJobApplication } from '@/types/laravel-models';
+import { getApplicationStatusColor } from '@/helpers/job-applications';
+import { getApplicationStatusLabel } from '@/helpers/job-applications';
 
-defineProps<{
+const props = defineProps<{
     job: WorkJob;
+    userApplication: UserWorkJobApplication | null;
 }>();
+
+const isLoading = ref(false);
+
+const handleApply = () => {
+    isLoading.value = true;
+    router.post(jobSelectionApply(props.job.id), {}, {
+        onFinish: () => {
+            isLoading.value = false;
+        },
+    });
+};
 
 defineOptions({
     layout: {
@@ -98,9 +115,23 @@ defineOptions({
 
                 <!-- Apply Button -->
                 <div class="flex gap-4 sticky bottom-0 bg-white dark:bg-stone-900 pt-6 mt-8 border-t border-stone-200 dark:border-stone-800">
-                    <Button class="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg px-8 py-6 font-semibold text-base tracking-wide">
-                        Apply for Position
-                    </Button>
+                    <template v-if="userApplication">
+                        <Button 
+                            disabled 
+                            :class="`flex-1 rounded-lg px-8 py-6 font-semibold text-base tracking-wide ${getApplicationStatusColor(userApplication.status)}`"
+                        >
+                            {{ getApplicationStatusLabel(userApplication.status) }}
+                        </Button>
+                    </template>
+                    <template v-else>
+                        <Button 
+                            @click="handleApply"
+                            :disabled="isLoading"
+                            class="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg px-8 py-6 font-semibold text-base tracking-wide"
+                        >
+                            {{ isLoading ? 'Applying...' : 'Apply for Position' }}
+                        </Button>
+                    </template>
                 </div>
             </div>
         </div>

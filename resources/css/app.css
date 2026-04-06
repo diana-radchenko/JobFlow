@@ -175,3 +175,18 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Application Status Colors */
+@layer utilities {
+    .status-green {
+        @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100;
+    }
+
+    .status-grey {
+        @apply bg-stone-200 text-stone-700 dark:bg-stone-700 dark:text-stone-200;
+    }
+
+    .status-red {
+        @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100;
+    }
+}

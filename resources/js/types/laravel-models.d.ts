@@ -88,12 +88,16 @@ export type User = {
   skills: Skill[]
   projects: Project[]
   additional_information: AdditionalInformation
+  applications: UserWorkJobApplication[]
+  applied_jobs: WorkJob[]
   notifications: DatabaseNotification[]
   // counts
   educations_count: number
   work_experiences_count: number
   skills_count: number
   projects_count: number
+  applications_count: number
+  applied_jobs_count: number
   notifications_count: number
   // exists
   profile_exists: boolean
@@ -102,6 +106,8 @@ export type User = {
   skills_exists: boolean
   projects_exists: boolean
   additional_information_exists: boolean
+  applications_exists: boolean
+  applied_jobs_exists: boolean
   notifications_exists: boolean
 }
 
@@ -119,6 +125,23 @@ export type UserProfile = {
   // counts
   // exists
   user_exists: boolean
+}
+
+export type UserWorkJobApplication = {
+  // columns
+  id: number
+  user_id: number
+  work_job_id: number
+  status: ApplicationStatus
+  created_at: string | null
+  updated_at: string | null
+  // relations
+  user: User
+  work_job: WorkJob
+  // counts
+  // exists
+  user_exists: boolean
+  work_job_exists: boolean
 }
 
 export type WorkExperience = {
@@ -154,5 +177,24 @@ export type WorkJob = {
   technologies: string[]
   created_at: string | null
   updated_at: string | null
+  // relations
+  applications: UserWorkJobApplication[]
+  applicants: User[]
+  // counts
+  applications_count: number
+  applicants_count: number
+  // exists
+  applications_exists: boolean
+  applicants_exists: boolean
 }
+
+const ApplicationStatus = {
+  Applied: 'applied',
+  InterviewScheduled: 'interview_scheduled',
+  Rejected: 'rejected',
+  Offer: 'offer',
+  Hired: 'hired',
+} as const;
+
+export type ApplicationStatus = typeof ApplicationStatus[keyof typeof ApplicationStatus]
 

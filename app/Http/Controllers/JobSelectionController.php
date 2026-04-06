@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\JobSelectionRequest;
+use App\Models\UserWorkJobApplication;
 use App\Models\WorkJob;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,8 +38,26 @@ class JobSelectionController extends Controller
 
     public function show(WorkJob $job): Response
     {
+        $userApplication = auth()->user()
+            ->applications()
+            ->where('work_job_id', $job->id)
+            ->first();
+
         return Inertia::render('JobDetail', [
             'job' => $job,
+            'userApplication' => $userApplication,
         ]);
+    }
+
+    public function apply(WorkJob $job): RedirectResponse
+    {
+        UserWorkJobApplication::firstOrCreate(
+            [
+                'user_id' => auth()->id(),
+                'work_job_id' => $job->id,
+            ],
+        );
+
+        return redirect()->route('job-selection.show', $job)->with('success', 'Application submitted successfully!');
     }
 }
