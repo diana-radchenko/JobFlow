@@ -24,7 +24,12 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '@/components/ui/sidebar';
-import { dashboard, jobSelection as jobSelectionRoute, logout } from '@/routes';
+import {
+    dashboard,
+    jobSelection as jobSelectionRoute,
+    logout,
+    requestTracker as requestTrackerRoute,
+} from '@/routes';
 import { resumeEditor as resumeEditorRoute } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
 import type { NavItem } from '@/types';
@@ -34,6 +39,7 @@ import { computed } from 'vue';
 const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 
 const dashboardUrl = dashboard();
+const requestTrackerUrl = requestTrackerRoute();
 const settingsUrl = '/settings';
 
 const mainNavItems = computed<NavItem[]>(() => [
@@ -57,8 +63,9 @@ const mainNavItems = computed<NavItem[]>(() => [
     },
     {
         title: 'Request Tracker',
-        href: '#',
+        href: requestTrackerUrl,
         icon: ClipboardList,
+        isActive: isCurrentUrl(requestTrackerUrl),
     },
     {
         title: 'Salary',

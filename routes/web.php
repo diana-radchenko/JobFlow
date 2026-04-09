@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\JobSelectionController;
+use App\Http\Controllers\RequestTrackerController;
 use App\Http\Controllers\ResumeEditorController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -11,6 +12,8 @@ Route::inertia('/', 'Welcome', [
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+
+    Route::get('request-tracker', [RequestTrackerController::class, 'show'])->name('request-tracker');
 
     Route::get('job-selection', [JobSelectionController::class, 'jobSelection'])->name('job-selection');
     Route::get('job-selection/{job}', [JobSelectionController::class, 'show'])->name('job-selection.show');
