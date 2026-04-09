@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\EducationDegree;
 use App\Enums\SkillsLevel;
+use App\Http\Requests\StoreEducationRequest;
+use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\StoreWorkExperienceRequest;
 use App\Models\Education;
 use App\Models\Project;
 use App\Models\Skill;
 use App\Models\WorkExperience;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -53,36 +56,16 @@ class ResumeEditorController extends Controller
         return back()->with('success', 'Personal information updated successfully.');
     }
 
-    public function storeWorkExperience(Request $request): RedirectResponse
+    public function storeWorkExperience(StoreWorkExperienceRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'job_title' => 'required|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'is_current' => 'boolean',
-            'description' => 'nullable|string',
-        ]);
-
-        auth()->user()->workExperiences()->create($validated);
+        auth()->user()->workExperiences()->create($request->validated());
 
         return back()->with('success', 'Work experience added successfully.');
     }
 
-    public function updateWorkExperience(Request $request, WorkExperience $workExperience): RedirectResponse
+    public function updateWorkExperience(StoreWorkExperienceRequest $request, WorkExperience $workExperience): RedirectResponse
     {
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'job_title' => 'required|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'is_current' => 'boolean',
-            'description' => 'nullable|string',
-        ]);
-
-        $workExperience->update($validated);
+        $workExperience->update($request->validated());
 
         return back()->with('success', 'Work experience updated successfully.');
     }
@@ -94,34 +77,16 @@ class ResumeEditorController extends Controller
         return back()->with('success', 'Work experience deleted successfully.');
     }
 
-    public function storeEducation(Request $request): RedirectResponse
+    public function storeEducation(StoreEducationRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'degree' => 'required|in:'.implode(',', array_column(EducationDegree::cases(), 'value')),
-            'institution' => 'required|string|max:255',
-            'field_of_study' => 'nullable|string|max:255',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'description' => 'nullable|string',
-        ]);
-
-        auth()->user()->educations()->create($validated);
+        auth()->user()->educations()->create($request->validated());
 
         return back()->with('success', 'Education added successfully.');
     }
 
-    public function updateEducation(Request $request, Education $education): RedirectResponse
+    public function updateEducation(StoreEducationRequest $request, Education $education): RedirectResponse
     {
-        $validated = $request->validate([
-            'degree' => 'required|in:'.implode(',', array_column(EducationDegree::cases(), 'value')),
-            'institution' => 'required|string|max:255',
-            'field_of_study' => 'nullable|string|max:255',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'description' => 'nullable|string',
-        ]);
-
-        $education->update($validated);
+        $education->update($request->validated());
 
         return back()->with('success', 'Education updated successfully.');
     }
@@ -137,7 +102,7 @@ class ResumeEditorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'proficiency_level' => 'required|in:'.implode(',', array_column(SkillsLevel::cases(), 'value')),
+            'proficiency_level' => ['required', Rule::enum(SkillsLevel::class)],
         ]);
 
         auth()->user()->skills()->create($validated);
@@ -149,7 +114,7 @@ class ResumeEditorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'proficiency_level' => 'required|in:'.implode(',', array_column(SkillsLevel::cases(), 'value')),
+            'proficiency_level' => ['required', Rule::enum(SkillsLevel::class)],
         ]);
 
         $skill->update($validated);
@@ -164,34 +129,16 @@ class ResumeEditorController extends Controller
         return back()->with('success', 'Skill deleted successfully.');
     }
 
-    public function storeProject(Request $request): RedirectResponse
+    public function storeProject(StoreProjectRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'type' => 'required|in:project,achievement',
-            'description' => 'nullable|string',
-            'url' => 'nullable|url',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        auth()->user()->projects()->create($validated);
+        auth()->user()->projects()->create($request->validated());
 
         return back()->with('success', 'Project added successfully.');
     }
 
-    public function updateProject(Request $request, Project $project): RedirectResponse
+    public function updateProject(StoreProjectRequest $request, Project $project): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'type' => 'required|in:project,achievement',
-            'description' => 'nullable|string',
-            'url' => 'nullable|url',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        $project->update($validated);
+        $project->update($request->validated());
 
         return back()->with('success', 'Project updated successfully.');
     }

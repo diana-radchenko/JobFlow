@@ -155,6 +155,7 @@ const formatDate = (date: string) => {
                                     id="title"
                                     v-model="form.title"
                                     placeholder="e.g., E-commerce Platform"
+                                    required
                                 />
                             </div>
                             <div>
