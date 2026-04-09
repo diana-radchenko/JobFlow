@@ -13,6 +13,9 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, Plus, Trash2, Edit2, Save } from 'lucide-vue-next';
+import { EducationDegreeEnum } from '@/enums/laravel-models-enums';
+import type { EducationDegree } from '@/types/laravel-models';
+import { stringForHuman } from '@/helpers/strings';
 
 const props = defineProps<{
     educations: any[];
@@ -24,15 +27,7 @@ interface Emits {
 
 defineEmits<Emits>();
 
-const degreeOptions: string[] = [
-    'High School',
-    'Certificate',
-    'Associate',
-    'Bachelors',
-    'Masters',
-    'Doctorate',
-    'Postdoctoral Researcher',
-];
+const degreeOptions: EducationDegree[] = Object.values(EducationDegreeEnum);
 
 const form = useForm({
     degree: '',
@@ -152,7 +147,7 @@ const formatDate = (date: string) => {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem v-for="deg in degreeOptions" :key="deg" :value="deg">
-                                            {{ deg }}
+                                            {{ stringForHuman(deg) }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>

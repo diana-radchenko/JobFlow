@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\EducationDegree;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,7 +15,7 @@ return new class extends Migration
         Schema::create('education', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('degree', ['High School', 'Certificate', 'Associate', 'Bachelors', 'Masters', 'Doctorate', 'Postdoctoral Researcher']);
+            $table->enum('degree', array_column(EducationDegree::cases(), 'value'));
             $table->string('institution');
             $table->string('field_of_study');
             $table->date('start_date');

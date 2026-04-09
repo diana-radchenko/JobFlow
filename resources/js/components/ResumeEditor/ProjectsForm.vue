@@ -13,6 +13,9 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, Plus, Trash2, Edit2, Save } from 'lucide-vue-next';
+import { ProjectTypeEnum } from '@/enums/laravel-models-enums';
+import type { ProjectType } from '@/types/laravel-models';
+import { stringForHuman } from '@/helpers/strings';
 
 interface Props {
     projects: any[];
@@ -26,7 +29,7 @@ interface Emits {
 
 defineEmits<Emits>();
 
-const typeOptions = ['project', 'achievement'];
+const typeOptions: ProjectType[] = Object.values(ProjectTypeEnum);
 const typeLabels: Record<string, string> = {
     'project': 'Project',
     'achievement': 'Achievement',
@@ -105,7 +108,7 @@ const formatDate = (date: string) => {
                             <div class="flex items-center gap-2">
                                 <h4 class="font-semibold text-foreground">{{ project.title }}</h4>
                                 <span class="inline-block text-xs px-2 py-1 rounded bg-primary/10 text-primary">
-                                    {{ typeLabels[project.type] }}
+                                    {{ stringForHuman(project.type) }}
                                 </span>
                             </div>
                             <p v-if="project.start_date" class="text-xs text-foreground/60 mt-1">
@@ -164,7 +167,7 @@ const formatDate = (date: string) => {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem v-for="type in typeOptions" :key="type" :value="type">
-                                            {{ typeLabels[type] }}
+                                            {{ stringForHuman(type) }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -179,7 +182,7 @@ const formatDate = (date: string) => {
                                 id="description"
                                 v-model="form.description"
                                 placeholder="Describe your project or achievement"
-                                rows="4"
+                                :rows="4"
                             />
                         </div>
 

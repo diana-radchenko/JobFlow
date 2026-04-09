@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EducationDegree;
+use App\Enums\SkillsLevel;
 use App\Models\Education;
 use App\Models\Project;
 use App\Models\Skill;
@@ -95,7 +97,7 @@ class ResumeEditorController extends Controller
     public function storeEducation(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'degree' => 'required|string',
+            'degree' => 'required|in:'.implode(',', array_column(EducationDegree::cases(), 'value')),
             'institution' => 'required|string|max:255',
             'field_of_study' => 'nullable|string|max:255',
             'start_date' => 'nullable|date',
@@ -111,7 +113,7 @@ class ResumeEditorController extends Controller
     public function updateEducation(Request $request, Education $education): RedirectResponse
     {
         $validated = $request->validate([
-            'degree' => 'required|string',
+            'degree' => 'required|in:'.implode(',', array_column(EducationDegree::cases(), 'value')),
             'institution' => 'required|string|max:255',
             'field_of_study' => 'nullable|string|max:255',
             'start_date' => 'nullable|date',
@@ -135,7 +137,7 @@ class ResumeEditorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'proficiency_level' => 'required|in:Beginner,Intermediate,Advanced,Expert',
+            'proficiency_level' => 'required|in:'.implode(',', array_column(SkillsLevel::cases(), 'value')),
         ]);
 
         auth()->user()->skills()->create($validated);
@@ -147,7 +149,7 @@ class ResumeEditorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'proficiency_level' => 'required|in:Beginner,Intermediate,Advanced,Expert',
+            'proficiency_level' => 'required|in:'.implode(',', array_column(SkillsLevel::cases(), 'value')),
         ]);
 
         $skill->update($validated);

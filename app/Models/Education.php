@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EducationDegree;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +15,7 @@ class Education extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
+            'degree' => EducationDegree::class,
         ];
     }
 

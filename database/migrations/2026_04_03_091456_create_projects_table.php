@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProjectType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('title');
-            $table->enum('type', ['project', 'achievement']);
+            $table->enum('type', array_column(ProjectType::cases(), 'value'));
             $table->text('description')->nullable();
             $table->string('url')->nullable();
             $table->date('start_date')->nullable();

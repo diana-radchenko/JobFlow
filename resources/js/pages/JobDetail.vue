@@ -9,7 +9,7 @@ import type { WorkJob } from '@/types/laravel-models';
 import { ref } from 'vue';
 import { UserWorkJobApplication } from '@/types/laravel-models';
 import { getApplicationStatusColor } from '@/helpers/job-applications';
-import { getApplicationStatusLabel } from '@/helpers/job-applications';
+import { stringForHuman } from '@/helpers/strings';
 
 const props = defineProps<{
     job: WorkJob;
@@ -120,7 +120,7 @@ defineOptions({
                             disabled 
                             :class="`flex-1 rounded-lg px-8 py-6 font-semibold text-base tracking-wide ${getApplicationStatusColor(userApplication.status)}`"
                         >
-                            {{ getApplicationStatusLabel(userApplication.status) }}
+                            {{ stringForHuman(userApplication.status) }}
                         </Button>
                     </template>
                     <template v-else>

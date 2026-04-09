@@ -1,3 +1,5 @@
+import { EducationDegreeEnum, ProjectTypeEnum, SkillsLevelEnum, ApplicationStatusEnum } from '@/enums/laravel-models-enums';
+
 export type AdditionalInformation = {
   // columns
   id: number
@@ -19,10 +21,10 @@ export type Education = {
   // columns
   id: number
   user_id: number
-  degree: string
+  degree: EducationDegree
   institution: string
-  field_of_study: string | null
-  start_date: string | null
+  field_of_study: string
+  start_date: string
   end_date: string | null
   description: string | null
   created_at: string | null
@@ -39,7 +41,7 @@ export type Project = {
   id: number
   user_id: number
   title: string
-  type: string
+  type: ProjectType
   description: string | null
   url: string | null
   start_date: string | null
@@ -58,7 +60,7 @@ export type Skill = {
   id: number
   user_id: number
   name: string
-  proficiency_level: string | null
+  proficiency_level: SkillsLevel
   created_at: string | null
   updated_at: string | null
   // relations
@@ -174,7 +176,7 @@ export type WorkJob = {
   description: string
   contacts: string
   location: string
-  technologies: string[]
+  technologies: Array<unknown>
   created_at: string | null
   updated_at: string | null
   // relations
@@ -188,13 +190,7 @@ export type WorkJob = {
   applicants_exists: boolean
 }
 
-const ApplicationStatus = {
-  Applied: 'applied',
-  InterviewScheduled: 'interview_scheduled',
-  Rejected: 'rejected',
-  Offer: 'offer',
-  Hired: 'hired',
-} as const;
-
-export type ApplicationStatus = typeof ApplicationStatus[keyof typeof ApplicationStatus]
-
+export type EducationDegree = (typeof EducationDegreeEnum)[keyof typeof EducationDegreeEnum]
+export type ProjectType = (typeof ProjectTypeEnum)[keyof typeof ProjectTypeEnum]
+export type SkillsLevel = (typeof SkillsLevelEnum)[keyof typeof SkillsLevelEnum]
+export type ApplicationStatus = (typeof ApplicationStatusEnum)[keyof typeof ApplicationStatusEnum]

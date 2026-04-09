@@ -12,6 +12,9 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, Plus, Trash2, Edit2, Save, Zap } from 'lucide-vue-next';
+import { SkillsLevelEnum } from '@/enums/laravel-models-enums';
+import type { SkillsLevel } from '@/types/laravel-models';
+import { stringForHuman } from '@/helpers/strings';
 
 const props = defineProps<{
     skills: any[];
@@ -23,11 +26,11 @@ interface Emits {
 
 defineEmits<Emits>();
 
-const proficiencyLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+const proficiencyLevels: SkillsLevel[] = Object.values(SkillsLevelEnum);
 
 const form = useForm({
     name: '',
-    proficiency_level: 'Intermediate',
+    proficiency_level: SkillsLevelEnum.Beginner,
 });
 
 const showForm = ref(false);
@@ -130,6 +133,7 @@ const getProficiencyColor = (level: string) => {
                                 id="skill-name"
                                 v-model="form.name"
                                 placeholder="e.g., Python, Project Management, Leadership"
+                                required
                             />
                         </div>
 
@@ -143,7 +147,7 @@ const getProficiencyColor = (level: string) => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem v-for="level in proficiencyLevels" :key="level" :value="level">
-                                        {{ level }}
+                                        {{ stringForHuman(level) }}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
