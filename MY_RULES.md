@@ -12,6 +12,8 @@ resources/js/
 └── types/         # TypeScript definitions
 ```
  
+If you are using the components from ready components/ folder and using variants, you should not override his background, the text and colors in compoenent by adding tailwind classes, because inside of components variants they're already the right colors and etc. The idea is to use the reusable components and variants as much as possible.
+
  Our Frontend Vue JS and Inertia:
     - reka-ui for ready to use UI components. In resources/js/components/ui/ folder we have components (card, button, dialog, sonner, button, e.t.c) on top of reka-ui components. Try to use them firstly and if there is no what we need, then you can install new one.
     - lucide-vue-next for icons 

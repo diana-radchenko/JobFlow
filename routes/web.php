@@ -14,6 +14,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
 
     Route::get('request-tracker', [RequestTrackerController::class, 'show'])->name('request-tracker');
+    Route::delete('request-tracker/applications/{userWorkJobApplication}', [RequestTrackerController::class, 'destroy'])->name('request-tracker.applications.destroy');
 
     Route::get('job-selection', [JobSelectionController::class, 'jobSelection'])->name('job-selection');
     Route::get('job-selection/{job}', [JobSelectionController::class, 'show'])->name('job-selection.show');
