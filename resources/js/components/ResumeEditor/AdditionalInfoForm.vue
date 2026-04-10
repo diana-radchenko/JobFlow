@@ -3,7 +3,13 @@ import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, Save } from 'lucide-vue-next';
 import AlertSuccess from '@/components/AlertSuccess.vue';
 
@@ -68,7 +74,10 @@ initializeForm();
             <CardContent>
                 <form @submit.prevent="submit" class="space-y-4">
                     <div>
-                        <label for="languages" class="block text-sm font-medium text-foreground mb-1">
+                        <label
+                            for="languages"
+                            class="mb-1 block text-sm font-medium text-foreground"
+                        >
                             Languages
                         </label>
                         <Textarea
@@ -80,7 +89,10 @@ initializeForm();
                     </div>
 
                     <div>
-                        <label for="certifications" class="block text-sm font-medium text-foreground mb-1">
+                        <label
+                            for="certifications"
+                            class="mb-1 block text-sm font-medium text-foreground"
+                        >
                             Certifications
                         </label>
                         <Textarea
@@ -92,7 +104,10 @@ initializeForm();
                     </div>
 
                     <div>
-                        <label for="interests" class="block text-sm font-medium text-foreground mb-1">
+                        <label
+                            for="interests"
+                            class="mb-1 block text-sm font-medium text-foreground"
+                        >
                             Interests
                         </label>
                         <Textarea
@@ -104,7 +119,10 @@ initializeForm();
                     </div>
 
                     <div>
-                        <label for="notes" class="block text-sm font-medium text-foreground mb-1">
+                        <label
+                            for="notes"
+                            class="mb-1 block text-sm font-medium text-foreground"
+                        >
                             Additional Notes
                         </label>
                         <Textarea
@@ -115,22 +133,19 @@ initializeForm();
                         />
                     </div>
 
-                    <div class="flex gap-3 pt-4 border-t">
-                        <Button
-                            type="submit"
-                            :disabled="form.processing"
-                        >
-                            <Save class="h-4 w-4 mr-2" />
+                    <div class="flex gap-3 border-t pt-4">
+                        <Button type="submit" :disabled="form.processing">
+                            <Save class="mr-2 h-4 w-4" />
                             Save Additional Info
                         </Button>
-                        </div>
+                    </div>
                     <div class="flex justify-between gap-3 pt-4">
                         <Button
                             type="button"
                             variant="outline"
                             @click="$emit('nextSection', 'projects')"
                         >
-                            <ChevronLeft class="h-4 w-4 mr-2" />
+                            <ChevronLeft class="mr-2 h-4 w-4" />
                             Back
                         </Button>
                         <Button
@@ -138,7 +153,7 @@ initializeForm();
                             @click="$emit('nextSection', 'summary')"
                         >
                             Review Summary
-                            <ChevronRight class="h-4 w-4 ml-2" />
+                            <ChevronRight class="ml-2 h-4 w-4" />
                         </Button>
                     </div>
                 </form>

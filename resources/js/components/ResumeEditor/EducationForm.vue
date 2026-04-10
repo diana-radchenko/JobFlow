@@ -4,7 +4,13 @@ import { useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import {
     Select,
     SelectContent,
@@ -12,7 +18,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Plus, Trash2, Edit2, Save } from 'lucide-vue-next';
+import {
+    ChevronLeft,
+    ChevronRight,
+    Plus,
+    Trash2,
+    Edit2,
+    Save,
+} from 'lucide-vue-next';
 import { EducationDegreeEnum } from '@/enums/laravel-models-enums';
 import type { EducationDegree } from '@/types/laravel-models';
 import { stringForHuman } from '@/helpers/strings';
@@ -77,7 +90,10 @@ const deleteEducation = (id: number) => {
 };
 
 const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+    });
 };
 </script>
 
@@ -99,16 +115,31 @@ const formatDate = (date: string) => {
                         class="flex items-start justify-between gap-4 rounded-lg border border-border p-4"
                     >
                         <div class="flex-1">
-                            <h4 class="font-semibold text-foreground">{{ edu.degree }}</h4>
-                            <p class="text-sm text-foreground/70">{{ edu.institution }}</p>
-                            <p v-if="edu.field_of_study" class="text-sm text-foreground/70">
+                            <h4 class="font-semibold text-foreground">
+                                {{ edu.degree }}
+                            </h4>
+                            <p class="text-sm text-foreground/70">
+                                {{ edu.institution }}
+                            </p>
+                            <p
+                                v-if="edu.field_of_study"
+                                class="text-sm text-foreground/70"
+                            >
                                 {{ edu.field_of_study }}
                             </p>
-                            <p v-if="edu.start_date" class="text-xs text-foreground/60 mt-1">
-                                {{ formatDate(edu.start_date) }} 
-                                <span v-if="edu.end_date">- {{ formatDate(edu.end_date) }}</span>
+                            <p
+                                v-if="edu.start_date"
+                                class="mt-1 text-xs text-foreground/60"
+                            >
+                                {{ formatDate(edu.start_date) }}
+                                <span v-if="edu.end_date"
+                                    >- {{ formatDate(edu.end_date) }}</span
+                                >
                             </p>
-                            <p v-if="edu.description" class="text-sm text-foreground/70 mt-2">
+                            <p
+                                v-if="edu.description"
+                                class="mt-2 text-sm text-foreground/70"
+                            >
                                 {{ edu.description }}
                             </p>
                         </div>
@@ -134,26 +165,41 @@ const formatDate = (date: string) => {
                 </div>
 
                 <!-- Form -->
-                <div v-if="showForm" class="rounded-lg border border-border p-4 bg-muted/30">
+                <div
+                    v-if="showForm"
+                    class="rounded-lg border border-border bg-muted/30 p-4"
+                >
                     <form @submit.prevent="submit" class="space-y-4">
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label for="degree" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="degree"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     Degree *
                                 </label>
                                 <Select v-model="form.degree">
                                     <SelectTrigger id="degree">
-                                        <SelectValue placeholder="Select degree level" />
+                                        <SelectValue
+                                            placeholder="Select degree level"
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem v-for="deg in degreeOptions" :key="deg" :value="deg">
+                                        <SelectItem
+                                            v-for="deg in degreeOptions"
+                                            :key="deg"
+                                            :value="deg"
+                                        >
                                             {{ stringForHuman(deg) }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div>
-                                <label for="institution" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="institution"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     Institution *
                                 </label>
                                 <Input
@@ -166,7 +212,10 @@ const formatDate = (date: string) => {
                         </div>
 
                         <div>
-                            <label for="field" class="block text-sm font-medium mb-1">
+                            <label
+                                for="field"
+                                class="mb-1 block text-sm font-medium"
+                            >
                                 Field of Study *
                             </label>
                             <Input
@@ -179,7 +228,10 @@ const formatDate = (date: string) => {
 
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label for="start_date" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="start_date"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     Start Date *
                                 </label>
                                 <Input
@@ -190,7 +242,10 @@ const formatDate = (date: string) => {
                                 />
                             </div>
                             <div>
-                                <label for="end_date" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="end_date"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     End Date
                                 </label>
                                 <Input
@@ -202,7 +257,10 @@ const formatDate = (date: string) => {
                         </div>
 
                         <div>
-                            <label for="description" class="block text-sm font-medium mb-1">
+                            <label
+                                for="description"
+                                class="mb-1 block text-sm font-medium"
+                            >
                                 Description
                             </label>
                             <Textarea
@@ -215,10 +273,14 @@ const formatDate = (date: string) => {
 
                         <div class="flex gap-3">
                             <Button type="submit" :disabled="form.processing">
-                                <Save class="h-4 w-4 mr-2" />
+                                <Save class="mr-2 h-4 w-4" />
                                 {{ editingId ? 'Update' : 'Add' }} Education
                             </Button>
-                            <Button type="button" variant="outline" @click="resetForm">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                @click="resetForm"
+                            >
                                 Cancel
                             </Button>
                         </div>
@@ -233,19 +295,19 @@ const formatDate = (date: string) => {
                         @click="showForm = true"
                         class="w-full"
                     >
-                        <Plus class="h-4 w-4 mr-2" />
+                        <Plus class="mr-2 h-4 w-4" />
                         Add Education
                     </Button>
                 </div>
 
                 <!-- Navigation -->
-                <div class="flex justify-between gap-3 pt-4 border-t">
+                <div class="flex justify-between gap-3 border-t pt-4">
                     <Button
                         type="button"
                         variant="outline"
                         @click="$emit('nextSection', 'workExperience')"
                     >
-                        <ChevronLeft class="h-4 w-4 mr-2" />
+                        <ChevronLeft class="mr-2 h-4 w-4" />
                         Back
                     </Button>
                     <Button
@@ -253,7 +315,7 @@ const formatDate = (date: string) => {
                         @click="$emit('nextSection', 'skills')"
                     >
                         Next
-                        <ChevronRight class="h-4 w-4 ml-2" />
+                        <ChevronRight class="ml-2 h-4 w-4" />
                     </Button>
                 </div>
             </CardContent>

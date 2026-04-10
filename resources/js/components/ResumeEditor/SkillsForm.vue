@@ -3,7 +3,13 @@ import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import {
     Select,
     SelectContent,
@@ -11,7 +17,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Plus, Trash2, Edit2, Save, Zap } from 'lucide-vue-next';
+import {
+    ChevronLeft,
+    ChevronRight,
+    Plus,
+    Trash2,
+    Edit2,
+    Save,
+    Zap,
+} from 'lucide-vue-next';
 import { SkillsLevelEnum } from '@/enums/laravel-models-enums';
 import type { SkillsLevel } from '@/types/laravel-models';
 import { stringForHuman } from '@/helpers/strings';
@@ -69,10 +83,13 @@ const deleteSkill = (id: number) => {
 
 const getProficiencyColor = (level: string) => {
     const colors: Record<string, string> = {
-        'Beginner': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-        'Intermediate': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-        'Advanced': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-        'Expert': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+        Beginner:
+            'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+        Intermediate:
+            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        Advanced:
+            'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+        Expert: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
     };
     return colors[level] || 'bg-gray-100 text-gray-800';
 };
@@ -96,8 +113,17 @@ const getProficiencyColor = (level: string) => {
                         class="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
                     >
                         <div>
-                            <h4 class="font-medium text-foreground">{{ skill.name }}</h4>
-                            <span :class="['text-xs px-2 py-1 rounded mt-1 inline-block', getProficiencyColor(skill.proficiency_level)]">
+                            <h4 class="font-medium text-foreground">
+                                {{ skill.name }}
+                            </h4>
+                            <span
+                                :class="[
+                                    'mt-1 inline-block rounded px-2 py-1 text-xs',
+                                    getProficiencyColor(
+                                        skill.proficiency_level,
+                                    ),
+                                ]"
+                            >
                                 {{ skill.proficiency_level }}
                             </span>
                         </div>
@@ -123,10 +149,16 @@ const getProficiencyColor = (level: string) => {
                 </div>
 
                 <!-- Form -->
-                <div v-if="showForm" class="rounded-lg border border-border p-4 bg-muted/30">
+                <div
+                    v-if="showForm"
+                    class="rounded-lg border border-border bg-muted/30 p-4"
+                >
                     <form @submit.prevent="submit" class="space-y-4">
                         <div>
-                            <label for="skill-name" class="block text-sm font-medium mb-1">
+                            <label
+                                for="skill-name"
+                                class="mb-1 block text-sm font-medium"
+                            >
                                 Skill Name *
                             </label>
                             <Input
@@ -138,7 +170,10 @@ const getProficiencyColor = (level: string) => {
                         </div>
 
                         <div>
-                            <label for="proficiency" class="block text-sm font-medium mb-1">
+                            <label
+                                for="proficiency"
+                                class="mb-1 block text-sm font-medium"
+                            >
                                 Proficiency Level *
                             </label>
                             <Select v-model="form.proficiency_level">
@@ -146,7 +181,11 @@ const getProficiencyColor = (level: string) => {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem v-for="level in proficiencyLevels" :key="level" :value="level">
+                                    <SelectItem
+                                        v-for="level in proficiencyLevels"
+                                        :key="level"
+                                        :value="level"
+                                    >
                                         {{ stringForHuman(level) }}
                                     </SelectItem>
                                 </SelectContent>
@@ -155,10 +194,14 @@ const getProficiencyColor = (level: string) => {
 
                         <div class="flex gap-3">
                             <Button type="submit" :disabled="form.processing">
-                                <Save class="h-4 w-4 mr-2" />
+                                <Save class="mr-2 h-4 w-4" />
                                 {{ editingId ? 'Update' : 'Add' }} Skill
                             </Button>
-                            <Button type="button" variant="outline" @click="resetForm">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                @click="resetForm"
+                            >
                                 Cancel
                             </Button>
                         </div>
@@ -173,19 +216,19 @@ const getProficiencyColor = (level: string) => {
                         @click="showForm = true"
                         class="w-full"
                     >
-                        <Plus class="h-4 w-4 mr-2" />
+                        <Plus class="mr-2 h-4 w-4" />
                         Add Skill
                     </Button>
                 </div>
 
                 <!-- Navigation -->
-                <div class="flex justify-between gap-3 pt-4 border-t">
+                <div class="flex justify-between gap-3 border-t pt-4">
                     <Button
                         type="button"
                         variant="outline"
                         @click="$emit('nextSection', 'education')"
                     >
-                        <ChevronLeft class="h-4 w-4 mr-2" />
+                        <ChevronLeft class="mr-2 h-4 w-4" />
                         Back
                     </Button>
                     <Button
@@ -193,7 +236,7 @@ const getProficiencyColor = (level: string) => {
                         @click="$emit('nextSection', 'projects')"
                     >
                         Next
-                        <ChevronRight class="h-4 w-4 ml-2" />
+                        <ChevronRight class="ml-2 h-4 w-4" />
                     </Button>
                 </div>
             </CardContent>

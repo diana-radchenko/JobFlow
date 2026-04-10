@@ -106,7 +106,6 @@ function handleNavigation() {
 
 <template>
     <Sidebar collapsible="icon" variant="inset">
-
         <SidebarHeader class="no-hover-header">
             <SidebarMenu>
                 <SidebarMenuItem>
@@ -129,7 +128,9 @@ function handleNavigation() {
                     <SidebarMenuButton size="lg" as-child>
                         <a href="#" @click.prevent>
                             <Globe />
-                            <span :class="state === 'collapsed' && 'hidden'">Support</span>
+                            <span :class="state === 'collapsed' && 'hidden'"
+                                >Support</span
+                            >
                         </a>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -142,7 +143,9 @@ function handleNavigation() {
                             @click="handleLogout"
                         >
                             <LogOut />
-                            <span :class="state === 'collapsed' && 'hidden'">Log out</span>
+                            <span :class="state === 'collapsed' && 'hidden'"
+                                >Log out</span
+                            >
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

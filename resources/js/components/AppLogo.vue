@@ -15,8 +15,6 @@ const { state } = useSidebar();
         class="ml-1 grid flex-1 text-left text-sm"
         :class="state === 'collapsed' && 'hidden'"
     >
-        <span class="mb-0.5 truncate leading-tight font-semibold"
-            >JobFlow</span
-        >
+        <span class="mb-0.5 truncate leading-tight font-semibold">JobFlow</span>
     </div>
 </template>

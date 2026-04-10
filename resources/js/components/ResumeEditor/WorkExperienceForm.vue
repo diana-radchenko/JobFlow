@@ -4,9 +4,22 @@ import { useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronLeft, ChevronRight, Plus, Trash2, Edit2, Save } from 'lucide-vue-next';
+import {
+    ChevronLeft,
+    ChevronRight,
+    Plus,
+    Trash2,
+    Edit2,
+    Save,
+} from 'lucide-vue-next';
 
 interface Props {
     workExperiences: any[];
@@ -69,7 +82,10 @@ const deleteExperience = (id: number) => {
 };
 
 const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+    });
 };
 </script>
 
@@ -91,17 +107,29 @@ const formatDate = (date: string) => {
                         class="flex items-start justify-between gap-4 rounded-lg border border-border p-4"
                     >
                         <div class="flex-1">
-                            <h4 class="font-semibold text-foreground">{{ exp.job_title }}</h4>
-                            <p class="text-sm text-foreground/70">{{ exp.company_name }}</p>
-                            <p class="text-xs text-foreground/60 mt-1">
-                                {{ formatDate(exp.start_date) }} - 
-                                <span v-if="exp.is_current">Present</span>
-                                <span v-else>{{ formatDate(exp.end_date) }}</span>
+                            <h4 class="font-semibold text-foreground">
+                                {{ exp.job_title }}
+                            </h4>
+                            <p class="text-sm text-foreground/70">
+                                {{ exp.company_name }}
                             </p>
-                            <p v-if="exp.location" class="text-xs text-foreground/60">
+                            <p class="mt-1 text-xs text-foreground/60">
+                                {{ formatDate(exp.start_date) }} -
+                                <span v-if="exp.is_current">Present</span>
+                                <span v-else>{{
+                                    formatDate(exp.end_date)
+                                }}</span>
+                            </p>
+                            <p
+                                v-if="exp.location"
+                                class="text-xs text-foreground/60"
+                            >
                                 📍 {{ exp.location }}
                             </p>
-                            <p v-if="exp.description" class="text-sm text-foreground/70 mt-2">
+                            <p
+                                v-if="exp.description"
+                                class="mt-2 text-sm text-foreground/70"
+                            >
                                 {{ exp.description }}
                             </p>
                         </div>
@@ -127,11 +155,17 @@ const formatDate = (date: string) => {
                 </div>
 
                 <!-- Form -->
-                <div v-if="showForm" class="rounded-lg border border-border p-4 bg-muted/30">
+                <div
+                    v-if="showForm"
+                    class="rounded-lg border border-border bg-muted/30 p-4"
+                >
                     <form @submit.prevent="submit" class="space-y-4">
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label for="company" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="company"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     Company Name *
                                 </label>
                                 <Input
@@ -141,7 +175,10 @@ const formatDate = (date: string) => {
                                 />
                             </div>
                             <div>
-                                <label for="title" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="title"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     Job Title *
                                 </label>
                                 <Input
@@ -153,7 +190,10 @@ const formatDate = (date: string) => {
                         </div>
 
                         <div>
-                            <label for="location" class="block text-sm font-medium mb-1">
+                            <label
+                                for="location"
+                                class="mb-1 block text-sm font-medium"
+                            >
                                 Location
                             </label>
                             <Input
@@ -165,7 +205,10 @@ const formatDate = (date: string) => {
 
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label for="start_date" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="start_date"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     Start Date *
                                 </label>
                                 <Input
@@ -175,7 +218,10 @@ const formatDate = (date: string) => {
                                 />
                             </div>
                             <div>
-                                <label for="end_date" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="end_date"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     End Date
                                 </label>
                                 <Input
@@ -192,13 +238,19 @@ const formatDate = (date: string) => {
                                 id="is_current"
                                 v-model:checked="form.is_current"
                             />
-                            <label for="is_current" class="text-sm cursor-pointer">
+                            <label
+                                for="is_current"
+                                class="cursor-pointer text-sm"
+                            >
                                 I currently work here
                             </label>
                         </div>
 
                         <div>
-                            <label for="description" class="block text-sm font-medium mb-1">
+                            <label
+                                for="description"
+                                class="mb-1 block text-sm font-medium"
+                            >
                                 Description
                             </label>
                             <Textarea
@@ -211,10 +263,14 @@ const formatDate = (date: string) => {
 
                         <div class="flex gap-3">
                             <Button type="submit" :disabled="form.processing">
-                                <Save class="h-4 w-4 mr-2" />
+                                <Save class="mr-2 h-4 w-4" />
                                 {{ editingId ? 'Update' : 'Add' }} Experience
                             </Button>
-                            <Button type="button" variant="outline" @click="resetForm">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                @click="resetForm"
+                            >
                                 Cancel
                             </Button>
                         </div>
@@ -229,19 +285,19 @@ const formatDate = (date: string) => {
                         @click="showForm = true"
                         class="w-full"
                     >
-                        <Plus class="h-4 w-4 mr-2" />
+                        <Plus class="mr-2 h-4 w-4" />
                         Add Work Experience
                     </Button>
                 </div>
 
                 <!-- Navigation -->
-                <div class="flex justify-between gap-3 pt-4 border-t">
+                <div class="flex justify-between gap-3 border-t pt-4">
                     <Button
                         type="button"
                         variant="outline"
                         @click="$emit('nextSection', 'personalInfo')"
                     >
-                        <ChevronLeft class="h-4 w-4 mr-2" />
+                        <ChevronLeft class="mr-2 h-4 w-4" />
                         Back
                     </Button>
                     <Button
@@ -249,7 +305,7 @@ const formatDate = (date: string) => {
                         @click="$emit('nextSection', 'education')"
                     >
                         Next
-                        <ChevronRight class="h-4 w-4 ml-2" />
+                        <ChevronRight class="ml-2 h-4 w-4" />
                     </Button>
                 </div>
             </CardContent>

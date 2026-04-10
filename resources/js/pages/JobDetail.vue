@@ -20,11 +20,15 @@ const isLoading = ref(false);
 
 const handleApply = () => {
     isLoading.value = true;
-    router.post(jobSelectionApply(props.job.id), {}, {
-        onFinish: () => {
-            isLoading.value = false;
+    router.post(
+        jobSelectionApply(props.job.id),
+        {},
+        {
+            onFinish: () => {
+                isLoading.value = false;
+            },
         },
-    });
+    );
 };
 
 defineOptions({
@@ -49,7 +53,10 @@ defineOptions({
         <!-- Back Button -->
         <div class="border-b border-stone-200 dark:border-stone-800">
             <div class="flex items-center gap-2 p-4 md:p-6">
-                <Link :href="jobSelectionRoute.url()" class="flex items-center gap-2 text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors">
+                <Link
+                    :href="jobSelectionRoute.url()"
+                    class="flex items-center gap-2 text-stone-600 transition-colors hover:text-stone-900 dark:text-stone-400 dark:hover:text-white"
+                >
                     <ChevronLeft class="h-5 w-5" />
                     <span>Back to Jobs</span>
                 </Link>
@@ -58,42 +65,69 @@ defineOptions({
 
         <!-- Main Content -->
         <div class="flex-1 overflow-y-auto p-4 md:p-6">
-            <div class="max-w-3xl mx-auto">
+            <div class="mx-auto max-w-3xl">
                 <!-- Header with Heart Icon -->
-                <div class="flex justify-between items-start mb-6">
+                <div class="mb-6 flex items-start justify-between">
                     <div class="flex-1">
-                        <div class="text-sm text-stone-500 mb-2">
-                            There are currently 5 people considering this position
-                        </div>
-                        
-                        <h1 class="text-4xl font-bold text-stone-900 dark:text-white mb-4">{{ job.title }}</h1>
-                        
-                        <div class="flex items-center gap-1.5 mb-4">
-                            <span class="font-bold text-stone-900 dark:text-white text-lg">{{ job.company }}</span>
-                            <BadgeCheck class="h-6 w-6 text-stone-900 fill-stone-900 stroke-white dark:text-white dark:fill-white dark:stroke-stone-900" />
+                        <div class="mb-2 text-sm text-stone-500">
+                            There are currently 5 people considering this
+                            position
                         </div>
 
-                        <div class="flex items-center gap-1.5 text-stone-600 dark:text-stone-300 mb-4">
+                        <h1
+                            class="mb-4 text-4xl font-bold text-stone-900 dark:text-white"
+                        >
+                            {{ job.title }}
+                        </h1>
+
+                        <div class="mb-4 flex items-center gap-1.5">
+                            <span
+                                class="text-lg font-bold text-stone-900 dark:text-white"
+                                >{{ job.company }}</span
+                            >
+                            <BadgeCheck
+                                class="h-6 w-6 fill-stone-900 stroke-white text-stone-900 dark:fill-white dark:stroke-stone-900 dark:text-white"
+                            />
+                        </div>
+
+                        <div
+                            class="mb-4 flex items-center gap-1.5 text-stone-600 dark:text-stone-300"
+                        >
                             <MapPin class="h-5 w-5" />
                             <span class="text-lg">{{ job.location }}</span>
                         </div>
 
-                        <div class="text-stone-600 dark:text-stone-300 font-medium text-lg mb-6">
-                            from ${{ Number(job.salary_start).toLocaleString() }}/month
+                        <div
+                            class="mb-6 text-lg font-medium text-stone-600 dark:text-stone-300"
+                        >
+                            from ${{
+                                Number(job.salary_start).toLocaleString()
+                            }}/month
                         </div>
                     </div>
 
                     <!-- Heart Icon -->
-                    <button class="flex h-12 w-12 items-center justify-center rounded-full bg-blueish/60 hover:bg-blueish dark:bg-stone-800 dark:hover:bg-stone-700 transition-colors flex-shrink-0 ml-4">
+                    <button
+                        class="ml-4 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blueish/60 transition-colors hover:bg-blueish dark:bg-stone-800 dark:hover:bg-stone-700"
+                    >
                         <Heart class="h-6 w-6 text-stone-400" />
                     </button>
                 </div>
 
                 <!-- Technologies -->
                 <div class="mb-8">
-                    <h2 class="text-lg font-semibold text-stone-900 dark:text-white mb-3">Technologies</h2>
+                    <h2
+                        class="mb-3 text-lg font-semibold text-stone-900 dark:text-white"
+                    >
+                        Technologies
+                    </h2>
                     <div class="flex flex-wrap gap-2">
-                        <Badge v-for="(tech, index) in job.technologies" :key="index" variant="secondary" class="bg-primary hover:bg-primary/90 text-primary-foreground border-none rounded-full px-4 py-2 text-sm font-medium">
+                        <Badge
+                            v-for="(tech, index) in job.technologies"
+                            :key="index"
+                            variant="secondary"
+                            class="rounded-full border-none bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                        >
                             {{ tech }}
                         </Badge>
                     </div>
@@ -101,35 +135,55 @@ defineOptions({
 
                 <!-- Description -->
                 <div class="mb-8">
-                    <h2 class="text-lg font-semibold text-stone-900 dark:text-white mb-3">Job Description</h2>
+                    <h2
+                        class="mb-3 text-lg font-semibold text-stone-900 dark:text-white"
+                    >
+                        Job Description
+                    </h2>
                     <div class="prose prose-sm dark:prose-invert max-w-none">
-                        <p class="text-stone-600 dark:text-stone-300 whitespace-pre-wrap leading-relaxed">{{ job.description }}</p>
+                        <p
+                            class="leading-relaxed whitespace-pre-wrap text-stone-600 dark:text-stone-300"
+                        >
+                            {{ job.description }}
+                        </p>
                     </div>
                 </div>
 
                 <!-- Contacts -->
                 <div v-if="job.contacts" class="mb-8">
-                    <h2 class="text-lg font-semibold text-stone-900 dark:text-white mb-3">Contact Information</h2>
-                    <p class="text-stone-600 dark:text-stone-300 whitespace-pre-wrap">{{ job.contacts }}</p>
+                    <h2
+                        class="mb-3 text-lg font-semibold text-stone-900 dark:text-white"
+                    >
+                        Contact Information
+                    </h2>
+                    <p
+                        class="whitespace-pre-wrap text-stone-600 dark:text-stone-300"
+                    >
+                        {{ job.contacts }}
+                    </p>
                 </div>
 
                 <!-- Apply Button -->
-                <div class="flex gap-4 sticky bottom-0 bg-white dark:bg-stone-900 pt-6 mt-8 border-t border-stone-200 dark:border-stone-800">
+                <div
+                    class="sticky bottom-0 mt-8 flex gap-4 border-t border-stone-200 bg-white pt-6 dark:border-stone-800 dark:bg-stone-900"
+                >
                     <template v-if="userApplication">
-                        <Button 
-                            disabled 
-                            :class="`flex-1 rounded-lg px-8 py-6 font-semibold text-base tracking-wide ${getApplicationStatusColor(userApplication.status)}`"
+                        <Button
+                            disabled
+                            :class="`flex-1 rounded-lg px-8 py-6 text-base font-semibold tracking-wide ${getApplicationStatusColor(userApplication.status)}`"
                         >
                             {{ stringForHuman(userApplication.status) }}
                         </Button>
                     </template>
                     <template v-else>
-                        <Button 
+                        <Button
                             @click="handleApply"
                             :disabled="isLoading"
-                            class="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg px-8 py-6 font-semibold text-base tracking-wide"
+                            class="flex-1 rounded-lg bg-primary px-8 py-6 text-base font-semibold tracking-wide text-primary-foreground hover:bg-primary/90"
                         >
-                            {{ isLoading ? 'Applying...' : 'Apply for Position' }}
+                            {{
+                                isLoading ? 'Applying...' : 'Apply for Position'
+                            }}
                         </Button>
                     </template>
                 </div>

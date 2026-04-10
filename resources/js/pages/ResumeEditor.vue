@@ -44,25 +44,25 @@ const currentComponent = computed(() => {
 
 <template>
     <Head title="Resume Editor" />
-    
+
     <div class="flex h-full flex-1 gap-0 overflow-hidden">
         <!-- Inner Sidebar -->
-        <ResumeEditorSidebar 
-            :current-section="currentSection" 
+        <ResumeEditorSidebar
+            :current-section="currentSection"
             @select-section="currentSection = $event"
         />
-        
+
         <!-- Main Content -->
         <div class="flex-1 overflow-y-auto p-6">
             <div class="mx-auto max-w-2xl">
                 <!-- Error Alert -->
-                <AlertError 
+                <AlertError
                     v-if="props.errors && Object.keys(props.errors).length > 0"
                     :errors="props.errors"
                     class="mb-4"
                 />
-                
-                <component 
+
+                <component
                     :is="currentComponent"
                     :user="props.user"
                     :profile="props.profile"

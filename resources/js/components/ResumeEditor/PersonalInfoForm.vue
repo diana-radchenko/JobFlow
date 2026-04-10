@@ -3,7 +3,13 @@ import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { ChevronRight, Save } from 'lucide-vue-next';
 import AlertSuccess from '@/components/AlertSuccess.vue';
 
@@ -74,7 +80,10 @@ initializeForm();
             <CardContent>
                 <form @submit.prevent="submit" class="space-y-4">
                     <div>
-                        <label for="name" class="block text-sm font-medium text-foreground mb-1">
+                        <label
+                            for="name"
+                            class="mb-1 block text-sm font-medium text-foreground"
+                        >
                             Full Name
                         </label>
                         <Input
@@ -83,13 +92,16 @@ initializeForm();
                             disabled
                             class="bg-muted"
                         />
-                        <p class="text-xs text-foreground/60 mt-1">
+                        <p class="mt-1 text-xs text-foreground/60">
                             Your name from account settings
                         </p>
                     </div>
 
                     <div>
-                        <label for="email" class="block text-sm font-medium text-foreground mb-1">
+                        <label
+                            for="email"
+                            class="mb-1 block text-sm font-medium text-foreground"
+                        >
                             Email
                         </label>
                         <Input
@@ -98,13 +110,16 @@ initializeForm();
                             disabled
                             class="bg-muted"
                         />
-                        <p class="text-xs text-foreground/60 mt-1">
+                        <p class="mt-1 text-xs text-foreground/60">
                             Your account email
                         </p>
                     </div>
 
                     <div>
-                        <label for="phone" class="block text-sm font-medium text-foreground mb-1">
+                        <label
+                            for="phone"
+                            class="mb-1 block text-sm font-medium text-foreground"
+                        >
                             Phone Number
                         </label>
                         <Input
@@ -117,7 +132,10 @@ initializeForm();
                     </div>
 
                     <div>
-                        <label for="location" class="block text-sm font-medium text-foreground mb-1">
+                        <label
+                            for="location"
+                            class="mb-1 block text-sm font-medium text-foreground"
+                        >
                             Location
                         </label>
                         <Input
@@ -128,7 +146,10 @@ initializeForm();
                     </div>
 
                     <div>
-                        <label for="linkedin" class="block text-sm font-medium text-foreground mb-1">
+                        <label
+                            for="linkedin"
+                            class="mb-1 block text-sm font-medium text-foreground"
+                        >
                             LinkedIn URL
                         </label>
                         <Input
@@ -140,11 +161,8 @@ initializeForm();
                     </div>
 
                     <div class="flex justify-between gap-3 pt-4">
-                        <Button
-                            type="submit"
-                            :disabled="form.processing"
-                        >
-                            <Save class="h-4 w-4 mr-2" />
+                        <Button type="submit" :disabled="form.processing">
+                            <Save class="mr-2 h-4 w-4" />
                             Save Personal Info
                         </Button>
                         <Button
@@ -153,7 +171,7 @@ initializeForm();
                             @click="$emit('nextSection', 'workExperience')"
                         >
                             Next
-                            <ChevronRight class="h-4 w-4 ml-2" />
+                            <ChevronRight class="ml-2 h-4 w-4" />
                         </Button>
                     </div>
                 </form>

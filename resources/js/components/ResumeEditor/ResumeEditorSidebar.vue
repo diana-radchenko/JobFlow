@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
-import { 
-    User, 
-    Briefcase, 
-    BookOpen, 
-    Award, 
-    FolderOpen, 
-    Zap, 
-    FileText 
+import {
+    User,
+    Briefcase,
+    BookOpen,
+    Award,
+    FolderOpen,
+    Zap,
+    FileText,
 } from 'lucide-vue-next';
 
 interface Props {
@@ -68,12 +68,16 @@ const sections = computed(() => [
 </script>
 
 <template>
-    <div class="hidden mt-6 ml-6 mb-6 w-72 border rounded-xl bg-blueish md:flex md:flex-col md:gap-0 md:p-6">
+    <div
+        class="mt-6 mb-6 ml-6 hidden w-72 rounded-xl border bg-blueish md:flex md:flex-col md:gap-0 md:p-6"
+    >
         <div class="flex flex-1 flex-col gap-4 overflow-y-auto">
             <div class="mb-2">
-                <h3 class="text-sm font-semibold text-foreground/70">Summary sections</h3>
+                <h3 class="text-sm font-semibold text-foreground/70">
+                    Summary sections
+                </h3>
             </div>
-            
+
             <div class="flex flex-col gap-3">
                 <button
                     v-for="section in sections"
@@ -82,11 +86,14 @@ const sections = computed(() => [
                     :class="[
                         'flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition-all duration-200',
                         currentSection === section.id
-                            ? 'bg-sidebar-accent dark:bg-green-200 dark:text-green-900 text-sidebar-accent-foreground shadow-md'
-                            : 'bg-white text-sidebar-foreground hover:shadow-lg dark:bg-slate-800 dark:text-slate-100'
+                            ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-md dark:bg-green-200 dark:text-green-900'
+                            : 'bg-white text-sidebar-foreground hover:shadow-lg dark:bg-slate-800 dark:text-slate-100',
                     ]"
                 >
-                    <component :is="section.icon" class="h-4 w-4 flex-shrink-0" />
+                    <component
+                        :is="section.icon"
+                        class="h-4 w-4 flex-shrink-0"
+                    />
                     <span>{{ section.label }}</span>
                 </button>
             </div>

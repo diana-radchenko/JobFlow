@@ -13,9 +13,14 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-    <Alert variant="default" class="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
+    <Alert
+        variant="default"
+        class="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950"
+    >
         <CheckCircle class="size-4 text-green-600 dark:text-green-400" />
-        <AlertTitle class="text-green-900 dark:text-green-200">{{ title }}</AlertTitle>
+        <AlertTitle class="text-green-900 dark:text-green-200">{{
+            title
+        }}</AlertTitle>
         <AlertDescription class="text-green-800 dark:text-green-300">
             {{ message }}
         </AlertDescription>

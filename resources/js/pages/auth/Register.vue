@@ -53,13 +53,19 @@ const selectedProfileType = ref<'candidate' | 'employer'>('candidate');
                         "
                         @click="selectedProfileType = 'candidate'"
                     >
-                        <div class="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+                        <div
+                            class="flex h-10 w-10 items-center justify-center rounded-md bg-muted"
+                        >
                             <UserRound class="h-5 w-5 text-foreground" />
                         </div>
 
                         <div class="flex flex-col gap-1 pt-0.5">
-                            <div class="text-base font-semibold">I'm looking for a job</div>
-                            <div class="text-sm text-muted-foreground">Candidate profile</div>
+                            <div class="text-base font-semibold">
+                                I'm looking for a job
+                            </div>
+                            <div class="text-sm text-muted-foreground">
+                                Candidate profile
+                            </div>
                         </div>
                     </button>
 
@@ -77,13 +83,21 @@ const selectedProfileType = ref<'candidate' | 'employer'>('candidate');
                         "
                         @click="selectedProfileType = 'employer'"
                     >
-                        <div class="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
-                            <BriefcaseBusiness class="h-5 w-5 text-foreground" />
+                        <div
+                            class="flex h-10 w-10 items-center justify-center rounded-md bg-muted"
+                        >
+                            <BriefcaseBusiness
+                                class="h-5 w-5 text-foreground"
+                            />
                         </div>
 
                         <div class="flex flex-col gap-1 pt-0.5">
-                            <div class="text-base font-semibold">I'm hiring</div>
-                            <div class="text-sm text-muted-foreground">Employer profile</div>
+                            <div class="text-base font-semibold">
+                                I'm hiring
+                            </div>
+                            <div class="text-sm text-muted-foreground">
+                                Employer profile
+                            </div>
                         </div>
                     </button>
                 </div>

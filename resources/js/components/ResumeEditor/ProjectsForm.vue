@@ -4,7 +4,13 @@ import { useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import {
     Select,
     SelectContent,
@@ -12,7 +18,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Plus, Trash2, Edit2, Save } from 'lucide-vue-next';
+import {
+    ChevronLeft,
+    ChevronRight,
+    Plus,
+    Trash2,
+    Edit2,
+    Save,
+} from 'lucide-vue-next';
 import { ProjectTypeEnum } from '@/enums/laravel-models-enums';
 import type { ProjectType } from '@/types/laravel-models';
 import { stringForHuman } from '@/helpers/strings';
@@ -31,8 +44,8 @@ defineEmits<Emits>();
 
 const typeOptions: ProjectType[] = Object.values(ProjectTypeEnum);
 const typeLabels: Record<string, string> = {
-    'project': 'Project',
-    'achievement': 'Achievement',
+    project: 'Project',
+    achievement: 'Achievement',
 };
 
 const form = useForm({
@@ -83,7 +96,10 @@ const deleteProject = (id: number) => {
 };
 
 const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+    });
 };
 </script>
 
@@ -106,19 +122,37 @@ const formatDate = (date: string) => {
                     >
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
-                                <h4 class="font-semibold text-foreground">{{ project.title }}</h4>
-                                <span class="inline-block text-xs px-2 py-1 rounded bg-primary/10 text-primary">
+                                <h4 class="font-semibold text-foreground">
+                                    {{ project.title }}
+                                </h4>
+                                <span
+                                    class="inline-block rounded bg-primary/10 px-2 py-1 text-xs text-primary"
+                                >
                                     {{ stringForHuman(project.type) }}
                                 </span>
                             </div>
-                            <p v-if="project.start_date" class="text-xs text-foreground/60 mt-1">
+                            <p
+                                v-if="project.start_date"
+                                class="mt-1 text-xs text-foreground/60"
+                            >
                                 {{ formatDate(project.start_date) }}
-                                <span v-if="project.end_date">- {{ formatDate(project.end_date) }}</span>
+                                <span v-if="project.end_date"
+                                    >- {{ formatDate(project.end_date) }}</span
+                                >
                             </p>
-                            <p v-if="project.description" class="text-sm text-foreground/70 mt-2">
+                            <p
+                                v-if="project.description"
+                                class="mt-2 text-sm text-foreground/70"
+                            >
                                 {{ project.description }}
                             </p>
-                            <a v-if="project.url" :href="project.url" target="_blank" rel="noopener noreferrer" class="text-xs text-primary hover:underline mt-2 inline-block">
+                            <a
+                                v-if="project.url"
+                                :href="project.url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="mt-2 inline-block text-xs text-primary hover:underline"
+                            >
                                 View Project →
                             </a>
                         </div>
@@ -144,11 +178,17 @@ const formatDate = (date: string) => {
                 </div>
 
                 <!-- Form -->
-                <div v-if="showForm" class="rounded-lg border border-border p-4 bg-muted/30">
+                <div
+                    v-if="showForm"
+                    class="rounded-lg border border-border bg-muted/30 p-4"
+                >
                     <form @submit.prevent="submit" class="space-y-4">
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label for="title" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="title"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     Title *
                                 </label>
                                 <Input
@@ -159,7 +199,10 @@ const formatDate = (date: string) => {
                                 />
                             </div>
                             <div>
-                                <label for="type" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="type"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     Type *
                                 </label>
                                 <Select v-model="form.type">
@@ -167,7 +210,11 @@ const formatDate = (date: string) => {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem v-for="type in typeOptions" :key="type" :value="type">
+                                        <SelectItem
+                                            v-for="type in typeOptions"
+                                            :key="type"
+                                            :value="type"
+                                        >
                                             {{ stringForHuman(type) }}
                                         </SelectItem>
                                     </SelectContent>
@@ -176,7 +223,10 @@ const formatDate = (date: string) => {
                         </div>
 
                         <div>
-                            <label for="description" class="block text-sm font-medium mb-1">
+                            <label
+                                for="description"
+                                class="mb-1 block text-sm font-medium"
+                            >
                                 Description
                             </label>
                             <Textarea
@@ -188,7 +238,10 @@ const formatDate = (date: string) => {
                         </div>
 
                         <div>
-                            <label for="url" class="block text-sm font-medium mb-1">
+                            <label
+                                for="url"
+                                class="mb-1 block text-sm font-medium"
+                            >
                                 Project URL
                             </label>
                             <Input
@@ -201,7 +254,10 @@ const formatDate = (date: string) => {
 
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label for="start_date" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="start_date"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     Start Date
                                 </label>
                                 <Input
@@ -211,7 +267,10 @@ const formatDate = (date: string) => {
                                 />
                             </div>
                             <div>
-                                <label for="end_date" class="block text-sm font-medium mb-1">
+                                <label
+                                    for="end_date"
+                                    class="mb-1 block text-sm font-medium"
+                                >
                                     End Date
                                 </label>
                                 <Input
@@ -224,10 +283,14 @@ const formatDate = (date: string) => {
 
                         <div class="flex gap-3">
                             <Button type="submit" :disabled="form.processing">
-                                <Save class="h-4 w-4 mr-2" />
+                                <Save class="mr-2 h-4 w-4" />
                                 {{ editingId ? 'Update' : 'Add' }} Project
                             </Button>
-                            <Button type="button" variant="outline" @click="resetForm">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                @click="resetForm"
+                            >
                                 Cancel
                             </Button>
                         </div>
@@ -242,19 +305,19 @@ const formatDate = (date: string) => {
                         @click="showForm = true"
                         class="w-full"
                     >
-                        <Plus class="h-4 w-4 mr-2" />
+                        <Plus class="mr-2 h-4 w-4" />
                         Add Project or Achievement
                     </Button>
                 </div>
 
                 <!-- Navigation -->
-                <div class="flex justify-between gap-3 pt-4 border-t">
+                <div class="flex justify-between gap-3 border-t pt-4">
                     <Button
                         type="button"
                         variant="outline"
                         @click="$emit('nextSection', 'skills')"
                     >
-                        <ChevronLeft class="h-4 w-4 mr-2" />
+                        <ChevronLeft class="mr-2 h-4 w-4" />
                         Back
                     </Button>
                     <Button
@@ -262,7 +325,7 @@ const formatDate = (date: string) => {
                         @click="$emit('nextSection', 'additionalInfo')"
                     >
                         Next
-                        <ChevronRight class="h-4 w-4 ml-2" />
+                        <ChevronRight class="ml-2 h-4 w-4" />
                     </Button>
                 </div>
             </CardContent>
