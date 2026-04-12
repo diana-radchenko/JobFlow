@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Card,
     CardContent,
@@ -12,38 +14,42 @@ import {
 } from '@/components/ui/card';
 import { ChevronRight, Save } from 'lucide-vue-next';
 import AlertSuccess from '@/components/AlertSuccess.vue';
+import personalInfo from '@/routes/resume-editor/personal-info';
+import type { User, UserProfile } from '@/types/laravel-models';
 
 interface Props {
-    user: any;
-    profile: any;
+    user: User;
+    profile: UserProfile | null;
 }
 
 interface Emits {
     nextSection: [section: string];
 }
 
+const props = defineProps<Props>();
+
 defineEmits<Emits>();
 
-const form = useForm({
-    phone: '',
-    linkedin_url: '',
-    location: '',
+const formatDateForInput = (value: string | null | undefined): string =>
+    value ? String(value).slice(0, 10) : '';
+
+const toFormValues = (profile: UserProfile | null) => ({
+    first_name: profile?.first_name ?? '',
+    last_name: profile?.last_name ?? '',
+    middle_name: profile?.middle_name ?? '',
+    date_of_birth: formatDateForInput(profile?.date_of_birth),
+    phone: profile?.phone ?? '',
+    linkedin_url: profile?.linkedin_url ?? '',
+    city: profile?.city ?? '',
+    country: profile?.country ?? '',
 });
+
+const form = useForm(toFormValues(props.profile));
 
 const showSuccessAlert = ref(false);
 
-const initializeForm = () => {
-    if (props.profile) {
-        form.phone = props.profile.phone || '';
-        form.linkedin_url = props.profile.linkedin_url || '';
-        form.location = props.profile.location || '';
-    }
-};
-
-const props = defineProps<Props>();
-
 const submit = () => {
-    form.post('/resume-editor/personal-info', {
+    form.post(personalInfo.update.url(), {
         onSuccess: () => {
             showSuccessAlert.value = true;
             setTimeout(() => {
@@ -55,12 +61,10 @@ const submit = () => {
 
 const filterPhoneInput = (event: Event) => {
     const input = event.target as HTMLInputElement;
-    // Allow only digits, +, spaces, parentheses, and hyphens for formatting
     const filtered = input.value.replace(/[^\d+\s\(\)\-]/g, '');
     form.phone = filtered;
 };
 
-initializeForm();
 </script>
 
 <template>
@@ -74,90 +78,123 @@ initializeForm();
             <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
                 <CardDescription>
-                    Add your contact details and location
+                    Your name, contact details, and location
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <form @submit.prevent="submit" class="space-y-4">
-                    <div>
-                        <label
-                            for="name"
-                            class="mb-1 block text-sm font-medium text-foreground"
-                        >
-                            Full Name
-                        </label>
-                        <Input
-                            id="name"
-                            :model-value="user.name"
-                            disabled
-                            class="bg-muted"
-                        />
-                        <p class="mt-1 text-xs text-foreground/60">
-                            Your name from account settings
-                        </p>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="first_name">First name *</Label>
+                            <Input
+                                id="first_name"
+                                v-model="form.first_name"
+                                type="text"
+                                name="first_name"
+                                autocomplete="given-name"
+                                required
+                            />
+                            <InputError :message="form.errors.first_name" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="last_name">Last name *</Label>
+                            <Input
+                                id="last_name"
+                                v-model="form.last_name"
+                                type="text"
+                                name="last_name"
+                                autocomplete="family-name"
+                                required
+                            />
+                            <InputError :message="form.errors.last_name" />
+                        </div>
                     </div>
 
-                    <div>
-                        <label
-                            for="email"
-                            class="mb-1 block text-sm font-medium text-foreground"
-                        >
-                            Email
-                        </label>
+                    <div class="grid gap-2">
+                        <Label for="middle_name">Middle name</Label>
+                        <Input
+                            id="middle_name"
+                            v-model="form.middle_name"
+                            type="text"
+                            name="middle_name"
+                            autocomplete="additional-name"
+                        />
+                        <InputError :message="form.errors.middle_name" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="email">Email</Label>
                         <Input
                             id="email"
-                            :model-value="user.email"
+                            :model-value="props.user.email"
                             disabled
                             class="bg-muted"
                         />
-                        <p class="mt-1 text-xs text-foreground/60">
+                        <p class="text-xs text-foreground/60">
                             Your account email
                         </p>
                     </div>
 
-                    <div>
-                        <label
-                            for="phone"
-                            class="mb-1 block text-sm font-medium text-foreground"
-                        >
-                            Phone Number
-                        </label>
+                    <div class="grid gap-2">
+                        <Label for="date_of_birth">Date of birth</Label>
+                        <Input
+                            id="date_of_birth"
+                            v-model="form.date_of_birth"
+                            type="date"
+                            name="date_of_birth"
+                            autocomplete="bday"
+                        />
+                        <InputError :message="form.errors.date_of_birth" />
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="city">City</Label>
+                            <Input
+                                id="city"
+                                v-model="form.city"
+                                type="text"
+                                name="city"
+                                autocomplete="address-level2"
+                            />
+                            <InputError :message="form.errors.city" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="country">Country</Label>
+                            <Input
+                                id="country"
+                                v-model="form.country"
+                                type="text"
+                                name="country"
+                                autocomplete="country-name"
+                            />
+                            <InputError :message="form.errors.country" />
+                        </div>
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="phone">Phone number</Label>
                         <Input
                             id="phone"
                             v-model="form.phone"
                             type="tel"
+                            name="phone"
                             placeholder="+1 (555) 123-4567"
                             @input="filterPhoneInput"
                         />
+                        <InputError :message="form.errors.phone" />
                     </div>
 
-                    <div>
-                        <label
-                            for="location"
-                            class="mb-1 block text-sm font-medium text-foreground"
-                        >
-                            Location
-                        </label>
-                        <Input
-                            id="location"
-                            v-model="form.location"
-                            placeholder="City, Country"
-                        />
-                    </div>
-
-                    <div>
-                        <label
-                            for="linkedin"
-                            class="mb-1 block text-sm font-medium text-foreground"
-                        >
-                            LinkedIn URL
-                        </label>
+                    <div class="grid gap-2">
+                        <Label for="linkedin">LinkedIn URL</Label>
                         <Input
                             id="linkedin"
                             v-model="form.linkedin_url"
                             type="url"
+                            name="linkedin_url"
                             placeholder="https://linkedin.com/in/yourprofile"
                         />
+                        <InputError :message="form.errors.linkedin_url" />
                     </div>
 
                     <div class="flex justify-between gap-3 pt-4">

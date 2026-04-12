@@ -12,9 +12,12 @@ it('user has one profile', function () {
     $user = User::factory()->create();
     $profile = UserProfile::create([
         'user_id' => $user->id,
+        'first_name' => 'John',
+        'last_name' => 'Doe',
+        'city' => 'New York',
+        'country' => 'USA',
         'phone' => '+1234567890',
         'linkedin_url' => 'https://linkedin.com/in/john',
-        'location' => 'New York, USA',
     ]);
 
     expect($user->profile)->toBeInstanceOf(UserProfile::class);
@@ -134,6 +137,10 @@ it('deleting user cascades to all resume data', function () {
     $user = User::factory()->create();
     UserProfile::create([
         'user_id' => $user->id,
+        'first_name' => 'Jane',
+        'last_name' => 'Smith',
+        'city' => 'Boston',
+        'country' => 'USA',
         'phone' => '+1234567890',
     ]);
     Education::create([
@@ -182,8 +189,8 @@ it('dates are cast to carbon instances', function () {
         'end_date' => '2024-05-30',
     ]);
 
-    expect($education->start_date)->toBeInstanceOf(\DateTimeInterface::class);
-    expect($education->end_date)->toBeInstanceOf(\DateTimeInterface::class);
+    expect($education->start_date)->toBeInstanceOf(DateTimeInterface::class);
+    expect($education->end_date)->toBeInstanceOf(DateTimeInterface::class);
 
     $workExperience = WorkExperience::create([
         'user_id' => $user->id,
@@ -193,6 +200,6 @@ it('dates are cast to carbon instances', function () {
         'end_date' => '2024-05-30',
     ]);
 
-    expect($workExperience->start_date)->toBeInstanceOf(\DateTimeInterface::class);
-    expect($workExperience->end_date)->toBeInstanceOf(\DateTimeInterface::class);
+    expect($workExperience->start_date)->toBeInstanceOf(DateTimeInterface::class);
+    expect($workExperience->end_date)->toBeInstanceOf(DateTimeInterface::class);
 });

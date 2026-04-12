@@ -122,9 +122,14 @@ export type UserProfile = {
     // columns
     id: number;
     user_id: number;
+    first_name: string;
+    last_name: string;
+    middle_name: string | null;
+    date_of_birth: string | null;
     phone: string | null;
     linkedin_url: string | null;
-    location: string | null;
+    city: string | null;
+    country: string | null;
     created_at: string | null;
     updated_at: string | null;
     // relations

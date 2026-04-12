@@ -1,3 +1,5 @@
+While generating wayfinder routes please always add --with-form flag.
+
 Our Vue starter kit is built with Inertia 2, Vue 3 Composition API, Tailwind As with all of our starter kits, all of the backend and frontend code exists within your application to allow for full customization.
 
 The majority of the frontend code is located in the resources/js directory. You are free to modify any of the code to customize the appearance and behavior of your application:

@@ -6,6 +6,7 @@ use App\Enums\SkillsLevel;
 use App\Http\Requests\StoreEducationRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\StoreWorkExperienceRequest;
+use App\Http\Requests\UpdatePersonalInfoRequest;
 use App\Models\Education;
 use App\Models\Project;
 use App\Models\Skill;
@@ -28,7 +29,16 @@ class ResumeEditorController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
             ],
-            'profile' => $user->profile?->only(['phone', 'linkedin_url', 'location']),
+            'profile' => $user->profile?->only([
+                'first_name',
+                'last_name',
+                'middle_name',
+                'date_of_birth',
+                'phone',
+                'linkedin_url',
+                'city',
+                'country',
+            ]),
             'workExperiences' => $user->workExperiences()->orderBy('start_date', 'desc')->get(),
             'educations' => $user->educations()->orderBy('start_date', 'desc')->get(),
             'skills' => $user->skills()->get(),
@@ -37,15 +47,10 @@ class ResumeEditorController extends Controller
         ]);
     }
 
-    public function updatePersonalInfo(Request $request): RedirectResponse
+    public function updatePersonalInfo(UpdatePersonalInfoRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'phone' => ['nullable', 'string', 'max:20', 'regex:/^\+?[0-9]*$/'],
-            'linkedin_url' => 'nullable|url',
-            'location' => 'nullable|string|max:255',
-        ]);
-
-        $user = auth()->user();
+        $validated = $request->validated();
+        $user = $request->user();
 
         if ($user->profile) {
             $user->profile->update($validated);
@@ -180,7 +185,16 @@ class ResumeEditorController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
             ],
-            'profile' => $user->profile?->only(['phone', 'linkedin_url', 'location']),
+            'profile' => $user->profile?->only([
+                'first_name',
+                'last_name',
+                'middle_name',
+                'date_of_birth',
+                'phone',
+                'linkedin_url',
+                'city',
+                'country',
+            ]),
             'workExperiences' => $user->workExperiences()->orderBy('start_date', 'desc')->get(),
             'educations' => $user->educations()->orderBy('start_date', 'desc')->get(),
             'skills' => $user->skills()->get(),

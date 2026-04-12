@@ -29,9 +29,9 @@ interface Props {
     additionalInfo: any;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
-const emit = defineEmits<{
+defineEmits<{
     nextSection: [section: string];
 }>();
 
@@ -40,6 +40,28 @@ const formatDate = (date: string) => {
         year: 'numeric',
         month: 'long',
     });
+};
+
+const formatBirthDate = (date: string) => {
+    return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+};
+
+const displayFullName = () => {
+    const p = props.profile;
+    if (!p) {
+        return props.user?.name ?? '';
+    }
+    const parts = [p.first_name, p.middle_name, p.last_name].filter(
+        (x) => x != null && String(x).trim() !== '',
+    );
+    if (parts.length) {
+        return parts.join(' ');
+    }
+    return props.user?.name ?? '';
 };
 
 const getTypeIcon = (type: string) => {
@@ -78,13 +100,29 @@ const getTypeIcon = (type: string) => {
                         </Button>
                     </div>
                     <div class="space-y-2 text-sm">
-                        <p><strong>Name:</strong> {{ user.name }}</p>
+                        <p v-if="displayFullName()">
+                            <strong>Name:</strong> {{ displayFullName() }}
+                        </p>
                         <p><strong>Email:</strong> {{ user.email }}</p>
+                        <p v-if="profile?.date_of_birth">
+                            <strong>Date of birth:</strong>
+                            {{ formatBirthDate(profile.date_of_birth) }}
+                        </p>
                         <p v-if="profile?.phone">
                             <strong>Phone:</strong> {{ profile.phone }}
                         </p>
-                        <p v-if="profile?.location">
-                            <strong>Location:</strong> {{ profile.location }}
+                        <p
+                            v-if="profile?.city || profile?.country"
+                            class="flex flex-wrap gap-x-1"
+                        >
+                            <strong>Location:</strong>
+                            <span>
+                                {{
+                                    [profile?.city, profile?.country]
+                                        .filter(Boolean)
+                                        .join(', ')
+                                }}
+                            </span>
                         </p>
                         <p v-if="profile?.linkedin_url">
                             <strong>LinkedIn:</strong>

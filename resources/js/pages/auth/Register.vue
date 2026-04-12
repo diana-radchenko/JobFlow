@@ -109,6 +109,7 @@ const selectedProfileType = ref<'candidate' | 'employer'>('candidate');
                 />
             </div>
 
+            <!-- Name: optional at DB level; collect later in profile/settings if needed.
             <div class="grid gap-2">
                 <Label for="name">Name</Label>
                 <Input
@@ -122,6 +123,7 @@ const selectedProfileType = ref<'candidate' | 'employer'>('candidate');
                 />
                 <InputError :message="errors.name" />
             </div>
+            -->
 
             <div class="grid gap-2">
                 <Label for="email">Email address</Label>
@@ -129,7 +131,7 @@ const selectedProfileType = ref<'candidate' | 'employer'>('candidate');
                     id="email"
                     type="email"
                     required
-                    :tabindex="4"
+                    :tabindex="3"
                     autocomplete="email"
                     name="email"
                     placeholder="email@example.com"
@@ -142,7 +144,7 @@ const selectedProfileType = ref<'candidate' | 'employer'>('candidate');
                 <PasswordInput
                     id="password"
                     required
-                    :tabindex="5"
+                    :tabindex="4"
                     autocomplete="new-password"
                     name="password"
                     placeholder="Password"
@@ -155,7 +157,7 @@ const selectedProfileType = ref<'candidate' | 'employer'>('candidate');
                 <PasswordInput
                     id="password_confirmation"
                     required
-                    :tabindex="6"
+                    :tabindex="5"
                     autocomplete="new-password"
                     name="password_confirmation"
                     placeholder="Confirm password"
@@ -166,7 +168,7 @@ const selectedProfileType = ref<'candidate' | 'employer'>('candidate');
             <Button
                 type="submit"
                 class="mt-2 w-full"
-                tabindex="7"
+                tabindex="6"
                 :disabled="processing"
                 data-test="register-user-button"
             >
@@ -180,7 +182,7 @@ const selectedProfileType = ref<'candidate' | 'employer'>('candidate');
             <TextLink
                 :href="login()"
                 class="underline underline-offset-4"
-                :tabindex="6"
+                :tabindex="7"
                 >Log in</TextLink
             >
         </div>
