@@ -162,7 +162,9 @@ export type WorkExperience = {
     user_id: number;
     company_name: string;
     job_title: string;
-    location: string | null;
+    city: string | null;
+    country: string | null;
+    is_remote: boolean;
     start_date: string;
     end_date: string | null;
     is_current: boolean;

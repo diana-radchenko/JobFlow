@@ -16,6 +16,7 @@ import { ChevronRight, Save } from 'lucide-vue-next';
 import AlertSuccess from '@/components/AlertSuccess.vue';
 import personalInfo from '@/routes/resume-editor/personal-info';
 import type { User, UserProfile } from '@/types/laravel-models';
+import { formatDateForInput } from '@/helpers/dates';
 
 interface Props {
     user: User;
@@ -29,9 +30,6 @@ interface Emits {
 const props = defineProps<Props>();
 
 defineEmits<Emits>();
-
-const formatDateForInput = (value: string | null | undefined): string =>
-    value ? String(value).slice(0, 10) : '';
 
 const toFormValues = (profile: UserProfile | null) => ({
     first_name: profile?.first_name ?? '',

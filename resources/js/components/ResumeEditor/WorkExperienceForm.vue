@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
     Card,
@@ -20,9 +22,11 @@ import {
     Edit2,
     Save,
 } from 'lucide-vue-next';
+import type { WorkExperience } from '@/types/laravel-models';
+import { formatDateForInput } from '@/helpers/dates';
 
 interface Props {
-    workExperiences: any[];
+    workExperiences: WorkExperience[];
 }
 
 interface Emits {
@@ -32,10 +36,14 @@ interface Emits {
 defineProps<Props>();
 defineEmits<Emits>();
 
+
+
 const form = useForm({
     company_name: '',
     job_title: '',
-    location: '',
+    city: '',
+    country: '',
+    is_remote: false,
     start_date: '',
     end_date: '',
     is_current: false,
@@ -44,6 +52,19 @@ const form = useForm({
 
 const showForm = ref(false);
 const editingId = ref<number | null>(null);
+
+const formatWorkLocationLine = (exp: WorkExperience): string => {
+    const place = [exp.city, exp.country]
+        .filter((x) => x != null && String(x).trim() !== '')
+        .join(', ');
+    if (exp.is_remote && place) {
+        return `Remote · ${place}`;
+    }
+    if (exp.is_remote) {
+        return 'Remote';
+    }
+    return place;
+};
 
 const resetForm = () => {
     form.reset();
@@ -63,13 +84,15 @@ const submit = () => {
     }
 };
 
-const editExperience = (experience: any) => {
+const editExperience = (experience: WorkExperience) => {
     editingId.value = experience.id;
     form.company_name = experience.company_name;
     form.job_title = experience.job_title;
-    form.location = experience.location || '';
-    form.start_date = experience.start_date;
-    form.end_date = experience.end_date || '';
+    form.city = experience.city ?? '';
+    form.country = experience.country ?? '';
+    form.is_remote = experience.is_remote;
+    form.start_date = formatDateForInput(experience.start_date);
+    form.end_date = formatDateForInput(experience.end_date);
     form.is_current = experience.is_current;
     form.description = experience.description || '';
     showForm.value = true;
@@ -117,14 +140,16 @@ const formatDate = (date: string) => {
                                 {{ formatDate(exp.start_date) }} -
                                 <span v-if="exp.is_current">Present</span>
                                 <span v-else>{{
-                                    formatDate(exp.end_date)
+                                    exp.end_date
+                                        ? formatDate(exp.end_date)
+                                        : ''
                                 }}</span>
                             </p>
                             <p
-                                v-if="exp.location"
+                                v-if="formatWorkLocationLine(exp)"
                                 class="text-xs text-foreground/60"
                             >
-                                📍 {{ exp.location }}
+                                📍 {{ formatWorkLocationLine(exp) }}
                             </p>
                             <p
                                 v-if="exp.description"
@@ -161,75 +186,88 @@ const formatDate = (date: string) => {
                 >
                     <form @submit.prevent="submit" class="space-y-4">
                         <div class="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <label
-                                    for="company"
-                                    class="mb-1 block text-sm font-medium"
-                                >
-                                    Company Name *
-                                </label>
+                            <div class="grid gap-2">
+                                <Label for="company">Company Name *</Label>
                                 <Input
                                     id="company"
                                     v-model="form.company_name"
+                                    name="company_name"
                                     placeholder="e.g., Acme Corporation"
+                                    required
                                 />
+                                <InputError :message="form.errors.company_name" />
                             </div>
-                            <div>
-                                <label
-                                    for="title"
-                                    class="mb-1 block text-sm font-medium"
-                                >
-                                    Job Title *
-                                </label>
+                            <div class="grid gap-2">
+                                <Label for="title">Job Title *</Label>
                                 <Input
                                     id="title"
                                     v-model="form.job_title"
+                                    name="job_title"
                                     placeholder="e.g., Senior Developer"
+                                    required
                                 />
+                                <InputError :message="form.errors.job_title" />
                             </div>
                         </div>
 
-                        <div>
-                            <label
-                                for="location"
-                                class="mb-1 block text-sm font-medium"
-                            >
-                                Location
-                            </label>
-                            <Input
-                                id="location"
-                                v-model="form.location"
-                                placeholder="City, Country"
-                            />
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="grid gap-2">
+                                <Label for="work_city">City</Label>
+                                <Input
+                                    id="work_city"
+                                    v-model="form.city"
+                                    type="text"
+                                    name="city"
+                                    autocomplete="address-level2"
+                                />
+                                <InputError :message="form.errors.city" />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="work_country">Country</Label>
+                                <Input
+                                    id="work_country"
+                                    v-model="form.country"
+                                    type="text"
+                                    name="country"
+                                    autocomplete="country-name"
+                                />
+                                <InputError :message="form.errors.country" />
+                            </div>
                         </div>
 
+                        <div class="flex items-center gap-2">
+                            <Checkbox
+                                id="is_remote"
+                                v-model:checked="form.is_remote"
+                            />
+                            <Label for="is_remote" class="cursor-pointer font-normal">
+                                Remote role
+                            </Label>
+                        </div>
+                        <InputError :message="form.errors.is_remote" />
+
                         <div class="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <label
-                                    for="start_date"
-                                    class="mb-1 block text-sm font-medium"
-                                >
-                                    Start Date *
-                                </label>
+                            <div class="grid gap-2">
+                                <Label for="start_date">Start Date *</Label>
                                 <Input
                                     id="start_date"
                                     v-model="form.start_date"
                                     type="date"
+                                    name="start_date"
+                                    required
                                 />
+                                <InputError :message="form.errors.start_date" />
                             </div>
-                            <div>
-                                <label
-                                    for="end_date"
-                                    class="mb-1 block text-sm font-medium"
-                                >
-                                    End Date
-                                </label>
+                            <div class="grid gap-2">
+                                <Label for="end_date">End Date</Label>
                                 <Input
                                     id="end_date"
                                     v-model="form.end_date"
                                     type="date"
+                                    name="end_date"
                                     :disabled="form.is_current"
                                 />
+                                <InputError :message="form.errors.end_date" />
                             </div>
                         </div>
 
@@ -238,27 +276,25 @@ const formatDate = (date: string) => {
                                 id="is_current"
                                 v-model:checked="form.is_current"
                             />
-                            <label
+                            <Label
                                 for="is_current"
-                                class="cursor-pointer text-sm"
+                                class="cursor-pointer font-normal"
                             >
                                 I currently work here
-                            </label>
+                            </Label>
                         </div>
+                        <InputError :message="form.errors.is_current" />
 
-                        <div>
-                            <label
-                                for="description"
-                                class="mb-1 block text-sm font-medium"
-                            >
-                                Description
-                            </label>
+                        <div class="grid gap-2">
+                            <Label for="description">Description</Label>
                             <Textarea
                                 id="description"
                                 v-model="form.description"
+                                name="description"
                                 placeholder="Describe your responsibilities and achievements"
-                                rows="4"
+                                :rows="4"
                             />
+                            <InputError :message="form.errors.description" />
                         </div>
 
                         <div class="flex gap-3">

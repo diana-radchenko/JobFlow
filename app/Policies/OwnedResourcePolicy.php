@@ -9,7 +9,6 @@ class OwnedResourcePolicy
 {
     public function update(User $user, Model $model): bool
     {
-        dd($user->id, $model->user_id);
         return $user->id === $model->user_id;
     }
 

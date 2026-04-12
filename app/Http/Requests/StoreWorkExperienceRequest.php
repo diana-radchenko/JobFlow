@@ -25,7 +25,9 @@ class StoreWorkExperienceRequest extends FormRequest
         return [
             'company_name' => 'required|string|max:255',
             'job_title' => 'required|string|max:255',
-            'location' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'is_remote' => 'boolean',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'is_current' => 'boolean',

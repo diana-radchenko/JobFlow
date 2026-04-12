@@ -18,6 +18,7 @@ import {
     ChevronLeft,
     Download,
 } from 'lucide-vue-next';
+import type { WorkExperience } from '@/types/laravel-models';
 
 interface Props {
     user: any;
@@ -70,6 +71,19 @@ const getTypeIcon = (type: string) => {
         achievement: Award,
     };
     return icons[type] || FolderOpen;
+};
+
+const formatWorkLocationLine = (exp: WorkExperience): string => {
+    const place = [exp.city, exp.country]
+        .filter((x) => x != null && String(x).trim() !== '')
+        .join(', ');
+    if (exp.is_remote && place) {
+        return `Remote · ${place}`;
+    }
+    if (exp.is_remote) {
+        return 'Remote';
+    }
+    return place;
 };
 </script>
 
@@ -166,14 +180,16 @@ const getTypeIcon = (type: string) => {
                                 {{ formatDate(exp.start_date) }} -
                                 <span v-if="exp.is_current">Present</span>
                                 <span v-else>{{
-                                    formatDate(exp.end_date)
+                                    exp.end_date
+                                        ? formatDate(exp.end_date)
+                                        : '—'
                                 }}</span>
                             </p>
                             <p
-                                v-if="exp.location"
+                                v-if="formatWorkLocationLine(exp)"
                                 class="text-xs text-foreground/60"
                             >
-                                📍 {{ exp.location }}
+                                📍 {{ formatWorkLocationLine(exp) }}
                             </p>
                             <p
                                 v-if="exp.description"
