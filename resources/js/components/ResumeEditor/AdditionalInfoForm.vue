@@ -12,36 +12,30 @@ import {
 } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, Save } from 'lucide-vue-next';
 import AlertSuccess from '@/components/AlertSuccess.vue';
+import type { AdditionalInformation } from '@/types/laravel-models';
 
 interface Props {
-    additionalInfo: any;
+    additionalInfo: AdditionalInformation;
 }
 
 interface Emits {
     nextSection: [section: string];
 }
 
+const props = defineProps<Props>();
+    
 defineEmits<Emits>();
 
-const form = useForm({
-    languages: '',
-    certifications: '',
-    interests: '',
-    notes: '',
+const toFormValues = (additionalInfo: AdditionalInformation | null) => ({
+    languages: additionalInfo?.languages ?? '',
+    certifications: additionalInfo?.certifications ?? '',
+    interests: additionalInfo?.interests ?? '',
+    notes: additionalInfo?.notes ?? '',
 });
 
+const form = useForm(toFormValues(props.additionalInfo));
+
 const showSuccessAlert = ref(false);
-
-const initializeForm = () => {
-    if (props.additionalInfo) {
-        form.languages = props.additionalInfo.languages || '';
-        form.certifications = props.additionalInfo.certifications || '';
-        form.interests = props.additionalInfo.interests || '';
-        form.notes = props.additionalInfo.notes || '';
-    }
-};
-
-const props = defineProps<Props>();
 
 const submit = () => {
     form.post('/resume-editor/additional-info', {
@@ -54,7 +48,6 @@ const submit = () => {
     });
 };
 
-initializeForm();
 </script>
 
 <template>
