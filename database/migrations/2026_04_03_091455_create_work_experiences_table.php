@@ -16,7 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('company_name');
             $table->string('job_title');
-            $table->string('location')->nullable();
+            $table->string('country');
+            $table->string('city');
+            $table->boolean('is_remote')->default(false);
             $table->date('start_date');
             $table->date('end_date')->nullable();
             $table->boolean('is_current')->default(false);

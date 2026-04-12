@@ -16,7 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('phone')->nullable();
             $table->string('linkedin_url')->nullable();
-            $table->string('location')->nullable();
+            $table->string('country')->nullable();
+            $table->string('city')->nullable();
             $table->timestamps();
         });
     }
