@@ -124,7 +124,7 @@ const getProficiencyColor = (level: string) => {
                                     ),
                                 ]"
                             >
-                                {{ skill.proficiency_level }}
+                                {{ stringForHuman(skill.proficiency_level) }}
                             </span>
                         </div>
                         <div class="flex gap-2">

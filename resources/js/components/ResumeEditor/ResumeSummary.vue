@@ -19,6 +19,7 @@ import {
     Download,
 } from 'lucide-vue-next';
 import type { WorkExperience } from '@/types/laravel-models';
+import { stringForHuman } from '@/helpers/strings';
 
 interface Props {
     user: any;
@@ -224,7 +225,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                             :key="edu.id"
                             class="rounded-lg border border-border p-3"
                         >
-                            <h4 class="font-semibold">{{ edu.degree }}</h4>
+                            <h4 class="font-semibold">{{ stringForHuman(edu.degree) }}</h4>
                             <p class="text-sm text-foreground/70">
                                 {{ edu.institution }}
                             </p>
@@ -278,7 +279,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                             :key="skill.id"
                             class="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
                         >
-                            {{ skill.name }} • {{ skill.proficiency_level }}
+                            {{ skill.name }} • {{ stringForHuman(skill.proficiency_level) }}
                         </span>
                     </div>
                     <p v-else class="text-sm text-foreground/60 italic">
@@ -313,7 +314,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                                 <span
                                     class="rounded bg-primary/10 px-2 py-1 text-xs text-primary"
                                 >
-                                    {{ proj.type }}
+                                    {{ stringForHuman(proj.type) }}
                                 </span>
                             </div>
                             <p

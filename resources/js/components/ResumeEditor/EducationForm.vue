@@ -116,7 +116,7 @@ const formatDate = (date: string) => {
                     >
                         <div class="flex-1">
                             <h4 class="font-semibold text-foreground">
-                                {{ edu.degree }}
+                                {{ stringForHuman(edu.degree) }}
                             </h4>
                             <p class="text-sm text-foreground/70">
                                 {{ edu.institution }}
