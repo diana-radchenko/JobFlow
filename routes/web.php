@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JobSelectionController;
 use App\Http\Controllers\RequestTrackerController;
 use App\Http\Controllers\ResumeEditorController;
@@ -11,7 +12,7 @@ Route::inertia('/', 'Welcome', [
 ])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('request-tracker', [RequestTrackerController::class, 'show'])->name('request-tracker');
     Route::delete('request-tracker/applications/{userWorkJobApplication}', [RequestTrackerController::class, 'destroy'])->name('request-tracker.applications.destroy');

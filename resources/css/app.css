@@ -179,7 +179,7 @@
 /* Application Status Colors */
 @layer utilities {
     .status-green {
-        @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100;
+        @apply bg-green-800 text-white dark:bg-green-900 dark:text-green-100;
     }
 
     .status-grey {
@@ -187,6 +187,6 @@
     }
 
     .status-red {
-        @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100;
+        @apply bg-red-800 text-white dark:bg-red-900 dark:text-red-100;
     }
 }

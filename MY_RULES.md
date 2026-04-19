@@ -25,4 +25,4 @@ If you are using the components from ready components/ folder and using variants
 Notice: try to use these above mentioned tools. If you need some other 3rd party tools firstly, please ask before installing it and writing the code
 
     Code Style and Structure
-    - Tailwind color variables are located in resources/css/app.css. We have primary, secondary and so on standard colors. Please use these variables. These variables represent our design tokens
+    - Tailwind color variables are located in resources/css/app.css. We have primary, secondary and so on standard colors. Please use these variables. These variables represent our design tokens!!
