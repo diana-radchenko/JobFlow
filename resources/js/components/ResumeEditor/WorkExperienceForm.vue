@@ -238,11 +238,9 @@ const formatDate = (date: string) => {
                         <div class="flex items-center gap-2">
                             <Checkbox
                                 id="is_remote"
-                                v-model:checked="form.is_remote"
+                                v-model="form.is_remote"
+                                label="Remote role"
                             />
-                            <Label for="is_remote" class="cursor-pointer font-normal">
-                                Remote role
-                            </Label>
                         </div>
                         <InputError :message="form.errors.is_remote" />
 
@@ -274,14 +272,9 @@ const formatDate = (date: string) => {
                         <div class="flex items-center gap-2">
                             <Checkbox
                                 id="is_current"
-                                v-model:checked="form.is_current"
+                                v-model="form.is_current"
+                                label="I currently work here"
                             />
-                            <Label
-                                for="is_current"
-                                class="cursor-pointer font-normal"
-                            >
-                                I currently work here
-                            </Label>
                         </div>
                         <InputError :message="form.errors.is_current" />
 

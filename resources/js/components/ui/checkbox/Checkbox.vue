@@ -1,35 +1,27 @@
 <script setup lang="ts">
-import type { CheckboxRootEmits, CheckboxRootProps } from "reka-ui"
+import type { CheckboxRootProps } from "reka-ui"
 import type { HTMLAttributes } from "vue"
-import { reactiveOmit } from "@vueuse/core"
 import { Check } from "lucide-vue-next"
-import { CheckboxIndicator, CheckboxRoot, useForwardPropsEmits } from "reka-ui"
-import { cn } from "@/lib/utils"
+import { CheckboxIndicator, CheckboxRoot } from "reka-ui"
 
-const props = defineProps<CheckboxRootProps & { class?: HTMLAttributes["class"] }>()
-const emits = defineEmits<CheckboxRootEmits>()
+const props = defineProps<CheckboxRootProps & { class?: HTMLAttributes["class"] , label: string }>()
 
-const delegatedProps = reactiveOmit(props, "class")
+const propsModelValue = defineModel<boolean>()
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
 
 <template>
-  <CheckboxRoot
-    v-slot="slotProps"
-    data-slot="checkbox"
-    v-bind="forwarded"
-    :class="
-      cn('peer border-input data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-         props.class)"
-  >
-    <CheckboxIndicator
-      data-slot="checkbox-indicator"
-      class="grid place-content-center text-current transition-none"
-    >
-      <slot v-bind="slotProps">
-        <Check class="size-3.5" />
-      </slot>
-    </CheckboxIndicator>
-  </CheckboxRoot>
+<div class="flex flex-col gap-2.5">
+    <label class="flex flex-row gap-4 items-center [&>.checkbox]:hover:bg-neutral-100">
+      <CheckboxRoot
+        v-model="propsModelValue"
+        class="hover:bg-stone-50 flex h-5 w-5 appearance-none items-center justify-center rounded-md bg-white shadow-sm border outline-none"
+      >
+        <CheckboxIndicator class="bg-white h-full w-full rounded flex items-center justify-center">
+          <Check class="size-3.5" />
+        </CheckboxIndicator>
+      </CheckboxRoot>
+      <span class="select-none text-stone-700 text-sm dark:text-white cursor-pointer">{{ label }}</span>
+    </label>
+  </div>
 </template>
