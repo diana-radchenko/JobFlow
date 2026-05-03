@@ -52,6 +52,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Summary
     Route::get('resume-editor/summary', [ResumeEditorController::class, 'showSummary'])->name('resume-editor.summary');
+
+    Route::get('interview-preparation', \App\Http\Controllers\InterviewPreparationController::class)->name('interview-preparation');
 });
 
 require __DIR__.'/settings.php';

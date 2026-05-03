@@ -29,6 +29,7 @@ import {
     jobSelection as jobSelectionRoute,
     logout,
     requestTracker as requestTrackerRoute,
+    interviewPreparation as interviewPreparationRoute,
 } from '@/routes';
 import { resumeEditor as resumeEditorRoute } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
@@ -74,8 +75,9 @@ const mainNavItems = computed<NavItem[]>(() => [
     },
     {
         title: 'Interview Preparing',
-        href: '#',
+        href: interviewPreparationRoute(),
         icon: BrainCircuit,
+        isActive: isCurrentUrl(interviewPreparationRoute()),
     },
     {
         title: 'Development',
