@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InterviewPreparationController;
+use App\Http\Controllers\InterviewSessionController;
 use App\Http\Controllers\JobSelectionController;
 use App\Http\Controllers\RequestTrackerController;
 use App\Http\Controllers\ResumeEditorController;
@@ -53,7 +55,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Summary
     Route::get('resume-editor/summary', [ResumeEditorController::class, 'showSummary'])->name('resume-editor.summary');
 
-    Route::get('interview-preparation', \App\Http\Controllers\InterviewPreparationController::class)->name('interview-preparation');
+    Route::get('interview-preparation', InterviewPreparationController::class)->name('interview-preparation');
+    Route::post('interview-sessions', [InterviewSessionController::class, 'store'])->name('interview-session.store');
+    Route::get('interview-sessions/{session}', [InterviewSessionController::class, 'show'])->name('interview-session.show');
+    Route::post('interview-sessions/{session}/message', [InterviewSessionController::class, 'message'])->name('interview-session.message');
+    Route::post('interview-sessions/{session}/complete', [InterviewSessionController::class, 'complete'])->name('interview-session.complete');
 });
 
 require __DIR__.'/settings.php';
