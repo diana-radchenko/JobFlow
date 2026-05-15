@@ -15,7 +15,8 @@ import {
     Sparkles,
     History,
     PlayCircle,
-    CheckCircle2
+    CheckCircle2,
+    Loader2
 } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { stringForHuman } from '@/helpers/strings';
@@ -79,6 +80,15 @@ const form = useForm({
     complexity: '',
     mode: '',
 });
+const isCompletingInterview = ref(false);
+
+function handleCompleteInterviewSubmit() {
+    if (isCompletingInterview.value) {
+        return;
+    }
+
+    isCompletingInterview.value = true;
+}
 
 function startInterview(modeId: string) {
     if (modeId !== 'text') {
@@ -144,12 +154,16 @@ defineOptions({
                             class="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 px-4 py-2">
                             Continue Interview
                         </Link>
-                        <form :action="interviewSessionComplete.url(activeSession.id)"
-                            method="POST">
+                        <form
+                            :action="interviewSessionComplete.url(activeSession.id)"
+                            method="POST"
+                            @submit="handleCompleteInterviewSubmit"
+                        >
                             <input type="hidden" name="_token" :value="$page.props.csrf_token">
-                            <Button type="submit" variant="outline" class="gap-2 cursor-pointer w-full mt-4 dark:bg-primary/15 dark:hover:bg-primary/25">
-                                <CheckCircle2 class="w-4 h-4" />
-                                Complete Interview
+                            <Button type="submit" variant="outline" class="gap-2 cursor-pointer w-full mt-4 dark:bg-primary/15 dark:hover:bg-primary/25" :disabled="isCompletingInterview">
+                                <Loader2 v-if="isCompletingInterview" class="w-4 h-4 animate-spin" />
+                                <CheckCircle2 v-else class="w-4 h-4" />
+                                {{ isCompletingInterview ? 'Processing Completion...' : 'Complete Interview' }}
                             </Button>
                         </form>
                     </CardContent>

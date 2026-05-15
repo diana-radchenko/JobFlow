@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Ai\Agents\InterviewAgent;
 use App\Data\InterviewContextData;
 use App\Models\InterviewSession;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -12,8 +13,13 @@ use Inertia\Response;
 
 class InterviewSessionController extends Controller
 {
+    private const FINAL_EVALUATION_PROMPT = 'The interview is now complete. Provide a final evaluation of the candidate based on the conversation so far. Include concise scores (1-10) for technical depth, communication, problem-solving, and confidence, then end with the top 3 actionable improvements.';
+
     public function store(Request $request)
     {
+        /** @var User $user */
+        $user = $request->user();
+
         $validated = $request->validate([
             'type' => ['required', 'string'],
             'complexity' => ['required', 'string'],
@@ -21,7 +27,8 @@ class InterviewSessionController extends Controller
         ]);
 
         // Check if there is an active session
-        $activeSession = InterviewSession::where('user_id', $request->user()->id)
+        $activeSession = InterviewSession::query()
+            ->where('user_id', $user->id)
             ->where('status', 'in_progress')
             ->first();
 
@@ -30,7 +37,7 @@ class InterviewSessionController extends Controller
         }
 
         $session = InterviewSession::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
             'type' => $validated['type'],
             'complexity' => $validated['complexity'],
             'status' => 'in_progress',
@@ -68,7 +75,10 @@ class InterviewSessionController extends Controller
 
     public function message(Request $request, InterviewSession $session)
     {
-        if ($session->user_id !== $request->user()->id) {
+        /** @var User $user */
+        $user = $request->user();
+
+        if ($session->user_id !== $user->id) {
             abort(403);
         }
 
@@ -76,24 +86,7 @@ class InterviewSessionController extends Controller
             'message' => ['required', 'string'],
         ]);
 
-        $context = InterviewContextData::fromUser($request->user());
-
-        $agent = new InterviewAgent(
-            $session->type,
-            $session->complexity,
-            $context->resumeContext(),
-            $context->jobContext(),
-        );
-
-        if ($session->conversation_id) {
-            $response = $agent->continue($session->conversation_id, as: $request->user())->prompt($validated['message'], model: 'gpt-5.4-nano');
-        } else {
-            $response = $agent->forUser($request->user())->prompt($validated['message'], model: 'gpt-5.4-nano');
-
-            $session->update([
-                'conversation_id' => $response->conversationId,
-            ]);
-        }
+        $response = $this->promptInterviewAgent($user, $session, $validated['message']);
 
         return response()->json([
             'message' => [
@@ -105,12 +98,47 @@ class InterviewSessionController extends Controller
 
     public function complete(Request $request, InterviewSession $session)
     {
-        if ($session->user_id !== $request->user()->id) {
+        /** @var User $user */
+        $user = $request->user();
+
+        if ($session->user_id !== $user->id) {
             abort(403);
         }
+
+        $this->promptInterviewAgent($user, $session, self::FINAL_EVALUATION_PROMPT);
 
         $session->update(['status' => 'completed']);
 
         return redirect()->route('interview-preparation');
+    }
+
+    private function makeInterviewAgent(User $user, InterviewSession $session): InterviewAgent
+    {
+        $context = InterviewContextData::fromUser($user);
+
+        return new InterviewAgent(
+            $session->type,
+            $session->complexity,
+            $context->resumeContext(),
+            $context->jobContext(),
+        );
+    }
+
+    private function promptInterviewAgent(User $user, InterviewSession $session, string $prompt): object
+    {
+        $agent = $this->makeInterviewAgent($user, $session);
+
+        if ($session->conversation_id) {
+            return $agent->continue($session->conversation_id, as: $user)
+                ->prompt($prompt, model: 'gpt-5.4-nano');
+        }
+
+        $response = $agent->forUser($user)->prompt($prompt, model: 'gpt-5.4-nano');
+
+        $session->update([
+            'conversation_id' => $response->conversationId,
+        ]);
+
+        return $response;
     }
 }

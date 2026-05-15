@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ref, onMounted, nextTick, watch } from 'vue';
-import { Send, CheckCircle2, User, Bot } from 'lucide-vue-next';
+import { Send, CheckCircle2, User, Bot, Loader2 } from 'lucide-vue-next';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { stringForHuman } from '@/helpers/strings';
@@ -40,6 +40,7 @@ const chatMessages = ref([...props.messages]);
 const messageRefs = ref<HTMLElement[]>([]);
 const newMessage = ref('');
 const isProcessing = ref(false);
+const isCompletingInterview = ref(false);
 const chatContainer = ref<HTMLElement | null>(null);
 
 const scrollToMessage = (index: number) => {
@@ -118,6 +119,14 @@ function handleKeydown(e: KeyboardEvent) {
     }
 }
 
+function handleCompleteInterviewSubmit() {
+    if (isCompletingInterview.value || isProcessing.value) {
+        return;
+    }
+
+    isCompletingInterview.value = true;
+}
+
 defineOptions({
     layout: {
         breadcrumbs: [
@@ -148,11 +157,17 @@ defineOptions({
                 </p>
             </div>
 
-            <form v-if="session.status === 'in_progress'" :action="interviewSessionComplete.url(session.id)" method="POST">
+            <form
+                v-if="session.status === 'in_progress'"
+                :action="interviewSessionComplete.url(session.id)"
+                method="POST"
+                @submit="handleCompleteInterviewSubmit"
+            >
                 <input type="hidden" name="_token" :value="$page.props.csrf_token">
-                <Button type="submit" variant="outline" class="gap-2 mt-5 md:mt-0">
-                    <CheckCircle2 class="w-4 h-4" />
-                    Complete Interview
+                <Button type="submit" variant="outline" class="gap-2 mt-5 md:mt-0" :disabled="isCompletingInterview || isProcessing">
+                    <Loader2 v-if="isCompletingInterview" class="w-4 h-4 animate-spin" />
+                    <CheckCircle2 v-else class="w-4 h-4" />
+                    {{ isCompletingInterview ? 'Processing Completion...' : 'Complete Interview' }}
                 </Button>
             </form>
         </div>
