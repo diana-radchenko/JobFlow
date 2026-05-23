@@ -7,8 +7,8 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { useSidebar } from '@/components/ui/sidebar/utils';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { useSidebar } from '@/components/ui/sidebar/utils';
 import type { NavItem } from '@/types';
 
 const props = defineProps<{

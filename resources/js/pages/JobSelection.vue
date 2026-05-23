@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
 import { watchDebounced } from '@vueuse/core';
-import { BadgeCheck, MapPin, Heart } from 'lucide-vue-next';
+import { BadgeCheck, MapPin, Sparkles, Heart } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

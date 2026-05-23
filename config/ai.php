@@ -14,13 +14,6 @@ return [
     */
 
     'default' => 'openai',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Interview agent model (OpenAI)
-    |--------------------------------------------------------------------------
-    */
-    'interview_model' => env('OPENAI_INTERVIEW_MODEL', 'gpt-4o-mini'),
     'default_for_images' => 'gemini',
     'default_for_audio' => 'openai',
     'default_for_transcription' => 'openai',

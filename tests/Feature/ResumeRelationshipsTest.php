@@ -29,7 +29,7 @@ it('user has many educations', function () {
     $user = User::factory()->create();
     $education1 = Education::create([
         'user_id' => $user->id,
-        'degree' => 'bachelors',
+        'degree' => 'Bachelors',
         'institution' => 'MIT',
         'field_of_study' => 'Computer Science',
         'start_date' => '2018-01-01',
@@ -37,7 +37,7 @@ it('user has many educations', function () {
     ]);
     $education2 = Education::create([
         'user_id' => $user->id,
-        'degree' => 'masters',
+        'degree' => 'Masters',
         'institution' => 'Stanford',
         'field_of_study' => 'Machine Learning',
         'start_date' => '2022-09-01',
@@ -82,17 +82,17 @@ it('user has many skills', function () {
     $skill1 = Skill::create([
         'user_id' => $user->id,
         'name' => 'PHP',
-        'proficiency_level' => 'expert',
+        'proficiency_level' => 'Expert',
     ]);
     $skill2 = Skill::create([
         'user_id' => $user->id,
         'name' => 'JavaScript',
-        'proficiency_level' => 'advanced',
+        'proficiency_level' => 'Advanced',
     ]);
     $skill3 = Skill::create([
         'user_id' => $user->id,
         'name' => 'Python',
-        'proficiency_level' => 'intermediate',
+        'proficiency_level' => 'Intermediate',
     ]);
 
     expect($user->skills)->toHaveCount(3);
@@ -149,10 +149,8 @@ it('deleting user cascades to all resume data', function () {
     ]);
     Education::create([
         'user_id' => $user->id,
-        'degree' => 'bachelors',
+        'degree' => 'Bachelors',
         'institution' => 'MIT',
-        'field_of_study' => 'Computer Science',
-        'start_date' => '2020-01-01',
     ]);
     WorkExperience::create([
         'user_id' => $user->id,
@@ -163,7 +161,6 @@ it('deleting user cascades to all resume data', function () {
     Skill::create([
         'user_id' => $user->id,
         'name' => 'PHP',
-        'proficiency_level' => 'expert',
     ]);
     Project::create([
         'user_id' => $user->id,
@@ -190,9 +187,8 @@ it('dates are cast to carbon instances', function () {
     $user = User::factory()->create();
     $education = Education::create([
         'user_id' => $user->id,
-        'degree' => 'bachelors',
+        'degree' => 'Bachelors',
         'institution' => 'MIT',
-        'field_of_study' => 'Computer Science',
         'start_date' => '2020-01-15',
         'end_date' => '2024-05-30',
     ]);
