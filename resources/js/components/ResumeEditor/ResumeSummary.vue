@@ -1,4 +1,12 @@
 <script setup lang="ts">
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import {
     User,
     Briefcase,
@@ -8,17 +16,10 @@ import {
     Zap,
     Edit2,
     ChevronLeft,
+    Download,
 } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { stringForHuman } from '@/helpers/strings';
 import type { WorkExperience } from '@/types/laravel-models';
+import { stringForHuman } from '@/helpers/strings';
 
 interface Props {
     user: any;
@@ -53,35 +54,36 @@ const formatBirthDate = (date: string) => {
 
 const displayFullName = () => {
     const p = props.profile;
-
     if (!p) {
         return props.user?.name ?? '';
     }
-
     const parts = [p.first_name, p.middle_name, p.last_name].filter(
         (x) => x != null && String(x).trim() !== '',
     );
-
     if (parts.length) {
         return parts.join(' ');
     }
-
     return props.user?.name ?? '';
+};
+
+const getTypeIcon = (type: string) => {
+    const icons: Record<string, any> = {
+        project: FolderOpen,
+        achievement: Award,
+    };
+    return icons[type] || FolderOpen;
 };
 
 const formatWorkLocationLine = (exp: WorkExperience): string => {
     const place = [exp.city, exp.country]
         .filter((x) => x != null && String(x).trim() !== '')
         .join(', ');
-
     if (exp.is_remote && place) {
         return `Remote · ${place}`;
     }
-
     if (exp.is_remote) {
         return 'Remote';
     }
-
     return place;
 };
 </script>
@@ -223,9 +225,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                             :key="edu.id"
                             class="rounded-lg border border-border p-3"
                         >
-                            <h4 class="font-semibold">
-                                {{ stringForHuman(edu.degree) }}
-                            </h4>
+                            <h4 class="font-semibold">{{ stringForHuman(edu.degree) }}</h4>
                             <p class="text-sm text-foreground/70">
                                 {{ edu.institution }}
                             </p>
@@ -279,8 +279,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                             :key="skill.id"
                             class="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
                         >
-                            {{ skill.name }} •
-                            {{ stringForHuman(skill.proficiency_level) }}
+                            {{ skill.name }} • {{ stringForHuman(skill.proficiency_level) }}
                         </span>
                     </div>
                     <p v-else class="text-sm text-foreground/60 italic">

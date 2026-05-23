@@ -7,7 +7,7 @@ type Props = {
     title?: string;
 };
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
     title: 'Success!',
 });
 </script>

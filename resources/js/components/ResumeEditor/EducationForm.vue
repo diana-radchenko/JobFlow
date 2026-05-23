@@ -1,5 +1,23 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     ChevronLeft,
     ChevronRight,
@@ -8,29 +26,11 @@ import {
     Edit2,
     Save,
 } from 'lucide-vue-next';
-import { ref } from 'vue';
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { EducationDegreeEnum } from '@/enums/laravel-models-enums';
-import { stringForHuman } from '@/helpers/strings';
 import type { EducationDegree } from '@/types/laravel-models';
+import { stringForHuman } from '@/helpers/strings';
 
-defineProps<{
+const props = defineProps<{
     educations: any[];
 }>();
 

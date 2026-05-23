@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
-import { ChevronLeft, ChevronRight, Save } from 'lucide-vue-next';
 import { ref } from 'vue';
-import AlertSuccess from '@/components/AlertSuccess.vue';
+import { useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import {
     Card,
     CardContent,
@@ -11,7 +10,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
+import { ChevronLeft, ChevronRight, Save } from 'lucide-vue-next';
+import AlertSuccess from '@/components/AlertSuccess.vue';
 import type { AdditionalInformation } from '@/types/laravel-models';
 
 interface Props {
@@ -23,7 +23,7 @@ interface Emits {
 }
 
 const props = defineProps<Props>();
-
+    
 defineEmits<Emits>();
 
 const toFormValues = (additionalInfo: AdditionalInformation | null) => ({
@@ -47,6 +47,7 @@ const submit = () => {
         },
     });
 };
+
 </script>
 
 <template>
@@ -76,7 +77,7 @@ const submit = () => {
                             id="languages"
                             v-model="form.languages"
                             placeholder="e.g., English (Native), Spanish (Fluent), French (Intermediate)"
-                            :rows="3"
+                            rows="3"
                         />
                     </div>
 
@@ -91,7 +92,7 @@ const submit = () => {
                             id="certifications"
                             v-model="form.certifications"
                             placeholder="e.g., AWS Certified Solutions Architect, Google Cloud Professional"
-                            :rows="3"
+                            rows="3"
                         />
                     </div>
 
@@ -106,7 +107,7 @@ const submit = () => {
                             id="interests"
                             v-model="form.interests"
                             placeholder="e.g., Machine Learning, Open Source, Mentoring"
-                            :rows="3"
+                            rows="3"
                         />
                     </div>
 
@@ -121,7 +122,7 @@ const submit = () => {
                             id="notes"
                             v-model="form.notes"
                             placeholder="Any other information you'd like to add"
-                            :rows="4"
+                            rows="4"
                         />
                     </div>
 

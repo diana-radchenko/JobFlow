@@ -31,14 +31,13 @@ test('authenticated user can save personal info with required fields', function 
     expect($profile->date_of_birth?->format('Y-m-d'))->toBe('1990-05-15');
 });
 
-test('personal info validation requires first name and last name', function () {
+test('personal info validation requires first name last name city and country', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
         ->from(route('resume-editor'))
         ->post(route('resume-editor.personal-info.update'), [])
-        ->assertSessionHasErrors(['first_name', 'last_name'])
-        ->assertSessionDoesntHaveErrors(['city', 'country']);
+        ->assertSessionHasErrors(['first_name', 'last_name', 'city', 'country']);
 });
 
 test('user can update existing profile', function () {
