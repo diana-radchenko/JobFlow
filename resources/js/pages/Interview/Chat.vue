@@ -41,6 +41,7 @@ const messageRefs = ref<HTMLElement[]>([]);
 const newMessage = ref('');
 const isProcessing = ref(false);
 const isCompletingInterview = ref(false);
+const chatError = ref<string | null>(null);
 const chatContainer = ref<HTMLElement | null>(null);
 
 const scrollToMessage = (index: number) => {
@@ -68,45 +69,62 @@ onMounted(() => {
 
 async function sendMessage(textOverride?: string) {
     const text = textOverride || newMessage.value.trim();
-    
+
     if (!text || isProcessing.value || props.session.status === 'completed') return;
 
-    // Add user message to UI
+    const csrfToken = usePage().props.csrf_token as string | undefined;
+    if (!csrfToken) {
+        chatError.value = 'Session token missing. Refresh the page and try again.';
+        return;
+    }
+
+    chatMessages.value.push({
+        role: 'user',
+        content: text,
+    });
     if (!textOverride) {
-        chatMessages.value.push({
-            role: 'user',
-            content: text
-        });
         newMessage.value = '';
     }
-    
+
     isProcessing.value = true;
+    chatError.value = null;
 
     try {
         const response = await fetch(interviewSessionMessage.url(props.session.id), {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': usePage().props.csrf_token as string,
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
             },
             body: JSON.stringify({ message: text }),
         });
 
-        if (!response.ok) throw new Error('Request failed');
-        
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            const serverMessage =
+                typeof data.message === 'string'
+                    ? data.message
+                    : data.errors?.message?.[0] ?? `Request failed (${response.status})`;
+            throw new Error(serverMessage);
+        }
 
         if (data.message) {
             chatMessages.value.push(data.message);
         }
     } catch (error) {
         console.error('Failed to send message:', error);
-        // Remove the user message if it failed
+        chatMessages.value.pop();
         if (!textOverride) {
-            chatMessages.value.pop();
-            newMessage.value = text; // restore text
+            newMessage.value = text;
         }
-        alert('An error occurred while communicating with the AI. Please try again.');
+        chatError.value =
+            error instanceof Error
+                ? error.message
+                : 'Could not reach the AI. Check OPENAI_API_KEY in .env and try again.';
     } finally {
         isProcessing.value = false;
     }
@@ -219,6 +237,13 @@ defineOptions({
                     </div>
                 </div>
             </CardContent>
+
+            <p
+                v-if="chatError"
+                class="px-6 py-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border-t border-red-100 dark:border-red-900 shrink-0"
+            >
+                {{ chatError }}
+            </p>
 
             <!-- Input Area -->
             <CardFooter v-if="session.status === 'in_progress'" class="p-4 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 shrink-0">

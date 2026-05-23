@@ -86,7 +86,15 @@ class InterviewSessionController extends Controller
             'message' => ['required', 'string'],
         ]);
 
-        $response = $this->promptInterviewAgent($user, $session, $validated['message']);
+        try {
+            $response = $this->promptInterviewAgent($user, $session, $validated['message']);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => 'AI service error. Check OPENAI_API_KEY in .env and that the model name is valid.',
+            ], 502);
+        }
 
         return response()->json([
             'message' => [
@@ -128,12 +136,14 @@ class InterviewSessionController extends Controller
     {
         $agent = $this->makeInterviewAgent($user, $session);
 
+        $model = config('ai.interview_model');
+
         if ($session->conversation_id) {
             return $agent->continue($session->conversation_id, as: $user)
-                ->prompt($prompt, model: 'gpt-5.4-nano');
+                ->prompt($prompt, model: $model);
         }
 
-        $response = $agent->forUser($user)->prompt($prompt, model: 'gpt-5.4-nano');
+        $response = $agent->forUser($user)->prompt($prompt, model: $model);
 
         $session->update([
             'conversation_id' => $response->conversationId,
