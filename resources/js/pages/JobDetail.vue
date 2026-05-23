@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { BadgeCheck, MapPin, Heart, ChevronLeft } from 'lucide-vue-next';
+import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getApplicationStatusColor } from '@/helpers/job-applications';
+import { stringForHuman } from '@/helpers/strings';
 import { jobSelection as jobSelectionRoute } from '@/routes';
 import { apply as jobSelectionApply } from '@/routes/job-selection';
 import type { WorkJob } from '@/types/laravel-models';
-import { ref } from 'vue';
-import { UserWorkJobApplication } from '@/types/laravel-models';
-import { getApplicationStatusColor } from '@/helpers/job-applications';
-import { stringForHuman } from '@/helpers/strings';
+import type { UserWorkJobApplication } from '@/types/laravel-models';
 
 const props = defineProps<{
     job: WorkJob;

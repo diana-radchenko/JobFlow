@@ -1,19 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     ChevronLeft,
     ChevronRight,
@@ -22,8 +8,22 @@ import {
     Edit2,
     Save,
 } from 'lucide-vue-next';
-import type { WorkExperience } from '@/types/laravel-models';
+import { ref } from 'vue';
+import InputError from '@/components/InputError.vue';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { formatDateForInput } from '@/helpers/dates';
+import type { WorkExperience } from '@/types/laravel-models';
 
 interface Props {
     workExperiences: WorkExperience[];
@@ -35,8 +35,6 @@ interface Emits {
 
 defineProps<Props>();
 defineEmits<Emits>();
-
-
 
 const form = useForm({
     company_name: '',
@@ -57,12 +55,15 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
     const place = [exp.city, exp.country]
         .filter((x) => x != null && String(x).trim() !== '')
         .join(', ');
+
     if (exp.is_remote && place) {
         return `Remote · ${place}`;
     }
+
     if (exp.is_remote) {
         return 'Remote';
     }
+
     return place;
 };
 
@@ -140,9 +141,7 @@ const formatDate = (date: string) => {
                                 {{ formatDate(exp.start_date) }} -
                                 <span v-if="exp.is_current">Present</span>
                                 <span v-else>{{
-                                    exp.end_date
-                                        ? formatDate(exp.end_date)
-                                        : ''
+                                    exp.end_date ? formatDate(exp.end_date) : ''
                                 }}</span>
                             </p>
                             <p
@@ -195,7 +194,9 @@ const formatDate = (date: string) => {
                                     placeholder="e.g., Acme Corporation"
                                     required
                                 />
-                                <InputError :message="form.errors.company_name" />
+                                <InputError
+                                    :message="form.errors.company_name"
+                                />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="title">Job Title *</Label>

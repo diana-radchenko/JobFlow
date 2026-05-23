@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import AppLogo from '@/components/AppLogo.vue';
-import { SidebarHeader } from '@/components/ui/sidebar';
 import { Link, router } from '@inertiajs/vue3';
 import {
     LayoutGrid,
@@ -14,7 +12,10 @@ import {
     Globe,
     LogOut,
 } from 'lucide-vue-next';
+import { computed } from 'vue';
+import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
+import { SidebarHeader } from '@/components/ui/sidebar';
 import {
     Sidebar,
     SidebarContent,
@@ -24,18 +25,16 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '@/components/ui/sidebar';
+import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import {
     dashboard,
+    interviewPreparation as interviewPreparationRoute,
     jobSelection as jobSelectionRoute,
     logout,
     requestTracker as requestTrackerRoute,
-    interviewPreparation as interviewPreparationRoute,
 } from '@/routes';
 import { resumeEditor as resumeEditorRoute } from '@/routes';
-import { edit as editProfile } from '@/routes/profile';
 import type { NavItem } from '@/types';
-import { useCurrentUrl } from '@/composables/useCurrentUrl';
-import { computed } from 'vue';
 
 const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 

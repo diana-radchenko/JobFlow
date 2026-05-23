@@ -6,6 +6,7 @@ use App\Ai\Agents\InterviewAgent;
 use App\Data\InterviewContextData;
 use App\Models\InterviewSession;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -15,7 +16,7 @@ class InterviewSessionController extends Controller
 {
     private const FINAL_EVALUATION_PROMPT = 'The interview is now complete. Provide a final evaluation of the candidate based on the conversation so far. Include concise scores (1-10) for technical depth, communication, problem-solving, and confidence, then end with the top 3 actionable improvements.';
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
@@ -23,7 +24,7 @@ class InterviewSessionController extends Controller
         $validated = $request->validate([
             'type' => ['required', 'string'],
             'complexity' => ['required', 'string'],
-            'mode' => ['required', 'string', 'in:text'], // currently only supporting text mode
+            'mode' => ['required', 'string', 'in:text,live'],
         ]);
 
         // Check if there is an active session
@@ -40,6 +41,7 @@ class InterviewSessionController extends Controller
             'user_id' => $user->id,
             'type' => $validated['type'],
             'complexity' => $validated['complexity'],
+            'mode' => $validated['mode'],
             'status' => 'in_progress',
         ]);
 
@@ -67,7 +69,9 @@ class InterviewSessionController extends Controller
                 ]);
         }
 
-        return Inertia::render('Interview/Chat', [
+        $page = $session->mode === 'live' ? 'Interview/Live' : 'Interview/Chat';
+
+        return Inertia::render($page, [
             'session' => $session,
             'messages' => $messages,
         ]);
@@ -86,7 +90,15 @@ class InterviewSessionController extends Controller
             'message' => ['required', 'string'],
         ]);
 
-        $response = $this->promptInterviewAgent($user, $session, $validated['message']);
+        try {
+            $response = $this->promptInterviewAgent($user, $session, $validated['message']);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => 'AI service error. Check OPENAI_API_KEY in .env and that the model name is valid.',
+            ], 502);
+        }
 
         return response()->json([
             'message' => [
@@ -128,12 +140,14 @@ class InterviewSessionController extends Controller
     {
         $agent = $this->makeInterviewAgent($user, $session);
 
+        $model = config('ai.interview_model');
+
         if ($session->conversation_id) {
             return $agent->continue($session->conversation_id, as: $user)
-                ->prompt($prompt, model: 'gpt-5.4-nano');
+                ->prompt($prompt, model: $model);
         }
 
-        $response = $agent->forUser($user)->prompt($prompt, model: 'gpt-5.4-nano');
+        $response = $agent->forUser($user)->prompt($prompt, model: $model);
 
         $session->update([
             'conversation_id' => $response->conversationId,
