@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\WorkJob;
 use Database\Factories\WorkJobFactory;
 use Illuminate\Database\Seeder;
 
@@ -13,7 +14,7 @@ class WorkJobSeeder extends Seeder
     public function run(): void
     {
         foreach (WorkJobFactory::mockReadyData() as $data) {
-            \App\Models\WorkJob::create($data);
+            WorkJob::create($data);
         }
     }
 }
