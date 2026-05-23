@@ -16,6 +16,9 @@ import { interviewPreparation } from '@/routes';
 
 marked.setOptions({ gfm: true, breaks: true });
 
+const INITIAL_GREETING =
+    "Hello! Welcome to your AI interview practice. Take a moment to get comfortable, and when you're ready, tell me we can start.";
+
 /**
  * Renders assistant markdown to safe HTML for v-html.
  */
@@ -65,15 +68,17 @@ const scrollToLastMessage = () => {
 watch(chatMessages, scrollToLastMessage, { deep: true });
 
 onMounted(() => {
-    scrollToLastMessage();
-
-    // If it's a new session, trigger the first message from AI
     if (
         chatMessages.value.length === 0 &&
         props.session.status === 'in_progress'
     ) {
-        sendMessage('Hello, I am ready to begin the interview.');
+        chatMessages.value.push({
+            role: 'assistant',
+            content: INITIAL_GREETING,
+        });
     }
+
+    scrollToLastMessage();
 });
 
 async function sendMessage(textOverride?: string) {

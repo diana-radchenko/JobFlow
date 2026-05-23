@@ -30,6 +30,7 @@ const props = defineProps<{
         id: number;
         type: string;
         complexity: string;
+        mode: string;
         created_at: string;
     } | null;
     pastSessions: {
@@ -101,15 +102,9 @@ function handleCompleteInterviewSubmit() {
 }
 
 function startInterview(modeId: string) {
-    if (modeId !== 'text') {
-        alert('Only Text-Based Interview Mode is currently supported.');
-
-        return;
-    }
-
     if (props.activeSession) {
         alert(
-            'You already have an active interview session. Please finish it first.',
+            `You already have an active ${props.activeSession.mode} interview session. Please finish it first.`,
         );
 
         return;
@@ -181,7 +176,8 @@ defineOptions({
                             class="mb-4 text-sm text-slate-600 dark:text-slate-400"
                         >
                             You have an ongoing {{ activeSession.complexity }}
-                            {{ activeSession.type }} interview.
+                            {{ activeSession.type }}
+                            {{ activeSession.mode }} interview.
                         </p>
                         <Link
                             :href="interviewSessionShow.url(activeSession.id)"
