@@ -204,11 +204,14 @@ const allApplications = computed(() => {
             title: app.work_job?.title || 'Unknown Job',
             company: app.work_job?.company || 'Unknown Company',
             dateType: 'Submission Date',
-            dateValue: new Date(app.created_at || '').toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-            }),
+            dateValue: new Date(app.created_at || '').toLocaleDateString(
+                'en-US',
+                {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                },
+            ),
             status: stringForHuman(app.status),
             percentage: 50, // default dummy
             icon: Code,
@@ -257,9 +260,7 @@ const allApplications = computed(() => {
         </DialogContent>
     </Dialog>
 
-    <div
-        class="container mx-auto px-5 py-8 font-sans overflow-x-auto"
-    >
+    <div class="container mx-auto overflow-x-auto px-5 py-8 font-sans">
         <!-- Header Controls -->
         <div class="mb-6 flex flex-wrap items-center gap-3">
             <h1
@@ -332,17 +333,21 @@ const allApplications = computed(() => {
                                         >– {{ app.company }}</span
                                     >
                                 </div>
-                                <div class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                                <div
+                                    class="mt-0.5 text-sm text-slate-500 dark:text-slate-400"
+                                >
                                     {{ app.dateType }}: {{ app.dateValue }}
                                 </div>
                             </div>
                         </div>
 
                         <!-- Status & Actions -->
-                        <div class="flex w-full shrink-0 items-center gap-3 sm:w-auto sm:pl-4">
+                        <div
+                            class="flex w-full shrink-0 items-center gap-3 sm:w-auto sm:pl-4"
+                        >
                             <!-- Badge -->
                             <Badge
-                                class="flex flex-1 justify-center rounded-full bg-primary px-4 py-1 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 sm:flex-none sm:w-[160px]"
+                                class="flex flex-1 justify-center rounded-full bg-primary px-4 py-1 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 sm:w-[160px] sm:flex-none"
                             >
                                 {{ app.status }}
                             </Badge>
@@ -562,7 +567,7 @@ const allApplications = computed(() => {
                         >
                             <!-- Pie Chart Circle -->
                             <div
-                                class="relative flex h-48 w-48 items-center justify-center overflow-hidden rounded-full shadow-inner bg-slate-100 dark:bg-slate-800"
+                                class="relative flex h-48 w-48 items-center justify-center overflow-hidden rounded-full bg-slate-100 shadow-inner dark:bg-slate-800"
                                 style="
                                     background-image: conic-gradient(
                                         from 0deg,
@@ -598,11 +603,13 @@ const allApplications = computed(() => {
                                         <div
                                             class="h-4 w-8 rounded-[4px] border border-slate-200 bg-white dark:border-slate-600 dark:bg-slate-800"
                                         ></div>
-                                        <span class="font-bold text-slate-900 dark:text-slate-100"
+                                        <span
+                                            class="font-bold text-slate-900 dark:text-slate-100"
                                             >Viewed</span
                                         >
                                     </div>
-                                    <span class="text-xs text-slate-500 dark:text-slate-400"
+                                    <span
+                                        class="text-xs text-slate-500 dark:text-slate-400"
                                         >3 applications</span
                                     >
                                 </div>
@@ -613,11 +620,13 @@ const allApplications = computed(() => {
                                         <div
                                             class="h-4 w-8 rounded-[4px] bg-primary"
                                         ></div>
-                                        <span class="font-bold text-slate-900 dark:text-slate-100"
+                                        <span
+                                            class="font-bold text-slate-900 dark:text-slate-100"
                                             >Other</span
                                         >
                                     </div>
-                                    <span class="text-xs text-slate-500 dark:text-slate-400"
+                                    <span
+                                        class="text-xs text-slate-500 dark:text-slate-400"
                                         >7 applications</span
                                     >
                                 </div>
