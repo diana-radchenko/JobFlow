@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import { ChevronRight, Save } from 'lucide-vue-next';
+import { ref } from 'vue';
+import AlertSuccess from '@/components/AlertSuccess.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Card,
     CardContent,
@@ -12,11 +12,11 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { ChevronRight, Save } from 'lucide-vue-next';
-import AlertSuccess from '@/components/AlertSuccess.vue';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { formatDateForInput } from '@/helpers/dates';
 import personalInfo from '@/routes/resume-editor/personal-info';
 import type { User, UserProfile } from '@/types/laravel-models';
-import { formatDateForInput } from '@/helpers/dates';
 
 interface Props {
     user: User;
@@ -62,7 +62,6 @@ const filterPhoneInput = (event: Event) => {
     const filtered = input.value.replace(/[^\d+\s\(\)\-]/g, '');
     form.phone = filtered;
 };
-
 </script>
 
 <template>
