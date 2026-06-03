@@ -10,5 +10,6 @@ export const getApplicationStatusColor = (
         offer: 'status-green',
         hired: 'status-green',
     };
+
     return colors[status] || 'status-grey';
 };
