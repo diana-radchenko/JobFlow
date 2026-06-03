@@ -23,7 +23,7 @@ class InterviewSessionController extends Controller
         $validated = $request->validate([
             'type' => ['required', 'string'],
             'complexity' => ['required', 'string'],
-            'mode' => ['required', 'string', 'in:text'], // currently only supporting text mode
+            'mode' => ['required', 'string', 'in:text,live'],
         ]);
 
         // Check if there is an active session
@@ -40,6 +40,7 @@ class InterviewSessionController extends Controller
             'user_id' => $user->id,
             'type' => $validated['type'],
             'complexity' => $validated['complexity'],
+            'mode' => $validated['mode'],
             'status' => 'in_progress',
         ]);
 
@@ -67,7 +68,9 @@ class InterviewSessionController extends Controller
                 ]);
         }
 
-        return Inertia::render('Interview/Chat', [
+        $component = $session->mode === 'live' ? 'Interview/Live' : 'Interview/Chat';
+
+        return Inertia::render($component, [
             'session' => $session,
             'messages' => $messages,
         ]);
@@ -105,7 +108,15 @@ class InterviewSessionController extends Controller
             abort(403);
         }
 
-        $this->promptInterviewAgent($user, $session, self::FINAL_EVALUATION_PROMPT);
+        try {
+            $this->promptInterviewAgent($user, $session, self::FINAL_EVALUATION_PROMPT);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->withErrors([
+                'interview' => 'AI service error. Check your OpenAI connection and try again.',
+            ]);
+        }
 
         $session->update(['status' => 'completed']);
 
@@ -130,10 +141,10 @@ class InterviewSessionController extends Controller
 
         if ($session->conversation_id) {
             return $agent->continue($session->conversation_id, as: $user)
-                ->prompt($prompt, model: 'gpt-5.4-nano');
+                ->prompt($prompt, model: 'gpt-4o');
         }
 
-        $response = $agent->forUser($user)->prompt($prompt, model: 'gpt-5.4-nano');
+        $response = $agent->forUser($user)->prompt($prompt, model: 'gpt-4o');
 
         $session->update([
             'conversation_id' => $response->conversationId,
