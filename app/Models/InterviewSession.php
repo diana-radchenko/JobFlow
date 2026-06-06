@@ -15,6 +15,7 @@ class InterviewSession extends Model
         'conversation_id',
         'type',
         'complexity',
+        'mode',
         'status',
     ];
 

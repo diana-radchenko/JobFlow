@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Ai\Audio;
 
 class InterviewSessionController extends Controller
 {
@@ -23,7 +24,7 @@ class InterviewSessionController extends Controller
         $validated = $request->validate([
             'type' => ['required', 'string'],
             'complexity' => ['required', 'string'],
-            'mode' => ['required', 'string', 'in:text'], // currently only supporting text mode
+            'mode' => ['required', 'string', 'in:text,live'],
         ]);
 
         // Check if there is an active session
@@ -40,6 +41,7 @@ class InterviewSessionController extends Controller
             'user_id' => $user->id,
             'type' => $validated['type'],
             'complexity' => $validated['complexity'],
+            'mode' => $validated['mode'],
             'status' => 'in_progress',
         ]);
 
@@ -67,7 +69,9 @@ class InterviewSessionController extends Controller
                 ]);
         }
 
-        return Inertia::render('Interview/Chat', [
+        $component = $session->mode === 'live' ? 'Interview/Live' : 'Interview/Chat';
+
+        return Inertia::render($component, [
             'session' => $session,
             'messages' => $messages,
         ]);
@@ -96,6 +100,29 @@ class InterviewSessionController extends Controller
         ]);
     }
 
+    public function audio(Request $request, InterviewSession $session)
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if ($session->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'content' => ['required', 'string', 'max:10000'],
+        ]);
+
+        $audio = Audio::of($validated['content'])
+            ->female()
+            ->instructions('Speak naturally as a calm, supportive technical interviewer. Keep a warm conversational tone and avoid sounding robotic.')
+            ->generate();
+
+        return response((string) $audio)
+            ->header('Content-Type', $audio->mimeType() ?? 'audio/mpeg')
+            ->header('Cache-Control', 'no-store');
+    }
+
     public function complete(Request $request, InterviewSession $session)
     {
         /** @var User $user */
@@ -105,7 +132,15 @@ class InterviewSessionController extends Controller
             abort(403);
         }
 
-        $this->promptInterviewAgent($user, $session, self::FINAL_EVALUATION_PROMPT);
+        try {
+            $this->promptInterviewAgent($user, $session, self::FINAL_EVALUATION_PROMPT);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->withErrors([
+                'interview' => 'AI service error. Check your OpenAI connection and try again.',
+            ]);
+        }
 
         $session->update(['status' => 'completed']);
 
@@ -130,10 +165,10 @@ class InterviewSessionController extends Controller
 
         if ($session->conversation_id) {
             return $agent->continue($session->conversation_id, as: $user)
-                ->prompt($prompt, model: 'gpt-5.4-nano');
+                ->prompt($prompt, model: 'gpt-4o');
         }
 
-        $response = $agent->forUser($user)->prompt($prompt, model: 'gpt-5.4-nano');
+        $response = $agent->forUser($user)->prompt($prompt, model: 'gpt-4o');
 
         $session->update([
             'conversation_id' => $response->conversationId,

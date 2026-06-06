@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('type');
             $table->string('complexity');
             $table->string('status')->default('in_progress'); // in_progress, completed
-            $table->timestamps();
+            $table->timestamps();   
         });
     }
 

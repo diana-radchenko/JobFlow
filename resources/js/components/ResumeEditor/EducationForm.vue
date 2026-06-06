@@ -1,23 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import {
     ChevronLeft,
     ChevronRight,
@@ -26,11 +8,30 @@ import {
     Edit2,
     Save,
 } from 'lucide-vue-next';
+import { ref } from 'vue';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { EducationDegreeEnum } from '@/enums/laravel-models-enums';
-import type { EducationDegree } from '@/types/laravel-models';
+import { formatDateForInput } from '@/helpers/dates';
 import { stringForHuman } from '@/helpers/strings';
+import type { EducationDegree } from '@/types/laravel-models';
 
-const props = defineProps<{
+defineProps<{
     educations: any[];
 }>();
 
@@ -77,8 +78,8 @@ const editEducation = (education: any) => {
     form.degree = education.degree;
     form.institution = education.institution;
     form.field_of_study = education.field_of_study || '';
-    form.start_date = education.start_date || '';
-    form.end_date = education.end_date || '';
+    form.start_date = formatDateForInput(education.start_date);
+    form.end_date = formatDateForInput(education.end_date);
     form.description = education.description || '';
     showForm.value = true;
 };

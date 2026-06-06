@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { Button } from '@/components/ui/button';
 import {
     User,
     Briefcase,
@@ -10,6 +8,7 @@ import {
     Zap,
     FileText,
 } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface Props {
     currentSection: string;

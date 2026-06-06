@@ -1,22 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import {
     ChevronLeft,
     ChevronRight,
@@ -24,13 +7,29 @@ import {
     Trash2,
     Edit2,
     Save,
-    Zap,
 } from 'lucide-vue-next';
+import { ref } from 'vue';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { SkillsLevelEnum } from '@/enums/laravel-models-enums';
-import type { SkillsLevel } from '@/types/laravel-models';
 import { stringForHuman } from '@/helpers/strings';
+import type { SkillsLevel } from '@/types/laravel-models';
 
-const props = defineProps<{
+defineProps<{
     skills: any[];
 }>();
 
@@ -91,6 +90,7 @@ const getProficiencyColor = (level: string) => {
             'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
         Expert: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
     };
+
     return colors[level] || 'bg-gray-100 text-gray-800';
 };
 </script>
