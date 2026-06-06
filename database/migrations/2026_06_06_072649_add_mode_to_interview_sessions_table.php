@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('interview_sessions', function (Blueprint $table) {
-            $table->enum('mode', ['text', 'live'])
+            $table->enum('mode', ['text', 'live', 'video'])
                 ->default('text')
                 ->after('complexity');
         });
