@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ProjectTypeEnum } from '@/enums/laravel-models-enums';
+import { formatDateForInput } from '@/helpers/dates';
 import { stringForHuman } from '@/helpers/strings';
 import type { ProjectType } from '@/types/laravel-models';
 
@@ -79,8 +80,8 @@ const editProject = (project: any) => {
     form.type = project.type;
     form.description = project.description || '';
     form.url = project.url || '';
-    form.start_date = project.start_date || '';
-    form.end_date = project.end_date || '';
+    form.start_date = formatDateForInput(project.start_date);
+    form.end_date = formatDateForInput(project.end_date);
     showForm.value = true;
 };
 

@@ -25,7 +25,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { EducationDegreeEnum } from '@/enums/laravel-models-enums';
+import { formatDateForInput } from '@/helpers/dates';
 import { stringForHuman } from '@/helpers/strings';
 import type { EducationDegree } from '@/types/laravel-models';
 
@@ -76,8 +78,8 @@ const editEducation = (education: any) => {
     form.degree = education.degree;
     form.institution = education.institution;
     form.field_of_study = education.field_of_study || '';
-    form.start_date = education.start_date || '';
-    form.end_date = education.end_date || '';
+    form.start_date = formatDateForInput(education.start_date);
+    form.end_date = formatDateForInput(education.end_date);
     form.description = education.description || '';
     showForm.value = true;
 };
