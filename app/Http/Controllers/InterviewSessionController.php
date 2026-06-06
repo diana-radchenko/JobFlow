@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Ai\Audio;
 
 class InterviewSessionController extends Controller
 {
@@ -97,6 +98,29 @@ class InterviewSessionController extends Controller
                 'content' => (string) $response,
             ],
         ]);
+    }
+
+    public function audio(Request $request, InterviewSession $session)
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if ($session->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'content' => ['required', 'string', 'max:10000'],
+        ]);
+
+        $audio = Audio::of($validated['content'])
+            ->female()
+            ->instructions('Speak naturally as a calm, supportive technical interviewer. Keep a warm conversational tone and avoid sounding robotic.')
+            ->generate();
+
+        return response((string) $audio)
+            ->header('Content-Type', $audio->mimeType() ?? 'audio/mpeg')
+            ->header('Cache-Control', 'no-store');
     }
 
     public function complete(Request $request, InterviewSession $session)

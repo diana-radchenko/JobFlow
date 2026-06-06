@@ -21,6 +21,7 @@ import {
     watch,
 } from 'vue';
 import {
+    audio as interviewSessionAudio,
     complete as interviewSessionComplete,
     message as interviewSessionMessage,
 } from '@/actions/App/Http/Controllers/InterviewSessionController';
@@ -103,6 +104,7 @@ const isListening = ref(false);
 const isStartingListening = ref(false);
 const isProcessing = ref(false);
 const isCompletingInterview = ref(false);
+const isPreparingAudio = ref(false);
 const isSpeaking = ref(false);
 const isHoldingToTalk = ref(false);
 const liveError = ref<string | null>(null);
@@ -111,6 +113,9 @@ let audioContext: AudioContext | null = null;
 let analyser: AnalyserNode | null = null;
 let microphoneStream: MediaStream | null = null;
 let animationFrame: number | null = null;
+let assistantAudio: HTMLAudioElement | null = null;
+let assistantAudioUrl: string | null = null;
+let assistantAudioRequest: AbortController | null = null;
 
 const recognition = ref<SpeechRecognitionLike | null>(null);
 const shouldSendWhenRecognitionEnds = ref(false);
@@ -134,6 +139,10 @@ const statusLabel = computed(() => {
 
     if (isProcessing.value) {
         return 'Thinking';
+    }
+
+    if (isPreparingAudio.value) {
+        return 'Preparing voice';
     }
 
     if (isSpeaking.value) {
@@ -290,6 +299,28 @@ function cleanupAudioInput() {
     volumeLevel.value = 0;
 }
 
+function stopAssistantAudio() {
+    assistantAudioRequest?.abort();
+    assistantAudioRequest = null;
+
+    if (assistantAudio) {
+        assistantAudio.onplay = null;
+        assistantAudio.onended = null;
+        assistantAudio.onerror = null;
+        assistantAudio.pause();
+        assistantAudio.src = '';
+        assistantAudio = null;
+    }
+
+    if (assistantAudioUrl) {
+        URL.revokeObjectURL(assistantAudioUrl);
+        assistantAudioUrl = null;
+    }
+
+    isSpeaking.value = false;
+    isPreparingAudio.value = false;
+}
+
 async function ensureMicrophonePermission(): Promise<boolean> {
     if (!navigator.mediaDevices?.getUserMedia) {
         return true;
@@ -317,6 +348,7 @@ async function startListening() {
         isStartingListening.value ||
         isListening.value ||
         isProcessing.value ||
+        isPreparingAudio.value ||
         props.session.status === 'completed'
     ) {
         return false;
@@ -356,8 +388,7 @@ async function startListening() {
             return false;
         }
 
-        window.speechSynthesis.cancel();
-        isSpeaking.value = false;
+        stopAssistantAudio();
         shouldSendWhenRecognitionEnds.value = false;
         resetTranscript();
 
@@ -441,6 +472,7 @@ async function startHoldToTalk(event?: PointerEvent | KeyboardEvent) {
         isListening.value ||
         isStartingListening.value ||
         isProcessing.value ||
+        isPreparingAudio.value ||
         props.session.status === 'completed'
     ) {
         return;
@@ -488,27 +520,83 @@ function stopHoldToTalk(event?: PointerEvent | KeyboardEvent) {
     }
 }
 
-function speakAssistantMessage(content: string) {
-    if (!('speechSynthesis' in window)) {
+async function speakAssistantMessage(content: string) {
+    const csrfToken = usePage().props.csrf_token as string | undefined;
+
+    if (!csrfToken) {
+        liveError.value =
+            'Session token missing. Refresh the page and try again.';
+
         return;
     }
 
-    window.speechSynthesis.cancel();
+    stopAssistantAudio();
 
-    const utterance = new SpeechSynthesisUtterance(content);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.95;
-    utterance.onstart = () => {
-        isSpeaking.value = true;
-    };
-    utterance.onend = () => {
-        isSpeaking.value = false;
-    };
-    utterance.onerror = () => {
-        isSpeaking.value = false;
-    };
+    const controller = new AbortController();
+    assistantAudioRequest = controller;
+    isPreparingAudio.value = true;
 
-    window.speechSynthesis.speak(utterance);
+    try {
+        const response = await fetch(
+            interviewSessionAudio.url(props.session.id),
+            {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'audio/mpeg',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ content }),
+                signal: controller.signal,
+            },
+        );
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            const serverMessage =
+                typeof data.message === 'string'
+                    ? data.message
+                    : `Audio generation failed (${response.status})`;
+
+            throw new Error(serverMessage);
+        }
+
+        const audioBlob = await response.blob();
+
+        if (assistantAudioRequest !== controller) {
+            return;
+        }
+
+        assistantAudioUrl = URL.createObjectURL(audioBlob);
+        assistantAudio = new Audio(assistantAudioUrl);
+        assistantAudio.onplay = () => {
+            isPreparingAudio.value = false;
+            isSpeaking.value = true;
+        };
+        assistantAudio.onended = stopAssistantAudio;
+        assistantAudio.onerror = () => {
+            liveError.value = 'Audio playback failed. Try again.';
+            stopAssistantAudio();
+        };
+
+        await assistantAudio.play();
+    } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            return;
+        }
+
+        liveError.value =
+            error instanceof Error
+                ? error.message
+                : 'Could not generate audio. Check your AI audio provider settings and try again.';
+        stopAssistantAudio();
+    } finally {
+        if (assistantAudioRequest === controller) {
+            assistantAudioRequest = null;
+        }
+    }
 }
 
 async function sendMessage(text: string, showUserMessage = true) {
@@ -517,6 +605,7 @@ async function sendMessage(text: string, showUserMessage = true) {
     if (
         !trimmedText ||
         isProcessing.value ||
+        isPreparingAudio.value ||
         props.session.status === 'completed'
     ) {
         return;
@@ -592,14 +681,17 @@ async function sendMessage(text: string, showUserMessage = true) {
 }
 
 function handleCompleteInterviewSubmit() {
-    if (isCompletingInterview.value || isProcessing.value) {
+    if (
+        isCompletingInterview.value ||
+        isProcessing.value ||
+        isPreparingAudio.value
+    ) {
         return;
     }
 
     stopListening();
     isHoldingToTalk.value = false;
-    window.speechSynthesis.cancel();
-    isSpeaking.value = false;
+    stopAssistantAudio();
     isCompletingInterview.value = true;
 }
 
@@ -621,7 +713,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     recognition.value?.abort();
-    window.speechSynthesis.cancel();
+    stopAssistantAudio();
 });
 
 defineOptions({
@@ -669,7 +761,8 @@ defineOptions({
                         :class="[
                             statusLabel === 'Listening'
                                 ? 'animate-pulse bg-green-500'
-                                : statusLabel === 'Thinking'
+                                : statusLabel === 'Thinking' ||
+                                    statusLabel === 'Preparing voice'
                                   ? 'bg-yellow-500'
                                   : statusLabel === 'Speaking'
                                     ? 'animate-pulse bg-blue-500'
@@ -735,14 +828,16 @@ defineOptions({
                         :class="[
                             isListening
                                 ? 'border-green-300 bg-green-50 shadow-[0_0_0_18px_rgba(34,197,94,0.12)] dark:border-green-900 dark:bg-green-950/40'
-                                : isProcessing
+                                : isProcessing || isPreparingAudio
                                   ? 'border-yellow-300 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/40'
                                   : isSpeaking
                                     ? 'border-blue-300 bg-blue-50 shadow-[0_0_0_18px_rgba(59,130,246,0.12)] dark:border-blue-900 dark:bg-blue-950/40'
                                     : 'border-slate-200 bg-slate-50 hover:border-primary/40 dark:border-slate-800 dark:bg-slate-900',
                         ]"
                         :disabled="
-                            isProcessing || session.status === 'completed'
+                            isProcessing ||
+                            isPreparingAudio ||
+                            session.status === 'completed'
                         "
                         @pointerdown.prevent="startHoldToTalk"
                         @pointerup.prevent="stopHoldToTalk"
@@ -753,7 +848,7 @@ defineOptions({
                         @keyup.enter.prevent="stopHoldToTalk"
                     >
                         <Loader2
-                            v-if="isProcessing"
+                            v-if="isProcessing || isPreparingAudio"
                             class="h-16 w-16 animate-spin text-yellow-600"
                         />
                         <Volume2
@@ -776,9 +871,11 @@ defineOptions({
                                     ? 'Listening to your answer'
                                     : isProcessing
                                       ? 'AI is preparing the next response'
-                                      : isSpeaking
-                                        ? 'AI is speaking'
-                                        : 'Ready for your answer'
+                                      : isPreparingAudio
+                                        ? 'AI is preparing the voice'
+                                        : isSpeaking
+                                          ? 'AI is speaking'
+                                          : 'Ready for your answer'
                             }}
                         </h2>
                         <p class="text-sm text-slate-500 dark:text-slate-400">
@@ -840,6 +937,7 @@ defineOptions({
                             :disabled="
                                 isListening ||
                                 isProcessing ||
+                                isPreparingAudio ||
                                 session.status === 'completed'
                             "
                             @click="resetTranscript"
@@ -864,7 +962,11 @@ defineOptions({
                             type="submit"
                             variant="outline"
                             class="w-full gap-2 sm:w-auto"
-                            :disabled="isCompletingInterview || isProcessing"
+                            :disabled="
+                                isCompletingInterview ||
+                                isProcessing ||
+                                isPreparingAudio
+                            "
                         >
                             <Loader2
                                 v-if="isCompletingInterview"
