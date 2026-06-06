@@ -100,6 +100,7 @@ const committedTranscript = ref('');
 const currentTranscript = ref('');
 const recognitionLanguage = ref('en-US');
 const isListening = ref(false);
+const isStartingListening = ref(false);
 const isProcessing = ref(false);
 const isCompletingInterview = ref(false);
 const isSpeaking = ref(false);
@@ -221,6 +222,10 @@ function makeRecognition(): SpeechRecognitionLike | null {
             `${committedTranscript.value} ${interimTranscript}`.trim();
     };
     instance.onerror = (event) => {
+        if (recognition.value !== instance) {
+            return;
+        }
+
         const message = speechRecognitionErrorMessage(event.error);
 
         if (message) {
@@ -229,9 +234,16 @@ function makeRecognition(): SpeechRecognitionLike | null {
 
         shouldSendWhenRecognitionEnds.value = false;
         isListening.value = false;
+        cleanupAudioInput();
     };
     instance.onend = () => {
+        if (recognition.value !== instance) {
+            return;
+        }
+
+        recognition.value = null;
         isListening.value = false;
+        cleanupAudioInput();
 
         if (shouldSendWhenRecognitionEnds.value) {
             shouldSendWhenRecognitionEnds.value = false;
@@ -252,6 +264,30 @@ function resetTranscript() {
     committedTranscript.value = '';
     currentTranscript.value = '';
     liveError.value = null;
+}
+
+function cleanupAudioInput() {
+    if (microphoneStream) {
+        microphoneStream.getTracks().forEach((track) => {
+            track.stop();
+        });
+        microphoneStream = null;
+    }
+
+    if (animationFrame !== null) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+    }
+
+    analyser = null;
+
+    if (audioContext) {
+        const context = audioContext;
+        audioContext = null;
+        void context.close().catch(() => {});
+    }
+
+    volumeLevel.value = 0;
 }
 
 async function ensureMicrophonePermission(): Promise<boolean> {
@@ -277,42 +313,69 @@ async function ensureMicrophonePermission(): Promise<boolean> {
 }
 
 async function startListening() {
+    if (
+        isStartingListening.value ||
+        isListening.value ||
+        isProcessing.value ||
+        props.session.status === 'completed'
+    ) {
+        return false;
+    }
+
+    isStartingListening.value = true;
+
     if (!isSecureBrowserContext.value) {
         liveError.value =
             'Live voice mode requires HTTPS or localhost. Open the app through the secure Herd URL and try again.';
 
-        return;
+        isStartingListening.value = false;
+
+        return false;
     }
 
     if (!supportsSpeechRecognition.value) {
         liveError.value =
             'Your browser does not support speech recognition. Use Chrome or Edge for live mode.';
 
-        return;
-    }
+        isStartingListening.value = false;
 
-    if (!(await ensureMicrophonePermission())) {
-        return;
+        return false;
     }
-
-    if (isProcessing.value || props.session.status === 'completed') {
-        return;
-    }
-
-    window.speechSynthesis.cancel();
-    isSpeaking.value = false;
-    shouldSendWhenRecognitionEnds.value = false;
-    resetTranscript();
 
     try {
+        if (!(await ensureMicrophonePermission())) {
+            return false;
+        }
+
         recognition.value?.abort();
+        recognition.value = null;
+
+        if (!isHoldingToTalk.value) {
+            cleanupAudioInput();
+
+            return false;
+        }
+
+        window.speechSynthesis.cancel();
+        isSpeaking.value = false;
+        shouldSendWhenRecognitionEnds.value = false;
+        resetTranscript();
+
         recognition.value = makeRecognition();
         recognition.value?.start();
         isListening.value = true;
+
+        return true;
     } catch {
         liveError.value =
             'Speech recognition could not start. Refresh the page and try again.';
         isListening.value = false;
+        recognition.value = null;
+        cleanupAudioInput();
+
+        return false;
+    } finally {
+        isStartingListening.value = false;
     }
 }
 
@@ -350,38 +413,33 @@ function setupVolumeMeter(stream: MediaStream) {
 
 function stopListening(sendWhenStopped = false) {
     shouldSendWhenRecognitionEnds.value = sendWhenStopped;
-    recognition.value?.stop();
+    isStartingListening.value = false;
+
+    if (!recognition.value) {
+        cleanupAudioInput();
+
+        if (sendWhenStopped && currentTranscript.value.trim()) {
+            sendMessage(currentTranscript.value);
+        }
+
+        return;
+    }
+
+    try {
+        recognition.value.stop();
+    } catch {
+        recognition.value.abort();
+        recognition.value = null;
+        cleanupAudioInput();
+    }
+
     isListening.value = false;
-
-    if (microphoneStream) {
-        microphoneStream.getTracks().forEach((track) => {
-            track.stop();
-        });
-        microphoneStream = null;
-    }
-
-    if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-    }
-
-    if (audioContext) {
-        audioContext.close();
-    }
-
-    volumeLevel.value = 0;
-
-    if (
-        sendWhenStopped &&
-        !recognition.value &&
-        currentTranscript.value.trim()
-    ) {
-        sendMessage(currentTranscript.value);
-    }
 }
 
 async function startHoldToTalk(event?: PointerEvent | KeyboardEvent) {
     if (
         isListening.value ||
+        isStartingListening.value ||
         isProcessing.value ||
         props.session.status === 'completed'
     ) {
@@ -389,13 +447,21 @@ async function startHoldToTalk(event?: PointerEvent | KeyboardEvent) {
     }
 
     if (event instanceof PointerEvent) {
-        (event.currentTarget as HTMLElement | null)?.setPointerCapture(
-            event.pointerId,
-        );
+        const target = event.currentTarget as HTMLElement | null;
+
+        if (target && !target.hasPointerCapture(event.pointerId)) {
+            target.setPointerCapture(event.pointerId);
+        }
     }
 
     isHoldingToTalk.value = true;
-    await startListening();
+    const started = await startListening();
+
+    if (!started) {
+        isHoldingToTalk.value = false;
+
+        return;
+    }
 
     if (!isHoldingToTalk.value && isListening.value) {
         stopListening(true);
@@ -408,14 +474,16 @@ function stopHoldToTalk(event?: PointerEvent | KeyboardEvent) {
     }
 
     if (event instanceof PointerEvent) {
-        (event.currentTarget as HTMLElement | null)?.releasePointerCapture(
-            event.pointerId,
-        );
+        const target = event.currentTarget as HTMLElement | null;
+
+        if (target?.hasPointerCapture(event.pointerId)) {
+            target.releasePointerCapture(event.pointerId);
+        }
     }
 
     isHoldingToTalk.value = false;
 
-    if (isListening.value) {
+    if (isListening.value || isStartingListening.value) {
         stopListening(true);
     }
 }
