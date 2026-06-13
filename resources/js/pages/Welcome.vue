@@ -178,13 +178,13 @@ const mobileMenuOpen = ref(false);
         <main class="flex flex-1 flex-col pt-16 lg:flex-row lg:pt-0">
             <!-- Left Column -->
             <section
-                class="relative flex w-full flex-col justify-center px-6 pt-32 pb-16 lg:w-[55%] lg:px-20 lg:pt-0 lg:pb-0"
+                class="relative flex w-full flex-col justify-center px-6 pt-16 pb-8 lg:w-[55%] lg:px-12 lg:pt-0 lg:pb-0 [@media(max-width:1179px)]:scale-90 [@media(max-width:1179px)]:origin-left"
             >
                 <div class="max-w-xl">
                     <!-- Logo -->
                     <div class="mb-4 flex items-center gap-4">
                         <div
-                            class="relative flex h-32 items-center justify-center"
+                            class="relative flex h-20 items-center justify-center [@media(max-width:1179px)]:h-16"
                         >
                             <img
                                 src="/flow_bg_transparent.png"
@@ -195,9 +195,9 @@ const mobileMenuOpen = ref(false);
                     </div>
 
                     <!-- Hero Text -->
-                    <div class="mb-12">
+                    <div class="mb-8 [@media(max-width:1179px)]:mb-6">
                         <h1
-                            class="mb-4 flex flex-row items-center gap-12 text-5xl leading-tight font-bold tracking-tight text-white lg:text-7xl"
+                            class="mb-2 flex flex-row items-center gap-12 text-4xl leading-tight font-bold tracking-tight text-white lg:text-6xl [@media(max-width:1179px)]:text-5xl"
                         >
                             Flow
                             <span
@@ -209,7 +209,7 @@ const mobileMenuOpen = ref(false);
                         </h1>
                         <div class="h-px w-full bg-white/20"></div>
                         <p
-                            class="max-w-md pt-4 text-lg leading-relaxed text-gray-400"
+                            class="max-w-md pt-2 text-lg leading-relaxed text-gray-400 [@media(max-width:1179px)]:text-base"
                         >
                             AI-powered job matching and workforce automation for
                             professionals and businesses.
@@ -217,34 +217,34 @@ const mobileMenuOpen = ref(false);
                     </div>
 
                     <!-- Split Actions -->
-                    <div class="grid grid-cols-1 gap-12 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 [@media(max-width:1179px)]:gap-4">
                         <!-- JobFlow -->
-                        <div class="flex flex-col gap-6">
-                            <div class="flex flex-col gap-2">
-                                <h2 class="text-2xl font-bold text-white">
+                        <div class="flex flex-col gap-4 [@media(max-width:1179px)]:gap-2">
+                            <div class="flex flex-col gap-1">
+                                <h2 class="text-xl font-bold text-white [@media(max-width:1179px)]:text-lg">
                                     JobFlow
                                 </h2>
                                 <div class="h-px w-full bg-white/20"></div>
                             </div>
                             <Link
                                 :href="register()"
-                                class="inline-flex h-14 items-center justify-center rounded-full bg-white px-8 text-sm font-bold tracking-wide text-black uppercase transition-transform hover:scale-103 active:scale-95"
+                                class="inline-flex h-10 items-center justify-center rounded-full bg-white px-6 text-xs font-bold tracking-wide text-black uppercase transition-transform hover:scale-103 active:scale-95 [@media(max-width:1179px)]:h-10 [@media(max-width:1179px)]:px-6 [@media(max-width:1179px)]:text-xs"
                             >
                                 Find your perfect job
                             </Link>
                         </div>
 
                         <!-- HRFlow -->
-                        <div class="flex flex-col gap-6">
-                            <div class="flex flex-col gap-2">
-                                <h2 class="text-2xl font-bold text-white">
+                        <div class="flex flex-col gap-4 [@media(max-width:1179px)]:gap-2">
+                            <div class="flex flex-col gap-1">
+                                <h2 class="text-xl font-bold text-white [@media(max-width:1179px)]:text-lg">
                                     HRFlow
                                 </h2>
                                 <div class="h-px w-full bg-white/20"></div>
                             </div>
                             <Link
-                                :href="register()"
-                                class="inline-flex h-14 items-center justify-center rounded-full bg-white px-8 text-sm font-bold tracking-wide text-black uppercase transition-transform hover:scale-103 active:scale-95"
+                                href="#"
+                                class="inline-flex h-10 items-center justify-center rounded-full bg-white px-6 text-xs font-bold tracking-wide text-black uppercase transition-transform hover:scale-103 active:scale-95 [@media(max-width:1179px)]:h-10 [@media(max-width:1179px)]:px-6 [@media(max-width:1179px)]:text-xs"
                             >
                                 Manage your best team
                             </Link>
@@ -256,7 +256,7 @@ const mobileMenuOpen = ref(false);
             <!-- Right Column (Image) -->
             <section class="relative w-full overflow-hidden lg:w-[45%]">
                 <img
-                    src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=2070&auto=format&fit=crop"
+                    src="/robot_interview_scene.svg"
                     alt="AI Interview"
                     class="h-full w-full object-cover contrast-[1.1] grayscale-[0.2]"
                 />
@@ -273,12 +273,12 @@ const mobileMenuOpen = ref(false);
         <!-- Footer -->
         <footer class="absolute bottom-0 z-50 w-full p-6">
             <div
-                class="flex flex-col items-center gap-18 text-[14px] font-bold tracking-[0.1em] text-gray-500 uppercase sm:flex-row"
+                class="flex flex-col items-center gap-4 text-[12px] font-bold tracking-[0.1em] text-gray-500 uppercase sm:flex-row sm:gap-18 sm:text-[14px]"
             >
                 <div class="flex items-center gap-6">
                     <span>JobFlow © 2026. All rights reserved</span>
                 </div>
-                <div class="flex items-center gap-18">
+                <div class="flex items-center gap-6 sm:gap-18">
                     <a href="#" class="transition-colors hover:text-white"
                         >Privacy Policy</a
                     >
