@@ -19,6 +19,7 @@ import {
 import { computed, ref } from 'vue';
 import type { Component } from 'vue';
 import { destroy as destroyApplication } from '@/actions/App/Http/Controllers/RequestTrackerController';
+import { show as jobSelectionShow } from '@/routes/job-selection';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,6 +36,12 @@ import { Input } from '@/components/ui/input';
 import { stringForHuman } from '@/helpers/strings';
 import { requestTracker } from '@/routes';
 import type { UserWorkJobApplication } from '@/types/laravel-models';
+
+const visitJob = (app: any) => {
+    if (app.jobId) {
+        router.visit(jobSelectionShow(app.jobId).url);
+    }
+};
 
 type TrackerRow = {
     id: number | string;
@@ -201,6 +208,7 @@ const allApplications = computed(() => {
     const realApps = (props.applications || []).map((app) => {
         return {
             id: app.id,
+            jobId: app.work_job_id,
             title: app.work_job?.title || 'Unknown Job',
             company: app.work_job?.company || 'Unknown Company',
             dateType: 'Submission Date',
@@ -309,7 +317,9 @@ const allApplications = computed(() => {
                 <Card
                     v-for="app in allApplications"
                     :key="app.id"
-                    class="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                    @click="visitJob(app)"
+                    :class="app.jobId ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800' : ''"
+                    class="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm transition-colors duration-200 dark:border-slate-800 dark:bg-slate-900"
                 >
                     <CardContent
                         class="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -401,7 +411,7 @@ const allApplications = computed(() => {
                                 type="button"
                                 :disabled="removingApplicationId === app.id"
                                 class="h-[42px] w-[42px] shrink-0 rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground disabled:opacity-50 dark:hover:bg-primary/20 dark:hover:text-primary"
-                                @click="openDeleteDialog(app)"
+                                @click.stop="openDeleteDialog(app)"
                             >
                                 <X class="h-4 w-4" />
                             </Button>

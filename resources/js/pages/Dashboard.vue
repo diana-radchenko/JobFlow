@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import {
     Bot,
     SlidersHorizontal,
@@ -14,12 +14,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { stringForHuman } from '@/helpers/strings';
 import { dashboard } from '@/routes';
+import { show as jobSelectionShow } from '@/routes/job-selection';
 import type { UserWorkJobApplication } from '@/types/laravel-models';
 
 const props = defineProps<{
     applications: UserWorkJobApplication[] | null;
     profileFirstName: string;
 }>();
+
+const visitJob = (app: any) => {
+    if (app.jobId) {
+        router.visit(jobSelectionShow(app.jobId).url);
+    }
+};
 
 defineOptions({
     layout: {
@@ -67,6 +74,7 @@ const tableApplications = computed(() => {
 
         return {
             id: app.id,
+            jobId: app.work_job_id,
             title: app.work_job?.title || 'Unknown Job',
             company: app.work_job?.company || 'Unknown Company',
             salary: app.work_job?.salary_start
@@ -119,6 +127,7 @@ const timelineEvents = [
 const aiJobsMock = [
     {
         id: 1,
+        url: "https://www.innovatetechinc.com/careers.php",
         company: 'InnovateTech',
         logoText: 'IT',
         title: 'InnovateTech is looking for a Software Engineer to join our team!',
@@ -128,6 +137,7 @@ const aiJobsMock = [
     },
     {
         id: 2,
+        url: "https://www.data-wise-inc.com/career-opportunities",   
         company: 'DataWise',
         logoText: 'DW',
         title: 'DataWise is hiring a Data Scientist to drive data-driven decision-making.',
@@ -137,6 +147,7 @@ const aiJobsMock = [
     },
     {
         id: 3,
+        url: "#",
         company: 'SecureNet',
         logoText: 'SN',
         title: 'SecureNet is looking for a Cybersecurity Specialist!',
@@ -149,18 +160,27 @@ const aiJobsMock = [
 const articlesMock = [
     {
         id: 1,
-        image: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=400&h=150&auto=format&fit=crop',
-        title: 'Part-Time Jobs for Retirees: Finding Flexible Work That Fits Your Lifestyle',
+        image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=400&h=150&auto=format&fit=crop',
+        title: 'Working Part-Time in Retirement: Is It Right for You?',
+        url: 'https://www.tiaa.org/public/transitioners/working-part-time-in-retirement--is-it-right-for-you',
     },
     {
         id: 2,
-        image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=400&h=150&auto=format&fit=crop',
-        title: 'How to Become a Financial Planner After 50: A Late-Career Pivot',
+        image: 'https://proximus.talent-pool.com/cdn/image/5337d40d-aa5a-4cca-96eb-2ee1485ee6aa?withoutEnlargement=true&width=1440&format=webp',
+        title: 'Why freelance at Proximus?',
+        url: 'https://proximus.talent-pool.com/category/274/data-analysts-security?utm_medium=paidsearch&utm_source=googlesearch_rsr&utm_campaign=proximus_belgium_softwareengineering_talent_pool&utm_content=english-uk_text&gad_source=1&gad_campaignid=23822730197&gbraid=0AAAAA-QuVl7UcuDyNP2qXDQP1ukHqa0Dd&gclid=Cj0KCQjw3K7RBhDJARIsAKRtP5S60GfJvKYGUPXRZqXmqMS23enhCyn1edDxp1YTfGH5XLpkwMbT0koaAm8lEALw_wcB',
     },
     {
         id: 3,
-        image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=400&h=150&auto=format&fit=crop',
-        title: 'Internship After Graduation vs. After 50: A Tale of Two Journeys',
+        image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=400&h=150&auto=format&fit=crop',
+        title: 'How to Become a Financial Planner After 50: A Late-Career Pivot',
+        url: 'https://www.aarp.org/work/careers/financial-planner-career-change/?utm_source',
+    },
+    {
+        id: 4,
+        image: 'https://www.kingseducation.com/assets/uploads/Stout_800.jpg',
+        title: 'Why (and how) to get an internship after graduation',
+        url: 'https://www.kingseducation.com/kings-life/internship-after-graduation?utm_source',
     },
 ];
 </script>
@@ -347,7 +367,9 @@ const articlesMock = [
                                     <tr
                                         v-for="app in tableApplications"
                                         :key="app.id"
-                                        class="bg-white dark:bg-slate-950"
+                                        @click="visitJob(app)"
+                                        :class="app.jobId ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800' : ''"
+                                        class="bg-white transition-colors duration-200 dark:bg-slate-950"
                                     >
                                         <td
                                             class="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400"
@@ -414,11 +436,13 @@ const articlesMock = [
                                             {{ job.logoText }}
                                         </div>
                                         <div class="flex-1">
-                                            <p
-                                                class="text-[15px] leading-snug font-bold text-slate-900 dark:text-slate-100"
+                                            <a
+                                                :href="job.url"
+                                                target="_blank"
+                                                class="block text-[15px] leading-snug font-bold text-slate-900 hover:text-primary transition-colors dark:text-slate-100"
                                             >
                                                 {{ job.title }}
-                                            </p>
+                                        </a>
                                         </div>
                                         <Button
                                             variant="ghost"
@@ -476,22 +500,24 @@ const articlesMock = [
                             <Sparkles class="h-5 w-5 text-primary" />
                         </div>
                         <div class="space-y-4">
-                            <Card
+                            <a
                                 v-for="article in articlesMock"
                                 :key="article.id"
-                                class="flex flex-col gap-3 overflow-hidden rounded-[24px] border border-slate-200/60 bg-white py-0 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                                :href="article.url"
+                                target="_blank"
+                                class="flex flex-col gap-3 overflow-hidden rounded-[24px] border border-slate-200/60 bg-white py-0 shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
                             >
                                 <img
                                     :src="article.image"
                                     alt="Article cover"
-                                    class="h-28 w-full rounded-t-[16px] object-cover"
+                                    class="h-38 w-full rounded-t-[16px] object-cover"
                                 />
                                 <p
                                     class="px-4 pb-4 text-[15px] leading-snug font-bold text-slate-900 dark:text-slate-100"
                                 >
                                     {{ article.title }}
                                 </p>
-                            </Card>
+                            </a>
                         </div>
                     </div>
                 </div>
