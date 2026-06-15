@@ -7,6 +7,7 @@ use App\Http\Controllers\JobSelectionController;
 use App\Http\Controllers\RequestTrackerController;
 use App\Http\Controllers\ResumeEditorController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::inertia('/', 'Welcome', [
@@ -56,6 +57,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('resume-editor/summary', [ResumeEditorController::class, 'showSummary'])->name('resume-editor.summary');
 
     Route::get('interview-preparation', InterviewPreparationController::class)->name('interview-preparation');
+    Route::get('salary', function () {
+        return Inertia::render('Salary');
+    })->name('salary');
     Route::post('interview-sessions', [InterviewSessionController::class, 'store'])->name('interview-session.store');
     Route::get('interview-sessions/{session}', [InterviewSessionController::class, 'show'])->name('interview-session.show');
     Route::post('interview-sessions/{session}/message', [InterviewSessionController::class, 'message'])->name('interview-session.message');

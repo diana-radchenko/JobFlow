@@ -32,6 +32,7 @@ import {
     jobSelection as jobSelectionRoute,
     logout,
     requestTracker as requestTrackerRoute,
+    salary,
 } from '@/routes';
 import { resumeEditor as resumeEditorRoute } from '@/routes';
 import type { NavItem } from '@/types';
@@ -68,15 +69,16 @@ const mainNavItems = computed<NavItem[]>(() => [
         isActive: isCurrentUrl(requestTrackerUrl),
     },
     {
-        title: 'Salary',
-        href: '#',
-        icon: DollarSign,
-    },
-    {
         title: 'Interview Preparing',
         href: interviewPreparationRoute(),
         icon: BrainCircuit,
         isActive: isCurrentUrl(interviewPreparationRoute()),
+    },
+    {
+        title: 'Salary',
+        href: salary(),
+        icon: DollarSign,
+        isActive: isCurrentUrl(salary()),
     },
     {
         title: 'Development',
