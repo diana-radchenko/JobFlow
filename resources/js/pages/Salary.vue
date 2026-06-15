@@ -448,15 +448,15 @@ const comparisonRoles = [
 
                                     <!-- Nodes (circles) on the curve -->
                                     <!-- 10% -->
-                                    <circle cx="150" cy="273" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="3.5" class="cursor-pointer hover:scale-130 transition-transform duration-200" />
+                                    <circle cx="150" cy="273" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="3.5" />
                                     <!-- 25% -->
-                                    <circle cx="300" cy="240" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="3.5" class="cursor-pointer hover:scale-130 transition-transform duration-200" />
+                                    <circle cx="300" cy="240" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="3.5" />
                                     <!-- 50% Peak -->
-                                    <circle cx="500" cy="120" r="8" fill="#ffffff" stroke="#10b981" stroke-width="4.5" filter="url(#glow)" class="cursor-pointer hover:scale-130 transition-transform duration-200" />
+                                    <circle cx="500" cy="120" r="8" fill="#ffffff" stroke="#10b981" stroke-width="4.5" filter="url(#glow)" />
                                     <!-- 75% -->
-                                    <circle cx="700" cy="240" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="3.5" class="cursor-pointer hover:scale-130 transition-transform duration-200" />
+                                    <circle cx="700" cy="240" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="3.5" />
                                     <!-- 90% -->
-                                    <circle cx="850" cy="273" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="3.5" class="cursor-pointer hover:scale-130 transition-transform duration-200" />
+                                    <circle cx="850" cy="273" r="6" fill="#ffffff" stroke="#3b82f6" stroke-width="3.5" />
                                 </svg>
 
                                 <!-- Absolute HTML Labels positioned over the SVG nodes -->
