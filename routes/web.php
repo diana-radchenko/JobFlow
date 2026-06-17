@@ -60,6 +60,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('salary', function () {
         return Inertia::render('Salary');
     })->name('salary');
+    Route::get('development', function () {
+        return Inertia::render('Development');
+    })->name('development');
     Route::post('interview-sessions', [InterviewSessionController::class, 'store'])->name('interview-session.store');
     Route::get('interview-sessions/{session}', [InterviewSessionController::class, 'show'])->name('interview-session.show');
     Route::post('interview-sessions/{session}/message', [InterviewSessionController::class, 'message'])->name('interview-session.message');

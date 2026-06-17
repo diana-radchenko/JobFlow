@@ -28,6 +28,7 @@ import {
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import {
     dashboard,
+    development,
     interviewPreparation as interviewPreparationRoute,
     jobSelection as jobSelectionRoute,
     logout,
@@ -82,8 +83,9 @@ const mainNavItems = computed<NavItem[]>(() => [
     },
     {
         title: 'Development',
-        href: '#',
+        href: development(),
         icon: Code,
+        isActive: isCurrentUrl(development()),
     },
     {
         title: 'Settings',
