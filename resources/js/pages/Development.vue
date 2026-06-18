@@ -92,17 +92,17 @@ const articlesData = ref([
     {
         id: 'ar-1',
         title: 'Future of Jobs Report',
-        author: 'Malcolm Gladwell',
+        tags: ['Professional Development'],
         readingTime: '8 minutes',
         readingTimeMinutes: 8,
-        image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&q=80&w=600',
+        image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=600',
         url: 'https://www.weforum.org/publications/the-future-of-jobs-report-2025/',
         favorite: false
     },
     {
         id: 'ar-2',
         title: 'Ready for a Career Change at 50? Expert Tips and Advice',
-        author: 'Daniel Goleman',
+        tags: ['For Experienced Professionals & 50+ Workers'],
         readingTime: '10 minutes',
         readingTimeMinutes: 10,
         image: 'https://cdn.aarp.net/content/dam/aarpe/en/home/work/careers/50s-career-shift/_jcr_content/root/container_main/container_body_main/container_body1/container_body_cf/container_image/articlecontentfragment/cfimage.coreimg.50.932.jpeg/content/dam/aarp/work/work_at_plus/2023/04/1140-briefcase-of-professions.jpg',
@@ -112,7 +112,7 @@ const articlesData = ref([
     {
         id: 'ar-3',
         title: 'Job Fields That Will Be Seeking Workers Over 50',
-        author: 'Cal Newport',
+        tags: ['For Experienced Professionals & 50+ Workers'],
         readingTime: '12 minutes',
         readingTimeMinutes: 12,
         image: 'https://cdn.aarp.net/content/dam/aarpe/en/home/work/job-search/in-demand-job-fields-workers-over-50/_jcr_content/root/container_main/container_body_main/container_image/articlecontentfragme/cfimage.coreimg.75.1440.jpeg/content/dam/aarp/work/job_hunting/2017/08/1140-jobs-for-people-over-50.jpg',
@@ -122,7 +122,7 @@ const articlesData = ref([
     {
         id: 'ar-4',
         title: '4 Ways to Meaningfully Support New Mothers Returning to Work',
-        author: 'Carol S. Dweck',
+        tags: ['For Parents Returning to Work'],
         readingTime: '7 minutes',
         readingTimeMinutes: 7,
         image: 'https://hbr.org/resources/images/article_assets/2024/07/Jul24_25_909336878.jpg',
@@ -132,11 +132,21 @@ const articlesData = ref([
     {
         id: 'ar-5',
         title: 'Job Seekers Guide for Students and Graduates with Disabilities',
-        author: 'Carol S. Dweck',
+        tags: ['For Students & Recent Graduates', 'For Job Seekers with Disabilities'],
         readingTime: '7 minutes',
         readingTimeMinutes: 7,
-        image: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&q=80&w=600',
+        image: 'https://images.unsplash.com/photo-1577412647305-991150c7d163?auto=format&fit=crop&q=80&w=600',
         url: 'https://onleyinitiative.ca/wp-content/uploads/2020/07/DCOI-guidebook-Job-Seekers-Guide-for-Students-and-Graduates-with-Disabilities-ACC.pdf',
+        favorite: false
+    },
+    {
+        id: 'ar-6',
+        title: 'IQ or EI: You Need Both',
+        tags: ['Professional Development'],
+        readingTime: '7 minutes',
+        readingTimeMinutes: 7,
+        image: 'https://danielgolemanemotionalintelligence.com/wp-content/uploads/2023/07/Post-Why-IQ-or-EI.png',
+        url: 'https://danielgolemanemotionalintelligence.com/iq-or-ei-you-need-both/',
         favorite: false
     }
 ]);
@@ -314,12 +324,12 @@ const filteredAudiobooks = computed(() => {
 const filteredArticles = computed(() => {
     let result = [...articlesData.value];
 
-    // Search query filter
+        // Search query filter
     if (searchQuery.value.trim() !== '') {
         const query = searchQuery.value.toLowerCase();
         result = result.filter(
             a => a.title.toLowerCase().includes(query) || 
-                 a.author.toLowerCase().includes(query)
+                 a.tags.some(tag => tag.toLowerCase().includes(query))
         );
     }
 
@@ -628,23 +638,29 @@ onUnmounted(() => {
                                     </div>
                                 </div>
 
-                                <!-- Title, Author & Reading Time -->
-                                <div class="p-6 space-y-4">
-                                    <div class="space-y-1.5 min-h-[92px]">
-                                        <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 leading-snug tracking-tight line-clamp-3" :title="article.title">
-                                            "{{ article.title }}"
-                                        </h3>
-                                        <p class="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                                            <span class="text-slate-400 dark:text-slate-500 font-medium text-xs uppercase tracking-wider">Author:</span>
-                                            <span>{{ article.author }}</span>
-                                        </p>
-                                    </div>
+                                    <!-- Title, Tags & Reading Time -->
+                                    <div class="p-6 space-y-4">
+                                        <div class="space-y-1.5 min-h-[92px]">
+                                            <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 leading-snug tracking-tight line-clamp-3" :title="article.title">
+                                                "{{ article.title }}"
+                                            </h3>
+                                            <div class="flex flex-wrap gap-1.5 pt-2">
+                                                <Badge 
+                                                    v-for="tag in article.tags" 
+                                                    :key="tag" 
+                                                    variant="secondary" 
+                                                    class="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                                >
+                                                    {{ tag }}
+                                                </Badge>
+                                            </div>
+                                        </div>
 
-                                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800/60 flex items-center gap-2 text-[13px] font-bold text-slate-700 dark:text-slate-300">
-                                        <Clock class="h-4 w-4 text-indigo-500 shrink-0" />
-                                        <span>⏳ Reading Time: {{ article.readingTime }}</span>
+                                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800/60 flex items-center gap-2 text-[13px] font-bold text-slate-700 dark:text-slate-300">
+                                            <Clock class="h-4 w-4 text-indigo-500 shrink-0" />
+                                            <span>⏳ Reading Time: {{ article.readingTime }}</span>
+                                        </div>
                                     </div>
-                                </div>
                             </a>
                             </CardContent>
                     </Card>
