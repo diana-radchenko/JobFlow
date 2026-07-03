@@ -40,7 +40,7 @@ defineOptions({
 });
 
 // Mock data
-const mockApplications = [
+/* const mockApplications = [
     {
         id: 'm1',
         company: 'TechCorp',
@@ -57,7 +57,7 @@ const mockApplications = [
         status: 'Rejected',
         statusClass: 'status-red',
     },
-];
+]; */
 
 const tableApplications = computed(() => {
     const realApps = (props.applications || []).map((app) => {
@@ -88,7 +88,7 @@ const tableApplications = computed(() => {
     // Only take real + 2 mock as requested or all mock?
     // "Notice that Application tracker should be like this @resources/js/pages/RequestTracker.vue:176-219 (real + 2 mock test applications)"
     // The prompt means real + some mock test applications.
-    return [...realApps, ...mockApplications.slice(0, 5)];
+    return [...realApps];
 });
 
 const scheduleDays = [
@@ -145,7 +145,7 @@ const aiJobsMock = [
         tags: ['Machine learning'],
         score: '83/100',
     },
-    {
+/*     {
         id: 3,
         url: "#",
         company: 'SecureNet',
@@ -154,7 +154,7 @@ const aiJobsMock = [
         salary: '$98,000',
         tags: ['SOC', 'IDS/IPS'],
         score: '77/100',
-    },
+    }, */
 ];
 
 const articlesMock = [
