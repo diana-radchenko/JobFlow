@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Ai\Audio;
+use Laravel\Ai\Transcription;
 
 class InterviewSessionController extends Controller
 {
@@ -121,6 +122,36 @@ class InterviewSessionController extends Controller
         return response((string) $audio)
             ->header('Content-Type', $audio->mimeType() ?? 'audio/mpeg')
             ->header('Cache-Control', 'no-store');
+    }
+
+    public function transcribe(Request $request, InterviewSession $session)
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if ($session->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'audio' => ['required', 'file', 'max:20480'],
+        ]);
+
+        try {
+            $transcript = Transcription::fromUpload($validated['audio'])
+                ->language('en')
+                ->generate('openai');
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => 'Could not transcribe audio. Check your OpenAI connection and try again.',
+            ], 422);
+        }
+
+        return response()->json([
+            'text' => trim($transcript->text),
+        ]);
     }
 
     public function complete(Request $request, InterviewSession $session)

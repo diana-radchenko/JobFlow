@@ -24,6 +24,7 @@ import {
     audio as interviewSessionAudio,
     complete as interviewSessionComplete,
     message as interviewSessionMessage,
+    transcribe as interviewSessionTranscribe,
 } from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -41,38 +42,6 @@ marked.setOptions({ gfm: true, breaks: true });
 
 const INITIAL_GREETING =
     "Hello! Welcome to your AI interview practice. Take a moment to get comfortable, and when you're ready, tell me we can start.";
-
-interface SpeechRecognitionLike {
-    continuous: boolean;
-    interimResults: boolean;
-    lang: string;
-    onend: (() => void) | null;
-    onerror: ((event: { error?: string }) => void) | null;
-    onresult:
-        | ((event: {
-              resultIndex: number;
-              results: {
-                  length: number;
-                  [index: number]: {
-                      isFinal: boolean;
-                      [index: number]: { transcript: string };
-                  };
-              };
-          }) => void)
-        | null;
-    abort: () => void;
-    start: () => void;
-    stop: () => void;
-}
-
-type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
-
-declare global {
-    interface Window {
-        SpeechRecognition?: SpeechRecognitionConstructor;
-        webkitSpeechRecognition?: SpeechRecognitionConstructor;
-    }
-}
 
 function assistantMessageHtml(content: string): string {
     const raw = marked.parse(content, { async: false }) as string;
@@ -97,11 +66,11 @@ const props = defineProps<{
 
 const chatMessages = ref([...props.messages]);
 const messageRefs = ref<HTMLElement[]>([]);
-const committedTranscript = ref('');
 const currentTranscript = ref('');
 const recognitionLanguage = ref('en-US');
 const isListening = ref(false);
 const isStartingListening = ref(false);
+const isTranscribing = ref(false);
 const isProcessing = ref(false);
 const isCompletingInterview = ref(false);
 const isPreparingAudio = ref(false);
@@ -117,19 +86,22 @@ let assistantAudio: HTMLAudioElement | null = null;
 let assistantAudioUrl: string | null = null;
 let assistantAudioRequest: AbortController | null = null;
 
-const recognition = ref<SpeechRecognitionLike | null>(null);
-const shouldSendWhenRecognitionEnds = ref(false);
+let mediaRecorder: MediaRecorder | null = null;
+let recordedChunks: Blob[] = [];
+const shouldSendWhenRecordingEnds = ref(false);
 
 const recognitionLanguages = [{ value: 'en-US', label: 'English' }];
 
-const supportsSpeechRecognition = computed(() =>
-    Boolean(window.SpeechRecognition ?? window.webkitSpeechRecognition),
+const supportsVoiceRecording = computed(
+    () =>
+        Boolean(navigator.mediaDevices?.getUserMedia) &&
+        typeof MediaRecorder !== 'undefined',
 );
 
 const isSecureBrowserContext = computed(() => window.isSecureContext);
 
 const canUseVoiceInput = computed(
-    () => supportsSpeechRecognition.value && isSecureBrowserContext.value,
+    () => supportsVoiceRecording.value && isSecureBrowserContext.value,
 );
 
 const statusLabel = computed(() => {
@@ -139,6 +111,10 @@ const statusLabel = computed(() => {
 
     if (isProcessing.value) {
         return 'Thinking';
+    }
+
+    if (isTranscribing.value) {
+        return 'Transcribing';
     }
 
     if (isPreparingAudio.value) {
@@ -173,104 +149,18 @@ const scrollToLastMessage = () => {
 
 watch(chatMessages, scrollToLastMessage, { deep: true });
 
-function speechRecognitionErrorMessage(error?: string): string | null {
-    if (error === 'aborted') {
-        return null;
-    }
+function pickAudioMimeType(): string | undefined {
+    const candidates = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/mp4',
+    ];
 
-    if (error === 'not-allowed' || error === 'service-not-allowed') {
-        return 'Microphone permission was denied. Allow microphone access and try again.';
-    }
-
-    if (error === 'audio-capture') {
-        return 'No microphone was found. Check your microphone device and browser settings.';
-    }
-
-    if (error === 'network') {
-        return 'Speech recognition needs an internet connection in Chrome. Check your connection and try again.';
-    }
-
-    if (error === 'no-speech') {
-        return 'No speech was detected. Click the microphone, speak clearly, then use Stop & Send.';
-    }
-
-    return `Speech recognition stopped (${error ?? 'unknown'}). Try again.`;
-}
-
-function makeRecognition(): SpeechRecognitionLike | null {
-    const SpeechRecognition =
-        window.SpeechRecognition ?? window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-        return null;
-    }
-
-    const instance = new SpeechRecognition();
-    instance.continuous = true;
-    instance.interimResults = true;
-    instance.lang = recognitionLanguage.value;
-    instance.onresult = (event) => {
-        let interimTranscript = '';
-
-        for (
-            let index = event.resultIndex;
-            index < event.results.length;
-            index++
-        ) {
-            const transcript = event.results[index][0].transcript;
-
-            if (event.results[index].isFinal) {
-                committedTranscript.value =
-                    `${committedTranscript.value} ${transcript}`.trim();
-            } else {
-                interimTranscript += transcript;
-            }
-        }
-
-        currentTranscript.value =
-            `${committedTranscript.value} ${interimTranscript}`.trim();
-    };
-    instance.onerror = (event) => {
-        if (recognition.value !== instance) {
-            return;
-        }
-
-        const message = speechRecognitionErrorMessage(event.error);
-
-        if (message) {
-            liveError.value = message;
-        }
-
-        shouldSendWhenRecognitionEnds.value = false;
-        isListening.value = false;
-        cleanupAudioInput();
-    };
-    instance.onend = () => {
-        if (recognition.value !== instance) {
-            return;
-        }
-
-        recognition.value = null;
-        isListening.value = false;
-        cleanupAudioInput();
-
-        if (shouldSendWhenRecognitionEnds.value) {
-            shouldSendWhenRecognitionEnds.value = false;
-
-            if (currentTranscript.value.trim()) {
-                sendMessage(currentTranscript.value);
-            } else {
-                liveError.value =
-                    'No speech was captured. Click the microphone and try again.';
-            }
-        }
-    };
-
-    return instance;
+    return candidates.find((type) => MediaRecorder.isTypeSupported?.(type));
 }
 
 function resetTranscript() {
-    committedTranscript.value = '';
     currentTranscript.value = '';
     liveError.value = null;
 }
@@ -349,6 +239,7 @@ async function startListening() {
         isListening.value ||
         isProcessing.value ||
         isPreparingAudio.value ||
+        isTranscribing.value ||
         props.session.status === 'completed'
     ) {
         return false;
@@ -365,9 +256,9 @@ async function startListening() {
         return false;
     }
 
-    if (!supportsSpeechRecognition.value) {
+    if (!supportsVoiceRecording.value) {
         liveError.value =
-            'Your browser does not support speech recognition. Use Chrome or Edge for live mode.';
+            'Your browser does not support audio recording. Use Chrome or Edge for live mode.';
 
         isStartingListening.value = false;
 
@@ -379,8 +270,10 @@ async function startListening() {
             return false;
         }
 
-        recognition.value?.abort();
-        recognition.value = null;
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+        }
+        mediaRecorder = null;
 
         if (!isHoldingToTalk.value) {
             cleanupAudioInput();
@@ -389,19 +282,55 @@ async function startListening() {
         }
 
         stopAssistantAudio();
-        shouldSendWhenRecognitionEnds.value = false;
+        shouldSendWhenRecordingEnds.value = false;
         resetTranscript();
 
-        recognition.value = makeRecognition();
-        recognition.value?.start();
+        if (!microphoneStream) {
+            liveError.value = 'Microphone stream unavailable. Try again.';
+
+            return false;
+        }
+
+        recordedChunks = [];
+        const mimeType = pickAudioMimeType();
+        mediaRecorder = mimeType
+            ? new MediaRecorder(microphoneStream, { mimeType })
+            : new MediaRecorder(microphoneStream);
+
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, {
+                type: mediaRecorder?.mimeType || 'audio/webm',
+            });
+            recordedChunks = [];
+            cleanupAudioInput();
+
+            if (shouldSendWhenRecordingEnds.value) {
+                shouldSendWhenRecordingEnds.value = false;
+
+                if (blob.size > 0) {
+                    transcribeAndSend(blob);
+                } else {
+                    liveError.value =
+                        'No audio was captured. Click the microphone and try again.';
+                }
+            }
+        };
+
+        mediaRecorder.start();
         isListening.value = true;
 
         return true;
     } catch {
         liveError.value =
-            'Speech recognition could not start. Refresh the page and try again.';
+            'Audio recording could not start. Refresh the page and try again.';
         isListening.value = false;
-        recognition.value = null;
+        mediaRecorder = null;
         cleanupAudioInput();
 
         return false;
@@ -443,28 +372,93 @@ function setupVolumeMeter(stream: MediaStream) {
 }
 
 function stopListening(sendWhenStopped = false) {
-    shouldSendWhenRecognitionEnds.value = sendWhenStopped;
+    shouldSendWhenRecordingEnds.value = sendWhenStopped;
     isStartingListening.value = false;
 
-    if (!recognition.value) {
+    if (!mediaRecorder || mediaRecorder.state === 'inactive') {
         cleanupAudioInput();
 
-        if (sendWhenStopped && currentTranscript.value.trim()) {
-            sendMessage(currentTranscript.value);
+        if (sendWhenStopped) {
+            liveError.value =
+                'No audio was captured. Click the microphone and try again.';
         }
 
         return;
     }
 
     try {
-        recognition.value.stop();
+        mediaRecorder.stop();
     } catch {
-        recognition.value.abort();
-        recognition.value = null;
+        mediaRecorder = null;
         cleanupAudioInput();
     }
 
     isListening.value = false;
+}
+
+async function transcribeAndSend(blob: Blob) {
+    const csrfToken = usePage().props.csrf_token as string | undefined;
+
+    if (!csrfToken) {
+        liveError.value =
+            'Session token missing. Refresh the page and try again.';
+
+        return;
+    }
+
+    isTranscribing.value = true;
+    liveError.value = null;
+
+    try {
+        const formData = new FormData();
+        formData.append('audio', blob, 'answer.webm');
+        formData.append('language', recognitionLanguage.value.split('-')[0]);
+
+        const response = await fetch(
+            interviewSessionTranscribe.url(props.session.id),
+            {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: formData,
+            },
+        );
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            const serverMessage =
+                typeof data.message === 'string'
+                    ? data.message
+                    : `Transcription failed (${response.status})`;
+
+            throw new Error(serverMessage);
+        }
+
+        const text = typeof data.text === 'string' ? data.text.trim() : '';
+
+        if (!text) {
+            liveError.value =
+                'No speech was detected. Click the microphone, speak clearly, then use Stop & Send.';
+
+            return;
+        }
+
+        currentTranscript.value = text;
+
+        await sendMessage(text);
+    } catch (error) {
+        liveError.value =
+            error instanceof Error
+                ? error.message
+                : 'Could not transcribe audio. Check your OpenAI connection and try again.';
+    } finally {
+        isTranscribing.value = false;
+    }
 }
 
 async function startHoldToTalk(event?: PointerEvent | KeyboardEvent) {
@@ -473,6 +467,7 @@ async function startHoldToTalk(event?: PointerEvent | KeyboardEvent) {
         isStartingListening.value ||
         isProcessing.value ||
         isPreparingAudio.value ||
+        isTranscribing.value ||
         props.session.status === 'completed'
     ) {
         return;
@@ -712,7 +707,10 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    recognition.value?.abort();
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+    }
+    cleanupAudioInput();
     stopAssistantAudio();
 });
 
@@ -762,6 +760,7 @@ defineOptions({
                             statusLabel === 'Listening'
                                 ? 'animate-pulse bg-green-500'
                                 : statusLabel === 'Thinking' ||
+                                    statusLabel === 'Transcribing' ||
                                     statusLabel === 'Preparing voice'
                                   ? 'bg-yellow-500'
                                   : statusLabel === 'Speaking'
@@ -788,7 +787,9 @@ defineOptions({
                     <span v-else-if="!isSecureBrowserContext">
                         HTTPS or localhost required
                     </span>
-                    <span v-else>Chrome or Edge required</span>
+                    <span v-else>
+                        Microphone recording not supported in this browser
+                    </span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span
@@ -828,7 +829,9 @@ defineOptions({
                         :class="[
                             isListening
                                 ? 'border-green-300 bg-green-50 shadow-[0_0_0_18px_rgba(34,197,94,0.12)] dark:border-green-900 dark:bg-green-950/40'
-                                : isProcessing || isPreparingAudio
+                                : isProcessing ||
+                                    isPreparingAudio ||
+                                    isTranscribing
                                   ? 'border-yellow-300 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/40'
                                   : isSpeaking
                                     ? 'border-blue-300 bg-blue-50 shadow-[0_0_0_18px_rgba(59,130,246,0.12)] dark:border-blue-900 dark:bg-blue-950/40'
@@ -837,6 +840,7 @@ defineOptions({
                         :disabled="
                             isProcessing ||
                             isPreparingAudio ||
+                            isTranscribing ||
                             session.status === 'completed'
                         "
                         @pointerdown.prevent="startHoldToTalk"
@@ -848,7 +852,7 @@ defineOptions({
                         @keyup.enter.prevent="stopHoldToTalk"
                     >
                         <Loader2
-                            v-if="isProcessing || isPreparingAudio"
+                            v-if="isProcessing || isPreparingAudio || isTranscribing"
                             class="h-16 w-16 animate-spin text-yellow-600"
                         />
                         <Volume2
@@ -869,13 +873,15 @@ defineOptions({
                             {{
                                 isListening
                                     ? 'Listening to your answer'
-                                    : isProcessing
-                                      ? 'AI is preparing the next response'
-                                      : isPreparingAudio
-                                        ? 'AI is preparing the voice'
-                                        : isSpeaking
-                                          ? 'AI is speaking'
-                                          : 'Ready for your answer'
+                                    : isTranscribing
+                                      ? 'Transcribing your answer'
+                                      : isProcessing
+                                        ? 'AI is preparing the next response'
+                                        : isPreparingAudio
+                                          ? 'AI is preparing the voice'
+                                          : isSpeaking
+                                            ? 'AI is speaking'
+                                            : 'Ready for your answer'
                             }}
                         </h2>
                         <p class="text-sm text-slate-500 dark:text-slate-400">
@@ -913,8 +919,8 @@ defineOptions({
                             {{ currentTranscript }}
                         </span>
                         <span v-else class="text-slate-400">
-                            Hold the microphone and speak in English. Live
-                            caption will appear here.
+                            Hold the microphone and speak in English. Your
+                            transcribed answer will appear here.
                         </span>
                     </div>
 
@@ -938,6 +944,7 @@ defineOptions({
                                 isListening ||
                                 isProcessing ||
                                 isPreparingAudio ||
+                                isTranscribing ||
                                 session.status === 'completed'
                             "
                             @click="resetTranscript"
@@ -965,7 +972,8 @@ defineOptions({
                             :disabled="
                                 isCompletingInterview ||
                                 isProcessing ||
-                                isPreparingAudio
+                                isPreparingAudio ||
+                                isTranscribing
                             "
                         >
                             <Loader2

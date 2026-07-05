@@ -67,6 +67,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('interview-sessions/{session}', [InterviewSessionController::class, 'show'])->name('interview-session.show');
     Route::post('interview-sessions/{session}/message', [InterviewSessionController::class, 'message'])->name('interview-session.message');
     Route::post('interview-sessions/{session}/audio', [InterviewSessionController::class, 'audio'])->name('interview-session.audio');
+    Route::post('interview-sessions/{session}/transcribe', [InterviewSessionController::class, 'transcribe'])->name('interview-session.transcribe');
     Route::post('interview-sessions/{session}/complete', [InterviewSessionController::class, 'complete'])->name('interview-session.complete');
 });
 
