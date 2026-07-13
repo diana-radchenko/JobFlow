@@ -7,18 +7,25 @@ import {
     Maximize2,
     Sparkles,
     Heart,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import { show as interviewSessionShow } from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { stringForHuman } from '@/helpers/strings';
 import { dashboard } from '@/routes';
 import { show as jobSelectionShow } from '@/routes/job-selection';
-import type { UserWorkJobApplication } from '@/types/laravel-models';
+import type {
+    InterviewSession,
+    UserWorkJobApplication,
+} from '@/types/laravel-models';
 
 const props = defineProps<{
     applications: UserWorkJobApplication[] | null;
+    interviewSessions: InterviewSession[] | null;
     profileFirstName: string;
 }>();
 
@@ -26,6 +33,10 @@ const visitJob = (app: any) => {
     if (app.jobId) {
         router.visit(jobSelectionShow(app.jobId).url);
     }
+};
+
+const visitSession = (session: InterviewSession) => {
+    router.visit(interviewSessionShow(session.id).url);
 };
 
 defineOptions({
@@ -91,38 +102,121 @@ const tableApplications = computed(() => {
     return [...realApps];
 });
 
-const scheduleDays = [
-    { day: 'Sun', date: '16', active: false },
-    { day: 'Mon', date: '17', active: true },
-    { day: 'Tue', date: '18', active: false },
-    { day: 'Wed', date: '19', active: false },
-    { day: 'Thu', date: '20', active: false },
-    { day: 'Fri', date: '21', active: false },
-];
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-const timelineEvents = [
-    {
-        time: '09.00',
-        hasEvent: true,
-        title: 'Daily Sync',
-        duration: '09.00am-9.30am',
-    },
-    { time: '10.00', hasEvent: false },
-    {
-        time: '11.00',
-        hasEvent: true,
-        title: 'Interview',
-        duration: '11.00am-11.30am',
-    },
-    {
-        time: '12.00',
-        hasEvent: true,
-        title: 'Interview',
-        duration: '12.00am-12.30am',
-    },
-    { time: '13.00', hasEvent: false },
-    { time: '14.00', hasEvent: false },
-];
+const startOfDay = (date: Date) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+
+    return d;
+};
+
+const startOfWeek = (date: Date) => {
+    const d = startOfDay(date);
+    d.setDate(d.getDate() - d.getDay());
+
+    return d;
+};
+
+const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+const today = startOfDay(new Date());
+const selectedDate = ref(today);
+const weekStart = ref(startOfWeek(today));
+
+const weekDays = computed(() =>
+    Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(weekStart.value);
+        date.setDate(date.getDate() + i);
+
+        return {
+            date,
+            day: DAY_LABELS[date.getDay()],
+            dateLabel: String(date.getDate()),
+            active: isSameDay(date, selectedDate.value),
+            hasEvent: !!sessionsByDay.value.get(date.toDateString())?.length,
+        };
+    }),
+);
+
+const weekRangeLabel = computed(() => {
+    const start = weekDays.value[0].date;
+    const end = weekDays.value[6].date;
+    const startLabel = start.toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+    });
+    const endLabel = end.toLocaleDateString(
+        undefined,
+        start.getMonth() === end.getMonth()
+            ? { day: 'numeric', year: 'numeric' }
+            : { month: 'short', day: 'numeric', year: 'numeric' },
+    );
+
+    return `${startLabel} - ${endLabel}`;
+});
+
+const goToPreviousWeek = () => {
+    const date = new Date(weekStart.value);
+    date.setDate(date.getDate() - 7);
+    weekStart.value = date;
+};
+
+const goToNextWeek = () => {
+    const date = new Date(weekStart.value);
+    date.setDate(date.getDate() + 7);
+    weekStart.value = date;
+};
+
+const selectDay = (date: Date) => {
+    selectedDate.value = date;
+};
+
+const sessionsByDay = computed(() => {
+    const map = new Map<string, InterviewSession[]>();
+
+    for (const session of props.interviewSessions || []) {
+        if (!session.created_at) {
+continue;
+}
+
+        const key = new Date(session.created_at).toDateString();
+        const bucket = map.get(key) ?? [];
+        bucket.push(session);
+        map.set(key, bucket);
+    }
+
+    for (const bucket of map.values()) {
+        bucket.sort(
+            (a, b) =>
+                new Date(a.created_at!).getTime() -
+                new Date(b.created_at!).getTime(),
+        );
+    }
+
+    return map;
+});
+
+const timelineEvents = computed(() => {
+    const sessions =
+        sessionsByDay.value.get(selectedDate.value.toDateString()) || [];
+
+    return sessions.map((session) => {
+        const date = new Date(session.created_at!);
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+
+        return {
+            time: `${hours}:${minutes}`,
+            title: `${stringForHuman(session.type)} Interview`,
+            duration: `${stringForHuman(session.complexity)} · ${stringForHuman(session.status)}`,
+            session,
+        };
+    });
+});
 
 const aiJobsMock = [
     {
@@ -221,12 +315,39 @@ const articlesMock = [
                     <CardContent class="p-0">
                         <!-- Calendar Header -->
                         <div
+                            class="flex items-center justify-between border-b border-slate-200/60 px-4 pt-4 dark:border-slate-800"
+                        >
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="h-8 w-8 rounded-full text-slate-500 hover:text-primary"
+                                @click="goToPreviousWeek"
+                            >
+                                <ChevronLeft class="h-4 w-4" />
+                            </Button>
+                            <span
+                                class="text-xs font-bold text-slate-500 dark:text-slate-400"
+                            >
+                                {{ weekRangeLabel }}
+                            </span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="h-8 w-8 rounded-full text-slate-500 hover:text-primary"
+                                @click="goToNextWeek"
+                            >
+                                <ChevronRight class="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div
                             class="flex justify-between border-b border-slate-200/60 px-4 py-6 dark:border-slate-800"
                         >
-                            <div
-                                v-for="day in scheduleDays"
-                                :key="day.date"
-                                class="flex flex-col items-center gap-1"
+                            <button
+                                v-for="day in weekDays"
+                                :key="day.date.toISOString()"
+                                type="button"
+                                class="flex cursor-pointer flex-col items-center gap-1 rounded-lg px-1 py-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                                @click="selectDay(day.date)"
                             >
                                 <span
                                     class="text-xs font-medium text-slate-500 dark:text-slate-400"
@@ -238,20 +359,28 @@ const articlesMock = [
                                     {{ day.day }}
                                 </span>
                                 <span
-                                    class="text-lg font-bold"
+                                    class="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold"
                                     :class="
                                         day.active
-                                            ? 'text-slate-900 dark:text-slate-100'
+                                            ? 'bg-primary text-primary-foreground'
                                             : 'text-slate-400 dark:text-slate-500'
                                     "
                                 >
-                                    {{ day.date }}
+                                    {{ day.dateLabel }}
                                 </span>
-                            </div>
+                                <span
+                                    class="h-1.5 w-1.5 rounded-full"
+                                    :class="
+                                        day.hasEvent
+                                            ? 'bg-primary'
+                                            : 'bg-transparent'
+                                    "
+                                ></span>
+                            </button>
                         </div>
 
                         <!-- Timeline -->
-                        <div class="relative p-6">
+                        <div v-if="timelineEvents.length" class="relative p-6">
                             <!-- Continuous line -->
                             <div
                                 class="absolute top-10 bottom-6 left-[4.5rem] w-px border-l-2 border-dashed border-slate-300 dark:border-slate-700"
@@ -264,19 +393,21 @@ const articlesMock = [
                             >
                                 <!-- Time Badge -->
                                 <div
-                                    class="relative z-10 flex w-16 shrink-0 justify-end"
+                                    class="relative z-10 flex w-20 shrink-0 justify-end"
                                 >
                                     <div
-                                        class="flex h-8 items-center justify-center rounded-full bg-primary px-3 text-sm font-bold text-primary-foreground shadow-sm"
+                                        class="flex h-10 items-center justify-center rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground shadow-sm"
                                     >
                                         {{ event.time }}
                                     </div>
                                 </div>
 
                                 <!-- Event Card -->
-                                <div v-if="event.hasEvent" class="mt-6 flex-1">
-                                    <div
-                                        class="relative rounded-[16px] bg-primary p-4 text-primary-foreground shadow-sm"
+                                <div class="mt-6 flex-1">
+                                    <button
+                                        type="button"
+                                        class="relative w-full cursor-pointer rounded-[16px] bg-primary p-4 text-left text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
+                                        @click="visitSession(event.session)"
                                     >
                                         <div class="text-[15px] font-bold">
                                             {{ event.title }}
@@ -289,9 +420,15 @@ const articlesMock = [
                                         <div
                                             class="absolute top-4 right-4 h-2 w-2 rounded-full bg-white"
                                         ></div>
-                                    </div>
+                                    </button>
                                 </div>
                             </div>
+                        </div>
+                        <div
+                            v-else
+                            class="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+                        >
+                            No interviews on this day.
                         </div>
                     </CardContent>
                 </Card>

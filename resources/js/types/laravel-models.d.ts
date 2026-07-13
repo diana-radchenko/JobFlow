@@ -41,6 +41,24 @@ export type Education = {
     user_exists: boolean;
 };
 
+export type InterviewSession = {
+    // columns
+    id: number;
+    user_id: number;
+    conversation_id: string | null;
+    type: string;
+    complexity: string;
+    mode: string;
+    status: string;
+    created_at: string | null;
+    updated_at: string | null;
+    // relations
+    user: User;
+    // counts
+    // exists
+    user_exists: boolean;
+};
+
 export type Project = {
     // columns
     id: number;
