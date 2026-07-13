@@ -13,7 +13,10 @@ class WorkJobSeeder extends Seeder
     public function run(): void
     {
         foreach (WorkJobFactory::mockReadyData() as $data) {
-            \App\Models\WorkJob::create($data);
+            \App\Models\WorkJob::updateOrCreate(
+                ['title' => $data['title'], 'company' => $data['company']],
+                $data
+            );
         }
     }
 }

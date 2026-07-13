@@ -138,6 +138,26 @@ class WorkJobFactory extends Factory
                 'location' => 'Denver, USA',
                 'technologies' => ['SQL', 'Python', 'Tableau', 'Power BI', 'Google Analytics', 'Statistics'],
             ],
+            [
+                'title' => 'Data Scientist',
+                'salary_start' => 105000,
+                'salary_end' => 155000,
+                'company' => 'DataWise',
+                'description' => 'DataWise is hiring a Data Scientist to drive data-driven decision-making. You will develop machine learning models, perform statistical analysis, and build predictive systems that solve real-world business problems. We seek someone with strong expertise in Python, machine learning frameworks, and big data tools. You will collaborate with product and engineering teams to translate insights into actionable strategies.',
+                'contacts' => 'careers@datawise.com',
+                'location' => 'San Francisco, USA',
+                'technologies' => ['Python', 'Machine Learning', 'TensorFlow', 'SQL', 'Spark', 'Pandas', 'Scikit-learn', 'Statistics'],
+            ],
+            [
+                'title' => 'Software Engineer',
+                'salary_start' => 95000,
+                'salary_end' => 140000,
+                'company' => 'InnovateTech',
+                'description' => 'InnovateTech is looking for a Software Engineer to join our team! We are building cutting-edge solutions that transform industries. You will work on full-stack development, design scalable architectures, and mentor team members. We value problem-solving, creativity, and a passion for excellence. The ideal candidate has 4+ years of experience with modern programming languages and frameworks.',
+                'contacts' => 'hiring@innovatetech.com',
+                'location' => 'Austin, USA',
+                'technologies' => ['JavaScript', 'TypeScript', 'Node.js', 'React', 'PostgreSQL', 'Docker', 'AWS', 'Git'],
+            ],
         ];
     }
 }

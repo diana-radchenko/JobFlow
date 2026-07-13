@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
+import { router, useForm } from '@inertiajs/vue3';
 import {
     ChevronLeft,
     ChevronRight,
@@ -7,8 +7,10 @@ import {
     Trash2,
     Edit2,
     Save,
+    ChevronUp,
+    ChevronDown,
 } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -17,6 +19,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -27,11 +30,16 @@ import {
 } from '@/components/ui/select';
 import { SkillsLevelEnum } from '@/enums/laravel-models-enums';
 import { stringForHuman } from '@/helpers/strings';
+import items from '@/routes/resume-editor/items';
+import skill from '@/routes/resume-editor/skill';
 import type { SkillsLevel } from '@/types/laravel-models';
 
-defineProps<{
+interface Props {
+    resume: { id: number; title: string };
     skills: any[];
-}>();
+}
+
+const props = defineProps<Props>();
 
 interface Emits {
     nextSection: [section: string];
@@ -49,6 +57,13 @@ const form = useForm({
 const showForm = ref(false);
 const editingId = ref<number | null>(null);
 
+const includedIds = computed(() =>
+    props.skills
+        .filter((s) => s.included)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map((s) => s.id),
+);
+
 const resetForm = () => {
     form.reset();
     editingId.value = null;
@@ -57,27 +72,53 @@ const resetForm = () => {
 
 const submit = () => {
     if (editingId.value) {
-        form.put(`/resume-editor/skill/${editingId.value}`, {
+        form.put(skill.update.url([props.resume.id, editingId.value]), {
             onSuccess: () => resetForm(),
         });
     } else {
-        form.post('/resume-editor/skill', {
+        form.post(skill.store.url(props.resume.id), {
             onSuccess: () => resetForm(),
         });
     }
 };
 
-const editSkill = (skill: any) => {
-    editingId.value = skill.id;
-    form.name = skill.name;
-    form.proficiency_level = skill.proficiency_level;
+const editSkill = (s: any) => {
+    editingId.value = s.id;
+    form.name = s.name;
+    form.proficiency_level = s.proficiency_level;
     showForm.value = true;
 };
 
 const deleteSkill = (id: number) => {
     if (confirm('Are you sure you want to delete this skill?')) {
-        useForm().delete(`/resume-editor/skill/${id}`);
+        useForm().delete(skill.destroy.url([props.resume.id, id]));
     }
+};
+
+const toggleInclude = (s: any) => {
+    router.post(
+        items.toggle.url([props.resume.id, 'skill', s.id]),
+        {},
+        { preserveScroll: true },
+    );
+};
+
+const moveItem = (s: any, direction: -1 | 1) => {
+    const ids = [...includedIds.value];
+    const index = ids.indexOf(s.id);
+    const swapIndex = index + direction;
+
+    if (index === -1 || swapIndex < 0 || swapIndex >= ids.length) {
+        return;
+    }
+
+    [ids[index], ids[swapIndex]] = [ids[swapIndex], ids[index]];
+
+    router.post(
+        items.reorder.url([props.resume.id, 'skill']),
+        { ids },
+        { preserveScroll: true },
+    );
 };
 
 const getProficiencyColor = (level: string) => {
@@ -101,38 +142,68 @@ const getProficiencyColor = (level: string) => {
             <CardHeader>
                 <CardTitle>Skills & Competencies</CardTitle>
                 <CardDescription>
-                    Highlight your professional skills and expertise levels
+                    Choose which skills to include in "{{ resume.title }}"
                 </CardDescription>
             </CardHeader>
             <CardContent class="space-y-6">
                 <!-- Skills Grid -->
                 <div v-if="skills.length > 0" class="grid gap-3">
                     <div
-                        v-for="skill in skills"
-                        :key="skill.id"
+                        v-for="s in skills"
+                        :key="s.id"
                         class="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+                        :class="{ 'opacity-50': !s.included }"
                     >
-                        <div>
-                            <h4 class="font-medium text-foreground">
-                                {{ skill.name }}
-                            </h4>
-                            <span
-                                :class="[
-                                    'mt-1 inline-block rounded px-2 py-1 text-xs',
-                                    getProficiencyColor(
-                                        skill.proficiency_level,
-                                    ),
-                                ]"
-                            >
-                                {{ stringForHuman(skill.proficiency_level) }}
-                            </span>
+                        <div class="flex items-center gap-3">
+                            <Checkbox
+                                :model-value="s.included"
+                                @update:model-value="toggleInclude(s)"
+                            />
+                            <div>
+                                <h4 class="font-medium text-foreground">
+                                    {{ s.name }}
+                                </h4>
+                                <span
+                                    :class="[
+                                        'mt-1 inline-block rounded px-2 py-1 text-xs',
+                                        getProficiencyColor(
+                                            s.proficiency_level,
+                                        ),
+                                    ]"
+                                >
+                                    {{ stringForHuman(s.proficiency_level) }}
+                                </span>
+                            </div>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex items-center gap-2">
+                           <!--  <div v-if="s.included" class="flex gap-1">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    :disabled="includedIds[0] === s.id"
+                                    @click="moveItem(s, -1)"
+                                >
+                                    <ChevronUp class="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    :disabled="
+                                        includedIds[includedIds.length - 1] ===
+                                        s.id
+                                    "
+                                    @click="moveItem(s, 1)"
+                                >
+                                    <ChevronDown class="h-4 w-4" />
+                                </Button>
+                            </div> -->
                             <Button
                                 type="button"
                                 size="sm"
                                 variant="outline"
-                                @click="editSkill(skill)"
+                                @click="editSkill(s)"
                             >
                                 <Edit2 class="h-4 w-4" />
                             </Button>
@@ -140,7 +211,7 @@ const getProficiencyColor = (level: string) => {
                                 type="button"
                                 size="sm"
                                 variant="outline"
-                                @click="deleteSkill(skill.id)"
+                                @click="deleteSkill(s.id)"
                             >
                                 <Trash2 class="h-4 w-4" />
                             </Button>

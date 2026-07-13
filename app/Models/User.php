@@ -65,6 +65,11 @@ class User extends Authenticatable
         return $this->hasOne(AdditionalInformation::class);
     }
 
+    public function resumes(): HasMany
+    {
+        return $this->hasMany(Resume::class);
+    }
+
     public function applications(): HasMany
     {
         return $this->hasMany(UserWorkJobApplication::class);

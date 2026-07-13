@@ -9,6 +9,7 @@ import {
     Edit2,
     ChevronLeft,
 } from 'lucide-vue-next';
+import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -21,6 +22,7 @@ import { stringForHuman } from '@/helpers/strings';
 import type { WorkExperience } from '@/types/laravel-models';
 
 interface Props {
+    resume: { id: number; title: string };
     user: any;
     profile: any;
     workExperiences: any[];
@@ -35,6 +37,17 @@ const props = defineProps<Props>();
 defineEmits<{
     nextSection: [section: string];
 }>();
+
+const includedWorkExperiences = computed(() =>
+    props.workExperiences.filter((exp) => exp.included),
+);
+const includedEducations = computed(() =>
+    props.educations.filter((edu) => edu.included),
+);
+const includedSkills = computed(() => props.skills.filter((s) => s.included));
+const includedProjects = computed(() =>
+    props.projects.filter((p) => p.included),
+);
 
 const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -90,9 +103,10 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
     <div class="space-y-6">
         <Card>
             <CardHeader>
-                <CardTitle>Resume Summary</CardTitle>
+                <CardTitle>{{ resume.title }}</CardTitle>
                 <CardDescription>
-                    Review your complete resume before finalizing
+                    Review this resume before finalizing — only the items
+                    you've included are shown below
                 </CardDescription>
             </CardHeader>
             <CardContent class="space-y-8">
@@ -165,9 +179,9 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                             <Edit2 class="h-4 w-4" />
                         </Button>
                     </div>
-                    <div v-if="workExperiences.length > 0" class="space-y-4">
+                    <div v-if="includedWorkExperiences.length > 0" class="space-y-4">
                         <div
-                            v-for="exp in workExperiences"
+                            v-for="exp in includedWorkExperiences"
                             :key="exp.id"
                             class="rounded-lg border border-border p-3"
                         >
@@ -217,9 +231,9 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                             <Edit2 class="h-4 w-4" />
                         </Button>
                     </div>
-                    <div v-if="educations.length > 0" class="space-y-4">
+                    <div v-if="includedEducations.length > 0" class="space-y-4">
                         <div
-                            v-for="edu in educations"
+                            v-for="edu in includedEducations"
                             :key="edu.id"
                             class="rounded-lg border border-border p-3"
                         >
@@ -273,9 +287,9 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                             <Edit2 class="h-4 w-4" />
                         </Button>
                     </div>
-                    <div v-if="skills.length > 0" class="flex flex-wrap gap-2">
+                    <div v-if="includedSkills.length > 0" class="flex flex-wrap gap-2">
                         <span
-                            v-for="skill in skills"
+                            v-for="skill in includedSkills"
                             :key="skill.id"
                             class="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
                         >
@@ -304,9 +318,9 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                             <Edit2 class="h-4 w-4" />
                         </Button>
                     </div>
-                    <div v-if="projects.length > 0" class="space-y-4">
+                    <div v-if="includedProjects.length > 0" class="space-y-4">
                         <div
-                            v-for="proj in projects"
+                            v-for="proj in includedProjects"
                             :key="proj.id"
                             class="rounded-lg border border-border p-3"
                         >

@@ -5,9 +5,10 @@ use App\Models\WorkExperience;
 
 test('authenticated user can create work experience with city country and remote flag', function () {
     $user = User::factory()->create();
+    $resume = $user->resumes()->create(['title' => 'My Resume']);
 
     $this->actingAs($user)
-        ->post(route('resume-editor.work-experience.store'), [
+        ->post(route('resume-editor.work-experience.store', $resume), [
             'company_name' => 'Acme Corp',
             'job_title' => 'Engineer',
             'city' => 'Berlin',
@@ -33,6 +34,7 @@ test('authenticated user can create work experience with city country and remote
 
 test('authenticated user can update work experience location fields', function () {
     $user = User::factory()->create();
+    $resume = $user->resumes()->create(['title' => 'My Resume']);
     $workExperience = WorkExperience::create([
         'user_id' => $user->id,
         'company_name' => 'Old Co',
@@ -46,7 +48,7 @@ test('authenticated user can update work experience location fields', function (
     ]);
 
     $this->actingAs($user)
-        ->put(route('resume-editor.work-experience.update', $workExperience), [
+        ->put(route('resume-editor.work-experience.update', [$resume, $workExperience]), [
             'company_name' => 'New Co',
             'job_title' => 'Senior Dev',
             'city' => 'Amsterdam',

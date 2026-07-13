@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
+import { router, useForm } from '@inertiajs/vue3';
 import {
     ChevronLeft,
     ChevronRight,
@@ -7,8 +7,10 @@ import {
     Trash2,
     Edit2,
     Save,
+    ChevronUp,
+    ChevronDown,
 } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,9 +25,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDateForInput } from '@/helpers/dates';
+import items from '@/routes/resume-editor/items';
+import workExperience from '@/routes/resume-editor/work-experience';
 import type { WorkExperience } from '@/types/laravel-models';
 
 interface Props {
+    resume: { id: number; title: string };
     workExperiences: WorkExperience[];
 }
 
@@ -33,7 +38,7 @@ interface Emits {
     nextSection: [section: string];
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 defineEmits<Emits>();
 
 const form = useForm({
@@ -50,6 +55,13 @@ const form = useForm({
 
 const showForm = ref(false);
 const editingId = ref<number | null>(null);
+
+const includedIds = computed(() =>
+    props.workExperiences
+        .filter((exp) => exp.included)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map((exp) => exp.id),
+);
 
 const formatWorkLocationLine = (exp: WorkExperience): string => {
     const place = [exp.city, exp.country]
@@ -75,11 +87,11 @@ const resetForm = () => {
 
 const submit = () => {
     if (editingId.value) {
-        form.put(`/resume-editor/work-experience/${editingId.value}`, {
+        form.put(workExperience.update.url([props.resume.id, editingId.value]), {
             onSuccess: () => resetForm(),
         });
     } else {
-        form.post('/resume-editor/work-experience', {
+        form.post(workExperience.store.url(props.resume.id), {
             onSuccess: () => resetForm(),
         });
     }
@@ -101,8 +113,34 @@ const editExperience = (experience: WorkExperience) => {
 
 const deleteExperience = (id: number) => {
     if (confirm('Are you sure you want to delete this work experience?')) {
-        useForm().delete(`/resume-editor/work-experience/${id}`);
+        useForm().delete(workExperience.destroy.url([props.resume.id, id]));
     }
+};
+
+const toggleInclude = (experience: WorkExperience) => {
+    router.post(
+        items.toggle.url([props.resume.id, 'work-experience', experience.id]),
+        {},
+        { preserveScroll: true },
+    );
+};
+
+const moveItem = (experience: WorkExperience, direction: -1 | 1) => {
+    const ids = [...includedIds.value];
+    const index = ids.indexOf(experience.id);
+    const swapIndex = index + direction;
+
+    if (index === -1 || swapIndex < 0 || swapIndex >= ids.length) {
+        return;
+    }
+
+    [ids[index], ids[swapIndex]] = [ids[swapIndex], ids[index]];
+
+    router.post(
+        items.reorder.url([props.resume.id, 'work-experience']),
+        { ids },
+        { preserveScroll: true },
+    );
 };
 
 const formatDate = (date: string) => {
@@ -119,7 +157,7 @@ const formatDate = (date: string) => {
             <CardHeader>
                 <CardTitle>Work Experience</CardTitle>
                 <CardDescription>
-                    Add your professional work history
+                    Choose which experience to include in "{{ resume.title }}"
                 </CardDescription>
             </CardHeader>
             <CardContent class="space-y-6">
@@ -129,51 +167,85 @@ const formatDate = (date: string) => {
                         v-for="exp in workExperiences"
                         :key="exp.id"
                         class="flex items-start justify-between gap-4 rounded-lg border border-border p-4"
+                        :class="{ 'opacity-50': !exp.included }"
                     >
-                        <div class="flex-1">
-                            <h4 class="font-semibold text-foreground">
-                                {{ exp.job_title }}
-                            </h4>
-                            <p class="text-sm text-foreground/70">
-                                {{ exp.company_name }}
-                            </p>
-                            <p class="mt-1 text-xs text-foreground/60">
-                                {{ formatDate(exp.start_date) }} -
-                                <span v-if="exp.is_current">Present</span>
-                                <span v-else>{{
-                                    exp.end_date ? formatDate(exp.end_date) : ''
-                                }}</span>
-                            </p>
-                            <p
-                                v-if="formatWorkLocationLine(exp)"
-                                class="text-xs text-foreground/60"
-                            >
-                                📍 {{ formatWorkLocationLine(exp) }}
-                            </p>
-                            <p
-                                v-if="exp.description"
-                                class="mt-2 text-sm text-foreground/70"
-                            >
-                                {{ exp.description }}
-                            </p>
+                        <div class="flex items-start gap-3">
+                            <Checkbox
+                                :model-value="exp.included"
+                                @update:model-value="toggleInclude(exp)"
+                            />
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-foreground">
+                                    {{ exp.job_title }}
+                                </h4>
+                                <p class="text-sm text-foreground/70">
+                                    {{ exp.company_name }}
+                                </p>
+                                <p class="mt-1 text-xs text-foreground/60">
+                                    {{ formatDate(exp.start_date) }} -
+                                    <span v-if="exp.is_current">Present</span>
+                                    <span v-else>{{
+                                        exp.end_date
+                                            ? formatDate(exp.end_date)
+                                            : ''
+                                    }}</span>
+                                </p>
+                                <p
+                                    v-if="formatWorkLocationLine(exp)"
+                                    class="text-xs text-foreground/60"
+                                >
+                                    📍 {{ formatWorkLocationLine(exp) }}
+                                </p>
+                                <p
+                                    v-if="exp.description"
+                                    class="mt-2 text-sm text-foreground/70"
+                                >
+                                    {{ exp.description }}
+                                </p>
+                            </div>
                         </div>
-                        <div class="flex gap-2">
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                @click="editExperience(exp)"
-                            >
-                                <Edit2 class="h-4 w-4" />
-                            </Button>
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                @click="deleteExperience(exp.id)"
-                            >
-                                <Trash2 class="h-4 w-4" />
-                            </Button>
+                        <div class="flex flex-col items-end gap-2">
+                            <div class="flex gap-2">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    @click="editExperience(exp)"
+                                >
+                                    <Edit2 class="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    @click="deleteExperience(exp.id)"
+                                >
+                                    <Trash2 class="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <!-- <div v-if="exp.included" class="flex gap-1">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    :disabled="includedIds[0] === exp.id"
+                                    @click="moveItem(exp, -1)"
+                                >
+                                    <ChevronUp class="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    :disabled="
+                                        includedIds[includedIds.length - 1] ===
+                                        exp.id
+                                    "
+                                    @click="moveItem(exp, 1)"
+                                >
+                                    <ChevronDown class="h-4 w-4" />
+                                </Button>
+                            </div> -->
                         </div>
                     </div>
                 </div>

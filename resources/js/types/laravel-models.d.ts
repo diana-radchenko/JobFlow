@@ -39,6 +39,9 @@ export type Education = {
     // counts
     // exists
     user_exists: boolean;
+    // resume inclusion (present when returned from ResumeEditorController)
+    included?: boolean;
+    order?: number | null;
 };
 
 export type InterviewSession = {
@@ -76,6 +79,31 @@ export type Project = {
     // counts
     // exists
     user_exists: boolean;
+    // resume inclusion (present when returned from ResumeEditorController)
+    included?: boolean;
+    order?: number | null;
+};
+
+export type Resume = {
+    // columns
+    id: number;
+    user_id: number;
+    title: string;
+    created_at: string | null;
+    updated_at: string | null;
+    // relations
+    user: User;
+    skills: Skill[];
+    projects: Project[];
+    educations: Education[];
+    work_experiences: WorkExperience[];
+    // counts
+    skills_count: number;
+    projects_count: number;
+    educations_count: number;
+    work_experiences_count: number;
+    // exists
+    user_exists: boolean;
 };
 
 export type Skill = {
@@ -91,6 +119,9 @@ export type Skill = {
     // counts
     // exists
     user_exists: boolean;
+    // resume inclusion (present when returned from ResumeEditorController)
+    included?: boolean;
+    order?: number | null;
 };
 
 export type User = {
@@ -116,6 +147,7 @@ export type User = {
     applications: UserWorkJobApplication[];
     applied_jobs: WorkJob[];
     notifications: DatabaseNotification[];
+    resumes: Resume[];
     // counts
     educations_count: number;
     work_experiences_count: number;
@@ -124,6 +156,7 @@ export type User = {
     applications_count: number;
     applied_jobs_count: number;
     notifications_count: number;
+    resumes_count: number;
     // exists
     profile_exists: boolean;
     educations_exists: boolean;
@@ -134,6 +167,7 @@ export type User = {
     applications_exists: boolean;
     applied_jobs_exists: boolean;
     notifications_exists: boolean;
+    resumes_exists: boolean;
 };
 
 export type UserProfile = {
@@ -194,6 +228,9 @@ export type WorkExperience = {
     // counts
     // exists
     user_exists: boolean;
+    // resume inclusion (present when returned from ResumeEditorController)
+    included?: boolean;
+    order?: number | null;
 };
 
 export type WorkJob = {

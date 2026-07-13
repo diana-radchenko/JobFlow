@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { ArrowLeft } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import AlertError from '@/components/AlertError.vue';
 import AdditionalInfoForm from '@/components/ResumeEditor/AdditionalInfoForm.vue';
@@ -10,13 +11,18 @@ import ResumeEditorSidebar from '@/components/ResumeEditor/ResumeEditorSidebar.v
 import ResumeSummary from '@/components/ResumeEditor/ResumeSummary.vue';
 import SkillsForm from '@/components/ResumeEditor/SkillsForm.vue';
 import WorkExperienceForm from '@/components/ResumeEditor/WorkExperienceForm.vue';
+import resumes from '@/routes/resumes';
 
 defineOptions({
     layout: {
         breadcrumbs: [
             {
+                title: 'Resumes',
+                href: '/resumes',
+            },
+            {
                 title: 'Resume Editor',
-                href: '/resume-editor',
+                href: '#',
             },
         ],
     },
@@ -55,6 +61,19 @@ const currentComponent = computed(() => {
         <!-- Main Content -->
         <div class="flex-1 overflow-y-auto p-6">
             <div class="mx-auto max-w-2xl">
+                <div class="mb-4 flex items-center justify-between">
+                    <Link
+                        :href="resumes.index()"
+                        class="flex items-center gap-1 text-sm text-foreground/60 hover:text-foreground"
+                    >
+                        <ArrowLeft class="h-4 w-4" />
+                        My Resumes
+                    </Link>
+                    <span class="text-sm font-medium text-foreground/70">
+                        {{ props.resume?.title }}
+                    </span>
+                </div>
+
                 <!-- Error Alert -->
                 <AlertError
                     v-if="props.errors && Object.keys(props.errors).length > 0"
@@ -64,6 +83,7 @@ const currentComponent = computed(() => {
 
                 <component
                     :is="currentComponent"
+                    :resume="props.resume"
                     :user="props.user"
                     :profile="props.profile"
                     :work-experiences="props.workExperiences"

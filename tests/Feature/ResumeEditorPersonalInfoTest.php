@@ -35,7 +35,7 @@ test('personal info validation requires first name last name city and country', 
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->from(route('resume-editor'))
+        ->from(route('resumes.index'))
         ->post(route('resume-editor.personal-info.update'), [])
         ->assertSessionHasErrors(['first_name', 'last_name', 'city', 'country']);
 });

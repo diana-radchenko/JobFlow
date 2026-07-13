@@ -5,6 +5,7 @@ use App\Http\Controllers\InterviewPreparationController;
 use App\Http\Controllers\InterviewSessionController;
 use App\Http\Controllers\JobSelectionController;
 use App\Http\Controllers\RequestTrackerController;
+use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\ResumeEditorController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -24,37 +25,46 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('job-selection/{job}', [JobSelectionController::class, 'show'])->name('job-selection.show');
     Route::post('job-selection/{job}/apply', [JobSelectionController::class, 'apply'])->name('job-selection.apply');
 
-    // Resume Editor Routes
-    Route::get('resume-editor', [ResumeEditorController::class, 'show'])->name('resume-editor');
+    // Resumes (list/create/rename/delete/duplicate)
+    Route::get('resumes', [ResumeController::class, 'index'])->name('resumes.index');
+    Route::post('resumes', [ResumeController::class, 'store'])->name('resumes.store');
+    Route::put('resumes/{resume}', [ResumeController::class, 'update'])->name('resumes.update');
+    Route::delete('resumes/{resume}', [ResumeController::class, 'destroy'])->name('resumes.destroy');
+    Route::post('resumes/{resume}/duplicate', [ResumeController::class, 'duplicate'])->name('resumes.duplicate');
 
-    // Personal Info
+    // Resume Editor Routes
+    Route::get('resume-editor/{resume}', [ResumeEditorController::class, 'show'])->name('resume-editor.show');
+    Route::get('resume-editor/{resume}/summary', [ResumeEditorController::class, 'showSummary'])->name('resume-editor.summary');
+
+    // Personal Info (shared across all of a user's resumes)
     Route::post('resume-editor/personal-info', [ResumeEditorController::class, 'updatePersonalInfo'])->name('resume-editor.personal-info.update');
 
     // Work Experience
-    Route::post('resume-editor/work-experience', [ResumeEditorController::class, 'storeWorkExperience'])->name('resume-editor.work-experience.store');
-    Route::put('resume-editor/work-experience/{workExperience}', [ResumeEditorController::class, 'updateWorkExperience'])->name('resume-editor.work-experience.update');
-    Route::delete('resume-editor/work-experience/{workExperience}', [ResumeEditorController::class, 'destroyWorkExperience'])->name('resume-editor.work-experience.destroy');
+    Route::post('resume-editor/{resume}/work-experience', [ResumeEditorController::class, 'storeWorkExperience'])->name('resume-editor.work-experience.store');
+    Route::put('resume-editor/{resume}/work-experience/{workExperience}', [ResumeEditorController::class, 'updateWorkExperience'])->name('resume-editor.work-experience.update');
+    Route::delete('resume-editor/{resume}/work-experience/{workExperience}', [ResumeEditorController::class, 'destroyWorkExperience'])->name('resume-editor.work-experience.destroy');
 
     // Education
-    Route::post('resume-editor/education', [ResumeEditorController::class, 'storeEducation'])->name('resume-editor.education.store');
-    Route::put('resume-editor/education/{education}', [ResumeEditorController::class, 'updateEducation'])->name('resume-editor.education.update');
-    Route::delete('resume-editor/education/{education}', [ResumeEditorController::class, 'destroyEducation'])->name('resume-editor.education.destroy');
+    Route::post('resume-editor/{resume}/education', [ResumeEditorController::class, 'storeEducation'])->name('resume-editor.education.store');
+    Route::put('resume-editor/{resume}/education/{education}', [ResumeEditorController::class, 'updateEducation'])->name('resume-editor.education.update');
+    Route::delete('resume-editor/{resume}/education/{education}', [ResumeEditorController::class, 'destroyEducation'])->name('resume-editor.education.destroy');
 
     // Skills
-    Route::post('resume-editor/skill', [ResumeEditorController::class, 'storeSkill'])->name('resume-editor.skill.store');
-    Route::put('resume-editor/skill/{skill}', [ResumeEditorController::class, 'updateSkill'])->name('resume-editor.skill.update');
-    Route::delete('resume-editor/skill/{skill}', [ResumeEditorController::class, 'destroySkill'])->name('resume-editor.skill.destroy');
+    Route::post('resume-editor/{resume}/skill', [ResumeEditorController::class, 'storeSkill'])->name('resume-editor.skill.store');
+    Route::put('resume-editor/{resume}/skill/{skill}', [ResumeEditorController::class, 'updateSkill'])->name('resume-editor.skill.update');
+    Route::delete('resume-editor/{resume}/skill/{skill}', [ResumeEditorController::class, 'destroySkill'])->name('resume-editor.skill.destroy');
 
     // Projects
-    Route::post('resume-editor/project', [ResumeEditorController::class, 'storeProject'])->name('resume-editor.project.store');
-    Route::put('resume-editor/project/{project}', [ResumeEditorController::class, 'updateProject'])->name('resume-editor.project.update');
-    Route::delete('resume-editor/project/{project}', [ResumeEditorController::class, 'destroyProject'])->name('resume-editor.project.destroy');
+    Route::post('resume-editor/{resume}/project', [ResumeEditorController::class, 'storeProject'])->name('resume-editor.project.store');
+    Route::put('resume-editor/{resume}/project/{project}', [ResumeEditorController::class, 'updateProject'])->name('resume-editor.project.update');
+    Route::delete('resume-editor/{resume}/project/{project}', [ResumeEditorController::class, 'destroyProject'])->name('resume-editor.project.destroy');
 
-    // Additional Info
+    // Additional Info (shared across all of a user's resumes)
     Route::post('resume-editor/additional-info', [ResumeEditorController::class, 'updateAdditionalInfo'])->name('resume-editor.additional-info.update');
 
-    // Summary
-    Route::get('resume-editor/summary', [ResumeEditorController::class, 'showSummary'])->name('resume-editor.summary');
+    // Include/exclude & reorder pool items within a resume
+    Route::post('resume-editor/{resume}/items/{type}/{item}/toggle', [ResumeEditorController::class, 'toggleItem'])->name('resume-editor.items.toggle');
+    Route::post('resume-editor/{resume}/items/{type}/reorder', [ResumeEditorController::class, 'reorderItems'])->name('resume-editor.items.reorder');
 
     Route::get('interview-preparation', InterviewPreparationController::class)->name('interview-preparation');
     Route::get('salary', function () {

@@ -20,7 +20,7 @@ test('new users can register', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('resume-editor', absolute: false));
+    $response->assertRedirect(route('resumes.index', absolute: false));
 
     $this->assertDatabaseHas('users', [
         'email' => 'test@example.com',

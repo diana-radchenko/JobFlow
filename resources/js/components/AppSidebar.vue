@@ -35,13 +35,14 @@ import {
     requestTracker as requestTrackerRoute,
     salary,
 } from '@/routes';
-import { resumeEditor as resumeEditorRoute } from '@/routes';
+import resumes from '@/routes/resumes';
 import type { NavItem } from '@/types';
 
 const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 
 const dashboardUrl = dashboard();
 const requestTrackerUrl = requestTrackerRoute();
+const resumesUrl = resumes.index();
 const settingsUrl = '/settings';
 
 const mainNavItems = computed<NavItem[]>(() => [
@@ -52,10 +53,10 @@ const mainNavItems = computed<NavItem[]>(() => [
         isActive: isCurrentUrl(dashboardUrl),
     },
     {
-        title: 'Resume Editor',
-        href: resumeEditorRoute(),
+        title: 'Resumes',
+        href: resumesUrl,
         icon: FileText,
-        isActive: isCurrentUrl(resumeEditorRoute()),
+        isActive: isCurrentOrParentUrl(resumesUrl),
     },
     {
         title: 'Job Selection',
