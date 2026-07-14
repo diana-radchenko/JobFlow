@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdditionalInformation;
 use App\Models\Resume;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,6 +37,8 @@ class ResumeController extends Controller
         $resume->projects()->sync($this->orderedIds($user->projects));
         $resume->educations()->sync($this->orderedIds($user->educations));
         $resume->workExperiences()->sync($this->orderedIds($user->workExperiences));
+
+        $this->copyLatestAdditionalInfo($user->id, $resume);
 
         return redirect()->route('resume-editor.show', $resume)->with('success', 'Resume created successfully.');
     }
@@ -75,6 +78,16 @@ class ResumeController extends Controller
         $copy->educations()->sync($this->pivotOrderIds($resume->educations));
         $copy->workExperiences()->sync($this->pivotOrderIds($resume->workExperiences));
 
+        if ($resume->additionalInformation) {
+            $copy->additionalInformation()->create([
+                'user_id' => $copy->user_id,
+                'languages' => $resume->additionalInformation->languages,
+                'certifications' => $resume->additionalInformation->certifications,
+                'interests' => $resume->additionalInformation->interests,
+                'notes' => $resume->additionalInformation->notes,
+            ]);
+        }
+
         return redirect()->route('resume-editor.show', $copy)->with('success', 'Resume duplicated successfully.');
     }
 
@@ -88,5 +101,25 @@ class ResumeController extends Controller
     private function pivotOrderIds(Collection $items): array
     {
         return $items->mapWithKeys(fn ($item) => [$item->id => ['order' => $item->pivot->order]])->all();
+    }
+
+    private function copyLatestAdditionalInfo(int $userId, Resume $resume): void
+    {
+        $latest = AdditionalInformation::whereHas('resume', fn ($query) => $query->where('user_id', $userId))
+            ->where('resume_id', '!=', $resume->id)
+            ->latest('updated_at')
+            ->first();
+
+        if (! $latest) {
+            return;
+        }
+
+        $resume->additionalInformation()->create([
+            'user_id' => $userId,
+            'languages' => $latest->languages,
+            'certifications' => $latest->certifications,
+            'interests' => $latest->interests,
+            'notes' => $latest->notes,
+        ]);
     }
 }

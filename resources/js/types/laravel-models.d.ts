@@ -9,6 +9,7 @@ export type AdditionalInformation = {
     // columns
     id: number;
     user_id: number;
+    resume_id: number | null;
     languages: string | null;
     certifications: string | null;
     interests: string | null;
@@ -17,9 +18,11 @@ export type AdditionalInformation = {
     updated_at: string | null;
     // relations
     user: User;
+    resume: Resume;
     // counts
     // exists
     user_exists: boolean;
+    resume_exists: boolean;
 };
 
 export type Education = {
@@ -97,6 +100,7 @@ export type Resume = {
     projects: Project[];
     educations: Education[];
     work_experiences: WorkExperience[];
+    additional_information: AdditionalInformation;
     // counts
     skills_count: number;
     projects_count: number;
@@ -104,6 +108,7 @@ export type Resume = {
     work_experiences_count: number;
     // exists
     user_exists: boolean;
+    additional_information_exists: boolean;
 };
 
 export type Skill = {

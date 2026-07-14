@@ -12,10 +12,12 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import additionalInfo from '@/routes/resume-editor/additional-info';
 import type { AdditionalInformation } from '@/types/laravel-models';
 
 interface Props {
-    additionalInfo: AdditionalInformation;
+    resume: { id: number; title: string };
+    additionalInfo: AdditionalInformation | null;
 }
 
 interface Emits {
@@ -26,11 +28,11 @@ const props = defineProps<Props>();
 
 defineEmits<Emits>();
 
-const toFormValues = (additionalInfo: AdditionalInformation | null) => ({
-    languages: additionalInfo?.languages ?? '',
-    certifications: additionalInfo?.certifications ?? '',
-    interests: additionalInfo?.interests ?? '',
-    notes: additionalInfo?.notes ?? '',
+const toFormValues = (info: AdditionalInformation | null) => ({
+    languages: info?.languages ?? '',
+    certifications: info?.certifications ?? '',
+    interests: info?.interests ?? '',
+    notes: info?.notes ?? '',
 });
 
 const form = useForm(toFormValues(props.additionalInfo));
@@ -38,7 +40,7 @@ const form = useForm(toFormValues(props.additionalInfo));
 const showSuccessAlert = ref(false);
 
 const submit = () => {
-    form.post('/resume-editor/additional-info', {
+    form.post(additionalInfo.update.url(props.resume.id), {
         onSuccess: () => {
             showSuccessAlert.value = true;
             setTimeout(() => {

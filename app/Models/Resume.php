@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['user_id', 'title'])]
 class Resume extends Model
@@ -13,6 +14,11 @@ class Resume extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function additionalInformation(): HasOne
+    {
+        return $this->hasOne(AdditionalInformation::class);
     }
 
     public function skills(): BelongsToMany

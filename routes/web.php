@@ -59,8 +59,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('resume-editor/{resume}/project/{project}', [ResumeEditorController::class, 'updateProject'])->name('resume-editor.project.update');
     Route::delete('resume-editor/{resume}/project/{project}', [ResumeEditorController::class, 'destroyProject'])->name('resume-editor.project.destroy');
 
-    // Additional Info (shared across all of a user's resumes)
-    Route::post('resume-editor/additional-info', [ResumeEditorController::class, 'updateAdditionalInfo'])->name('resume-editor.additional-info.update');
+    // Additional Info (per resume; new resumes start with a copy of the most recent one)
+    Route::post('resume-editor/{resume}/additional-info', [ResumeEditorController::class, 'updateAdditionalInfo'])->name('resume-editor.additional-info.update');
 
     // Include/exclude & reorder pool items within a resume
     Route::post('resume-editor/{resume}/items/{type}/{item}/toggle', [ResumeEditorController::class, 'toggleItem'])->name('resume-editor.items.toggle');

@@ -179,8 +179,10 @@ class ResumeEditorController extends Controller
         return back()->with('success', 'Project deleted successfully.');
     }
 
-    public function updateAdditionalInfo(Request $request): RedirectResponse
+    public function updateAdditionalInfo(Request $request, Resume $resume): RedirectResponse
     {
+        $this->authorize('update', $resume);
+
         $validated = $request->validate([
             'languages' => 'nullable|string',
             'certifications' => 'nullable|string',
@@ -188,12 +190,10 @@ class ResumeEditorController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $user = auth()->user();
-
-        if ($user->additionalInformation) {
-            $user->additionalInformation->update($validated);
+        if ($resume->additionalInformation) {
+            $resume->additionalInformation->update($validated);
         } else {
-            $user->additionalInformation()->create($validated);
+            $resume->additionalInformation()->create(array_merge($validated, ['user_id' => $resume->user_id]));
         }
 
         return back()->with('success', 'Additional information updated successfully.');
@@ -282,7 +282,7 @@ class ResumeEditorController extends Controller
             ),
             'skills' => $this->itemsWithInclusion($user->skills()->get(), $resume->skills),
             'projects' => $this->itemsWithInclusion($user->projects()->get(), $resume->projects),
-            'additionalInfo' => $user->additionalInformation?->only(['languages', 'certifications', 'interests', 'notes']),
+            'additionalInfo' => $resume->additionalInformation?->only(['languages', 'certifications', 'interests', 'notes']),
             'showSummary' => $showSummary,
         ];
     }
