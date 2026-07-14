@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
     Bot,
     SlidersHorizontal,
@@ -10,23 +10,48 @@ import {
     ChevronLeft,
     ChevronRight,
 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { show as interviewSessionShow } from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Spinner } from '@/components/ui/spinner';
 import { stringForHuman } from '@/helpers/strings';
 import { dashboard } from '@/routes';
 import { show as jobSelectionShow } from '@/routes/job-selection';
+import { store as scoreResumeRequest } from '@/routes/resume-score';
 import type {
     InterviewSession,
     UserWorkJobApplication,
 } from '@/types/laravel-models';
 
+interface DashboardResume {
+    id: number;
+    title: string;
+}
+
+interface ResumeScoreResult {
+    score: number;
+    summary: string;
+    highlights: string[];
+    additions: string[];
+    removals: string[];
+}
+
 const props = defineProps<{
     applications: UserWorkJobApplication[] | null;
     interviewSessions: InterviewSession[] | null;
     profileFirstName: string;
+    resumes: DashboardResume[];
 }>();
 
 const visitJob = (app: any) => {
@@ -227,17 +252,15 @@ const aiJobsMock = [
         title: 'InnovateTech is looking for a Software Engineer to join our team!',
         salary: '$95,000',
         tags: ['Python', 'React'],
-        score: '72/100',
     },
     {
         id: 2,
-        url: "https://www.data-wise-inc.com/career-opportunities",   
+        url: "https://www.data-wise-inc.com/career-opportunities",
         company: 'DataWise',
         logoText: 'DW',
         title: 'DataWise is hiring a Data Scientist to drive data-driven decision-making.',
         salary: '$105,000',
         tags: ['Machine learning'],
-        score: '83/100',
     },
 /*     {
         id: 3,
@@ -247,9 +270,110 @@ const aiJobsMock = [
         title: 'SecureNet is looking for a Cybersecurity Specialist!',
         salary: '$98,000',
         tags: ['SOC', 'IDS/IPS'],
-        score: '77/100',
     }, */
 ];
+
+type AiJobMock = (typeof aiJobsMock)[number];
+
+const jobScores = reactive<Record<number, ResumeScoreResult>>({});
+const scoringJobId = ref<number | null>(null);
+const scoreErrors = reactive<Record<number, string>>({});
+
+const resumePickerOpen = ref(false);
+const resumePickerJob = ref<AiJobMock | null>(null);
+
+const recommendationsOpen = ref(false);
+const recommendationsJob = ref<AiJobMock | null>(null);
+const activeRecommendations = computed<ResumeScoreResult | null>(() =>
+    recommendationsJob.value ? (jobScores[recommendationsJob.value.id] ?? null) : null,
+);
+
+const scoreLabel = (job: AiJobMock) => {
+    const result = jobScores[job.id];
+
+    return result ? `${result.score}/100` : 'Not scored yet';
+};
+
+const scoreButtonLabel = (job: AiJobMock) => {
+    if (scoringJobId.value === job.id) {
+        return 'SCORING…';
+    }
+
+    return jobScores[job.id] ? 'VIEW RECOMMENDATIONS' : 'SCORE RESUME';
+};
+
+const scoreResumeForJob = async (job: AiJobMock, resumeId: number) => {
+    scoringJobId.value = job.id;
+    delete scoreErrors[job.id];
+
+    try {
+        const response = await fetch(scoreResumeRequest.url(), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': usePage().props.csrf_token as string,
+            },
+            body: JSON.stringify({
+                resume_id: resumeId,
+                job_title: job.title,
+                job_company: job.company,
+                job_salary: job.salary,
+                job_tags: job.tags,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Request failed');
+        }
+
+        const data = (await response.json()) as ResumeScoreResult;
+        jobScores[job.id] = data;
+        recommendationsJob.value = job;
+        recommendationsOpen.value = true;
+    } catch (error) {
+        console.error('Failed to score resume:', error);
+        scoreErrors[job.id] =
+            'Could not score this resume. Please try again.';
+    } finally {
+        scoringJobId.value = null;
+    }
+};
+
+const onScoreResume = (job: AiJobMock) => {
+    if (scoringJobId.value !== null) {
+        return;
+    }
+
+    if (jobScores[job.id]) {
+        recommendationsJob.value = job;
+        recommendationsOpen.value = true;
+        return;
+    }
+
+    if (props.resumes.length === 0) {
+        router.visit('/resumes');
+        return;
+    }
+
+    if (props.resumes.length === 1) {
+        scoreResumeForJob(job, props.resumes[0].id);
+        return;
+    }
+
+    resumePickerJob.value = job;
+    resumePickerOpen.value = true;
+};
+
+const selectResumeForScoring = (resumeId: number) => {
+    const job = resumePickerJob.value;
+    resumePickerOpen.value = false;
+    resumePickerJob.value = null;
+
+    if (job) {
+        scoreResumeForJob(job, resumeId);
+    }
+};
 
 const articlesMock = [
     {
@@ -612,15 +736,27 @@ const articlesMock = [
                                         <div
                                             class="px-4 text-sm font-bold text-slate-700 dark:text-slate-300"
                                         >
-                                            AI SCORE: {{ job.score }}
+                                            AI SCORE: {{ scoreLabel(job) }}
                                         </div>
                                         <Button
                                             variant="ghost"
                                             class="h-9 rounded-lg border border-slate-100 bg-white text-xs font-bold text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                                            :disabled="scoringJobId === job.id"
+                                            @click="onScoreResume(job)"
                                         >
-                                            OPTIMIZE RESUME
+                                            <Spinner
+                                                v-if="scoringJobId === job.id"
+                                                class="mr-2 h-3 w-3"
+                                            />
+                                            {{ scoreButtonLabel(job) }}
                                         </Button>
                                     </div>
+                                    <p
+                                        v-if="scoreErrors[job.id]"
+                                        class="mt-2 text-xs text-destructive"
+                                    >
+                                        {{ scoreErrors[job.id] }}
+                                    </p>
                                 </CardContent>
                             </Card>
                         </div>
@@ -660,5 +796,102 @@ const articlesMock = [
                 </div>
             </div>
         </div>
+
+        <!-- Resume Picker Dialog (shown when the user has multiple resumes) -->
+        <Dialog
+            :open="resumePickerOpen"
+            @update:open="resumePickerOpen = $event"
+        >
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Choose a resume to score</DialogTitle>
+                    <DialogDescription>
+                        Which resume should the AI use to score your fit for
+                        "{{ resumePickerJob?.title }}"?
+                    </DialogDescription>
+                </DialogHeader>
+                <div class="space-y-2">
+                    <Button
+                        v-for="resume in props.resumes"
+                        :key="resume.id"
+                        type="button"
+                        variant="outline"
+                        class="w-full justify-start"
+                        @click="selectResumeForScoring(resume.id)"
+                    >
+                        {{ resume.title }}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+
+        <!-- AI Score Recommendations Dialog -->
+        <Dialog
+            :open="recommendationsOpen"
+            @update:open="recommendationsOpen = $event"
+        >
+            <DialogContent class="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>
+                        AI Score: {{ activeRecommendations?.score }}/100
+                    </DialogTitle>
+                    <DialogDescription>
+                        {{ activeRecommendations?.summary }}
+                    </DialogDescription>
+                </DialogHeader>
+                <div class="max-h-[60vh] space-y-4 overflow-y-auto">
+                    <div v-if="activeRecommendations?.highlights.length">
+                        <h4 class="mb-1 text-sm font-bold text-foreground">
+                            Highlight
+                        </h4>
+                        <ul
+                            class="list-disc space-y-1 pl-5 text-sm text-foreground/70"
+                        >
+                            <li
+                                v-for="(item, index) in activeRecommendations.highlights"
+                                :key="index"
+                            >
+                                {{ item }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div v-if="activeRecommendations?.additions.length">
+                        <h4 class="mb-1 text-sm font-bold text-foreground">
+                            Add
+                        </h4>
+                        <ul
+                            class="list-disc space-y-1 pl-5 text-sm text-foreground/70"
+                        >
+                            <li
+                                v-for="(item, index) in activeRecommendations.additions"
+                                :key="index"
+                            >
+                                {{ item }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div v-if="activeRecommendations?.removals.length">
+                        <h4 class="mb-1 text-sm font-bold text-foreground">
+                            Remove
+                        </h4>
+                        <ul
+                            class="list-disc space-y-1 pl-5 text-sm text-foreground/70"
+                        >
+                            <li
+                                v-for="(item, index) in activeRecommendations.removals"
+                                :key="index"
+                            >
+                                {{ item }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose as-child>
+                        <Button type="button" variant="outline">Close</Button>
+                    </DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>

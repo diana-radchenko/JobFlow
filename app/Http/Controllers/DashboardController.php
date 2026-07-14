@@ -25,10 +25,16 @@ class DashboardController extends Controller
 
         $profileFirstName = auth()->user()->profile?->first_name ?? ' ';
 
+        $resumes = auth()->user()->resumes()
+            ->select(['id', 'title'])
+            ->orderByDesc('updated_at')
+            ->get();
+
         return Inertia::render('Dashboard', [
             'applications' => $applications,
             'interviewSessions' => $interviewSessions,
             'profileFirstName' => $profileFirstName,
+            'resumes' => $resumes,
         ]);
     }
 }

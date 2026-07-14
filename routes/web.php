@@ -7,6 +7,7 @@ use App\Http\Controllers\JobSelectionController;
 use App\Http\Controllers\RequestTrackerController;
 use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\ResumeEditorController;
+use App\Http\Controllers\ResumeScoreController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -31,6 +32,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('resumes/{resume}', [ResumeController::class, 'update'])->name('resumes.update');
     Route::delete('resumes/{resume}', [ResumeController::class, 'destroy'])->name('resumes.destroy');
     Route::post('resumes/{resume}/duplicate', [ResumeController::class, 'duplicate'])->name('resumes.duplicate');
+
+    // AI Resume Scoring (dashboard "Score Resume" action)
+    Route::post('resume-score', [ResumeScoreController::class, 'store'])->name('resume-score.store');
 
     // Resume Editor Routes
     Route::get('resume-editor/{resume}', [ResumeEditorController::class, 'show'])->name('resume-editor.show');
