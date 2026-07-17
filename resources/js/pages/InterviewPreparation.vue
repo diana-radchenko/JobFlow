@@ -3,8 +3,6 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { InfiniteScroll } from '@inertiajs/vue3';
 import {
     Mic,
-    Type,
-    Video,
     ChevronRight,
     Sparkles,
     History,
@@ -61,30 +59,6 @@ const complexities = [
     { id: 'advanced', label: 'Advanced' },
 ];
 
-const interviewModes = [
-    {
-        id: 'live',
-        title: 'Live AI Interview Mode',
-        description:
-            'The AI asks questions, the user responds with his voice, the system analyzes tone, pauses, and confidence.',
-        icon: Mic,
-    },
-    {
-        id: 'text',
-        title: 'Text-Based Interview Mode',
-        description:
-            'The questions and answers are in text format, and AI evaluates the content and style.',
-        icon: Type,
-    },
-    {
-        id: 'video',
-        title: 'Video Recording Mode',
-        description:
-            'The user records their responses, and the AI analyzes facial expressions, voice, and speech structure.',
-        icon: Video,
-    },
-];
-
 const form = useForm({
     type: '',
     complexity: '',
@@ -100,13 +74,7 @@ function handleCompleteInterviewSubmit() {
     isCompletingInterview.value = true;
 }
 
-function startInterview(modeId: string) {
-    if (modeId === 'video') {
-        alert('Video Recording Mode is coming soon.');
-
-        return;
-    }
-
+function startInterview() {
     if (props.activeSession) {
         alert(
             'You already have an active interview session. Please finish it first.',
@@ -117,7 +85,7 @@ function startInterview(modeId: string) {
 
     form.type = interviewType.value;
     form.complexity = complexity.value;
-    form.mode = modeId;
+    form.mode = 'live';
     form.post(interviewSessionStore.url());
 }
 
@@ -166,7 +134,7 @@ defineOptions({
                 <!-- Active Session Card -->
                 <Card
                     v-if="activeSession"
-                    class="rounded-[24px] border-primary/20 bg-primary/5 shadow-none dark:bg-primary/10"
+                    class="rounded-[24px] border-primary/20 bg-primary/5 py-0 shadow-none dark:bg-primary/10"
                 >
                     <CardContent class="p-6">
                         <div class="mb-4 flex items-center gap-3">
@@ -296,11 +264,66 @@ defineOptions({
                         </RadioGroup>
                     </CardContent>
                 </Card>
+            </div>
+
+            <!-- Right Column: Live Interview + Past Sessions -->
+            <div class="space-y-6">
+                <Card
+                    class="self-start overflow-hidden rounded-[24px] border-0 bg-transparent py-0 shadow-none"
+                >
+                    <CardContent class="flex flex-col items-start p-0">
+                        <button
+                            @click="startInterview"
+                            :disabled="form.processing || !!activeSession"
+                            class="group relative flex w-full max-w-md flex-col items-center justify-center gap-3 overflow-hidden rounded-[24px] border border-primary/20 bg-gradient-to-br from-primary/10 via-white to-primary/5 p-6 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 dark:border-primary/20 dark:from-primary/15 dark:via-slate-950 dark:to-slate-950"
+                        >
+                            <div
+                                class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,theme(colors.primary.DEFAULT/8%),transparent_70%)] opacity-0 transition-opacity group-hover:opacity-100"
+                            />
+
+                            <div
+                                class="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-300 group-hover:scale-110"
+                            >
+                                <Loader2
+                                    v-if="form.processing"
+                                    class="h-6 w-6 animate-spin"
+                                />
+                                <Mic v-else class="h-6 w-6" />
+                            </div>
+
+                            <div>
+                                <h4
+                                    class="mb-1 text-lg font-bold text-slate-900 dark:text-slate-100"
+                                >
+                                    Live AI Interview
+                                </h4>
+                                <p
+                                    class="mx-auto max-w-sm text-xs leading-relaxed text-slate-600 dark:text-slate-400"
+                                >
+                                    The AI asks questions, you respond with
+                                    your voice, and the system analyzes your
+                                    tone, pauses, and confidence in real time.
+                                </p>
+                            </div>
+
+                            <div
+                                class="flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition-transform group-hover:scale-105 dark:bg-slate-100 dark:text-slate-900"
+                            >
+                                {{
+                                    form.processing
+                                        ? 'Starting...'
+                                        : 'Start Interview'
+                                }}
+                                <ChevronRight class="h-4 w-4" />
+                            </div>
+                        </button>
+                    </CardContent>
+                </Card>
 
                 <!-- Past Sessions -->
                 <Card
                     v-if="pastSessions.data && pastSessions.data.length > 0"
-                    class="rounded-[24px] border-0 bg-slate-100/50 shadow-none dark:bg-slate-900/50"
+                    class="w-full max-w-md rounded-[24px] border-0 bg-slate-100/50 shadow-none dark:bg-slate-900/50"
                 >
                     <CardContent class="p-6">
                         <div class="mb-4 flex items-center gap-3">
@@ -359,57 +382,6 @@ defineOptions({
                     </CardContent>
                 </Card>
             </div>
-
-            <!-- Right Column: Interview Modes -->
-            <Card
-                class="overflow-hidden rounded-[24px] border-0 bg-slate-100/50 shadow-none dark:bg-slate-900/50"
-            >
-                <CardContent class="p-4 sm:p-8">
-                    <h3
-                        class="mb-6 text-lg font-medium text-slate-600 dark:text-slate-400"
-                    >
-                        AI Interview Modes
-                    </h3>
-
-                    <div class="space-y-6">
-                        <button
-                            v-for="mode in interviewModes"
-                            :key="mode.id"
-                            @click="startInterview(mode.id)"
-                            :disabled="form.processing || !!activeSession"
-                            class="group flex w-full flex-col gap-4 rounded-[24px] border border-slate-200/60 bg-white p-5 text-left shadow-sm transition-all hover:border-primary/20 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 sm:flex-row sm:items-center sm:gap-6 sm:rounded-[32px] sm:p-8 dark:border-slate-800 dark:bg-slate-950"
-                        >
-                            <div
-                                class="flex h-12 w-12 shrink-0 items-center justify-center sm:h-16 sm:w-16"
-                            >
-                                <component
-                                    :is="mode.icon"
-                                    class="h-7 w-7 text-slate-900 sm:h-10 sm:w-10 dark:text-slate-100"
-                                />
-                            </div>
-
-                            <div class="flex-1">
-                                <h4
-                                    class="mb-2 text-lg font-bold text-slate-900 sm:text-xl dark:text-slate-100"
-                                >
-                                    {{ mode.title }}
-                                </h4>
-                                <p
-                                    class="max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-400"
-                                >
-                                    {{ mode.description }}
-                                </p>
-                            </div>
-
-                            <div
-                                class="flex h-10 w-10 items-center justify-center self-end rounded-full bg-slate-900 text-white transition-transform group-hover:scale-110 sm:h-12 sm:w-12 sm:self-auto dark:bg-slate-100 dark:text-slate-900"
-                            >
-                                <ChevronRight class="h-5 w-5 sm:h-6 sm:w-6" />
-                            </div>
-                        </button>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     </div>
 </template>

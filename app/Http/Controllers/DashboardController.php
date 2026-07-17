@@ -23,7 +23,7 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $profileFirstName = auth()->user()->profile?->first_name ?? ' ';
+        $profileFirstName = str(auth()->user()->email)->before('@')->toString();
 
         $resumes = auth()->user()->resumes()
             ->select(['id', 'title'])
