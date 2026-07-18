@@ -1,13 +1,16 @@
 {
     "agents": [
         "gemini",
-        "cursor"
+        "cursor",
+        "opencode",
+        "claude_code"
     ],
     "guidelines": true,
     "mcp": true,
     "nightwatch_mcp": false,
     "packages": [
-        "laravel/fortify"
+        "laravel/fortify",
+        "laravel/ai"
     ],
     "sail": false,
     "skills": [
@@ -16,6 +19,7 @@
         "pest-testing",
         "inertia-vue-development",
         "tailwindcss-development",
+        "ai-sdk-development",
         "fortify-development"
     ]
 }
