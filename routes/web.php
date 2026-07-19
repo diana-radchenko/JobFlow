@@ -40,6 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Resume Editor Routes
     Route::get('resume-editor/{resume}', [ResumeEditorController::class, 'show'])->name('resume-editor.show');
     Route::get('resume-editor/{resume}/summary', [ResumeEditorController::class, 'showSummary'])->name('resume-editor.summary');
+    Route::get('resume-editor/{resume}/assistant', [ResumeEditorController::class, 'showAssistant'])->name('resume-editor.assistant');
 
     // Personal Info (shared across all of a user's resumes)
     Route::post('resume-editor/personal-info', [ResumeEditorController::class, 'updatePersonalInfo'])->name('resume-editor.personal-info.update');

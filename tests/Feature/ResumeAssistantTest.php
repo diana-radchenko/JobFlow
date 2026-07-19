@@ -75,3 +75,26 @@ test('assistant message endpoint forbids acting on another users resume', functi
         ])
         ->assertForbidden();
 });
+
+test('assistant page renders as its own standalone inertia page', function () {
+    $user = User::factory()->create();
+    $resume = $user->resumes()->create(['title' => 'My Resume']);
+
+    $this->actingAs($user)
+        ->get(route('resume-editor.assistant', $resume))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('ResumeAiAssistant')
+            ->where('resume.id', $resume->id)
+        );
+});
+
+test('assistant page forbids viewing another users resume', function () {
+    $owner = User::factory()->create();
+    $resume = $owner->resumes()->create(['title' => 'My Resume']);
+    $intruder = User::factory()->create();
+
+    $this->actingAs($intruder)
+        ->get(route('resume-editor.assistant', $resume))
+        ->assertForbidden();
+});

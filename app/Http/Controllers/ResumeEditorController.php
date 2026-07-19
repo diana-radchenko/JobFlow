@@ -44,6 +44,13 @@ class ResumeEditorController extends Controller
         return Inertia::render('ResumeEditor', $this->buildPayload($resume, showSummary: true));
     }
 
+    public function showAssistant(Resume $resume): Response
+    {
+        $this->authorize('view', $resume);
+
+        return Inertia::render('ResumeAiAssistant', $this->buildPayload($resume));
+    }
+
     public function updatePersonalInfo(UpdatePersonalInfoRequest $request): RedirectResponse
     {
         $validated = $request->validated();

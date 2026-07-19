@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ArrowLeft } from 'lucide-vue-next';
+import { ArrowLeft, Sparkles } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import AlertError from '@/components/AlertError.vue';
 import AdditionalInfoForm from '@/components/ResumeEditor/AdditionalInfoForm.vue';
-import AiAssistantForm from '@/components/ResumeEditor/AiAssistantForm.vue';
 import EducationForm from '@/components/ResumeEditor/EducationForm.vue';
 import PersonalInfoForm from '@/components/ResumeEditor/PersonalInfoForm.vue';
 import ProjectsForm from '@/components/ResumeEditor/ProjectsForm.vue';
@@ -12,6 +11,7 @@ import ResumeEditorSidebar from '@/components/ResumeEditor/ResumeEditorSidebar.v
 import ResumeSummary from '@/components/ResumeEditor/ResumeSummary.vue';
 import SkillsForm from '@/components/ResumeEditor/SkillsForm.vue';
 import WorkExperienceForm from '@/components/ResumeEditor/WorkExperienceForm.vue';
+import resumeEditor from '@/routes/resume-editor';
 import resumes from '@/routes/resumes';
 
 defineOptions({
@@ -41,7 +41,6 @@ const sectionComponents: Record<string, any> = {
     skills: SkillsForm,
     projects: ProjectsForm,
     additionalInfo: AdditionalInfoForm,
-    aiAssistant: AiAssistantForm,
     summary: ResumeSummary,
 };
 
@@ -74,6 +73,14 @@ const currentComponent = computed(() => {
                     <span class="text-sm font-medium text-foreground/70">
                         {{ props.resume?.title }}
                     </span>
+                    <Link
+                        v-if="props.resume?.id"
+                        :href="resumeEditor.assistant.url(props.resume.id)"
+                        class="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                    >
+                        <Sparkles class="h-4 w-4" />
+                        Build with AI
+                    </Link>
                 </div>
 
                 <!-- Error Alert -->

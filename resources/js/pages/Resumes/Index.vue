@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { Copy, FileText, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import { Copy, FileText, Pencil, Plus, Sparkles, Trash2 } from 'lucide-vue-next';
 import { ref } from 'vue';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -9,10 +10,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import resumesUrl from '@/routes/resumes';
 import resumeEditor from '@/routes/resume-editor';
+import resumesUrl from '@/routes/resumes';
 
 defineOptions({
     layout: {
@@ -197,6 +197,12 @@ const formatDate = (date: string) =>
                         <Button as-child size="sm">
                             <a :href="resumeEditor.show.url(resume.id)">
                                 Edit
+                            </a>
+                        </Button>
+                        <Button as-child size="sm" variant="outline">
+                            <a :href="resumeEditor.assistant.url(resume.id)">
+                                <Sparkles class="mr-1 h-4 w-4" />
+                                Build with AI
                             </a>
                         </Button>
                         <Button
