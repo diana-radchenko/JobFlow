@@ -7,6 +7,7 @@ import {
     FolderOpen,
     Zap,
     FileText,
+    Sparkles,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 
@@ -56,6 +57,12 @@ const sections = computed(() => [
         label: 'Additional Info',
         icon: Zap,
         description: 'Languages & certifications',
+    },
+    {
+        id: 'aiAssistant',
+        label: 'AI Assistant',
+        icon: Sparkles,
+        description: 'Build your resume by chatting',
     },
     {
         id: 'summary',

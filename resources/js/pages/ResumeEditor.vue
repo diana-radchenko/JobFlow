@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import AlertError from '@/components/AlertError.vue';
 import AdditionalInfoForm from '@/components/ResumeEditor/AdditionalInfoForm.vue';
+import AiAssistantForm from '@/components/ResumeEditor/AiAssistantForm.vue';
 import EducationForm from '@/components/ResumeEditor/EducationForm.vue';
 import PersonalInfoForm from '@/components/ResumeEditor/PersonalInfoForm.vue';
 import ProjectsForm from '@/components/ResumeEditor/ProjectsForm.vue';
@@ -40,6 +41,7 @@ const sectionComponents: Record<string, any> = {
     skills: SkillsForm,
     projects: ProjectsForm,
     additionalInfo: AdditionalInfoForm,
+    aiAssistant: AiAssistantForm,
     summary: ResumeSummary,
 };
 
@@ -91,6 +93,7 @@ const currentComponent = computed(() => {
                     :skills="props.skills"
                     :projects="props.projects"
                     :additional-info="props.additionalInfo"
+                    :ai-messages="props.aiMessages"
                     @next-section="currentSection = $event"
                 />
             </div>

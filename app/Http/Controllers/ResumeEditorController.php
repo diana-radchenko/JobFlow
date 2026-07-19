@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -283,8 +284,31 @@ class ResumeEditorController extends Controller
             'skills' => $this->itemsWithInclusion($user->skills()->get(), $resume->skills),
             'projects' => $this->itemsWithInclusion($user->projects()->get(), $resume->projects),
             'additionalInfo' => $resume->additionalInformation?->only(['languages', 'certifications', 'interests', 'notes']),
+            'aiMessages' => $this->aiMessages($resume),
             'showSummary' => $showSummary,
         ];
+    }
+
+    /**
+     * Get the AI assistant chat history for a resume.
+     *
+     * @return array<int, array{role: string, content: string}>
+     */
+    private function aiMessages(Resume $resume): array
+    {
+        if (! $resume->ai_conversation_id) {
+            return [];
+        }
+
+        return DB::table('agent_conversation_messages')
+            ->where('conversation_id', $resume->ai_conversation_id)
+            ->whereIn('role', ['user', 'assistant'])
+            ->whereNotNull('content')
+            ->where('content', '!=', '')
+            ->orderBy('created_at')
+            ->get()
+            ->map(fn ($m) => ['role' => $m->role, 'content' => $m->content])
+            ->all();
     }
 
     private function itemsWithInclusion(Collection $allItems, Collection $includedItems): array

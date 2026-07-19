@@ -5,6 +5,7 @@ use App\Http\Controllers\InterviewPreparationController;
 use App\Http\Controllers\InterviewSessionController;
 use App\Http\Controllers\JobSelectionController;
 use App\Http\Controllers\RequestTrackerController;
+use App\Http\Controllers\ResumeAssistantController;
 use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\ResumeEditorController;
 use App\Http\Controllers\ResumeScoreController;
@@ -65,6 +66,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Additional Info (per resume; new resumes start with a copy of the most recent one)
     Route::post('resume-editor/{resume}/additional-info', [ResumeEditorController::class, 'updateAdditionalInfo'])->name('resume-editor.additional-info.update');
+
+    // AI Assistant chat (builds resume data via conversation)
+    Route::post('resume-editor/{resume}/assistant/message', [ResumeAssistantController::class, 'message'])->name('resume-editor.assistant.message');
 
     // Include/exclude & reorder pool items within a resume
     Route::post('resume-editor/{resume}/items/{type}/{item}/toggle', [ResumeEditorController::class, 'toggleItem'])->name('resume-editor.items.toggle');
