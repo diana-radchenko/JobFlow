@@ -91,3 +91,18 @@ test('duplicating a resume copies its title and item selections', function () {
     expect($copy)->not->toBeNull();
     expect($copy->skills->pluck('id'))->toContain($skill->id);
 });
+
+test('a user can manually add a research project to a resume', function () {
+    $user = User::factory()->create();
+    $resume = $user->resumes()->create(['title' => 'My Resume']);
+
+    $this->actingAs($user)
+        ->post(route('resume-editor.project.store', $resume), [
+            'title' => 'Distributed Systems Paper',
+            'type' => 'research',
+            'description' => 'Co-authored a peer-reviewed paper.',
+        ])
+        ->assertRedirect();
+
+    expect($user->projects()->where('title', 'Distributed Systems Paper')->where('type', 'research')->exists())->toBeTrue();
+});

@@ -307,7 +307,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                     <div class="flex items-center gap-2 border-b pb-2">
                         <FolderOpen class="h-5 w-5 text-primary" />
                         <h3 class="text-lg font-semibold">
-                            Projects & Achievements
+                            Projects, Achievements & Research
                         </h3>
                         <Button
                             size="sm"

@@ -47,7 +47,7 @@ const sections = computed(() => [
     },
     {
         id: 'projects',
-        label: 'Projects & Achievements',
+        label: 'Projects & Research',
         icon: FolderOpen,
         description: 'Your work samples',
     },

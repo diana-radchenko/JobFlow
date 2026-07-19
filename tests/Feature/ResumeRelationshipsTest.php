@@ -116,10 +116,17 @@ it('user has many projects', function () {
         'type' => 'achievement',
         'description' => 'Contributed to Laravel framework',
     ]);
+    $research = Project::create([
+        'user_id' => $user->id,
+        'title' => 'Published Paper on Distributed Systems',
+        'type' => 'research',
+        'description' => 'Co-authored a peer-reviewed paper',
+    ]);
 
-    expect($user->projects)->toHaveCount(2);
+    expect($user->projects)->toHaveCount(3);
     expect($user->projects->where('type', 'project'))->toHaveCount(1);
     expect($user->projects->where('type', 'achievement'))->toHaveCount(1);
+    expect($user->projects->where('type', 'research'))->toHaveCount(1);
 });
 
 it('user has one additional information', function () {

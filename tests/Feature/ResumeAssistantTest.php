@@ -1,8 +1,10 @@
 <?php
 
 use App\Ai\Agents\ResumeBuilderAgent;
+use App\Ai\Tools\SaveProject;
 use App\Ai\Tools\SaveSkill;
 use App\Ai\Tools\SaveWorkExperience;
+use App\Enums\ProjectType;
 use App\Models\User;
 use Laravel\Ai\Prompts\AgentPrompt;
 use Laravel\Ai\Tools\Request;
@@ -27,6 +29,23 @@ test('save work experience tool creates the record and attaches it to the resume
         ->and($exp->company_name)->toBe('Acme Corp')
         ->and($exp->is_remote)->toBeTrue();
     expect($resume->workExperiences()->whereKey($exp->id)->exists())->toBeTrue();
+});
+
+test('save project tool accepts the research type', function () {
+    $user = User::factory()->create();
+    $resume = $user->resumes()->create(['title' => 'My Resume']);
+
+    (new SaveProject($resume))->handle(new Request([
+        'title' => 'Distributed Systems Paper',
+        'type' => 'research',
+        'description' => 'Co-authored a peer-reviewed paper.',
+    ]));
+
+    $project = $user->fresh()->projects->first();
+
+    expect($project)->not->toBeNull()
+        ->and($project->type)->toBe(ProjectType::Research);
+    expect($resume->projects()->whereKey($project->id)->exists())->toBeTrue();
 });
 
 test('save skill tool scopes the skill to the resume owner', function () {

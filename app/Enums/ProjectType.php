@@ -6,4 +6,5 @@ enum ProjectType: string
 {
     case Project = 'project';
     case Achievement = 'achievement';
+    case Research = 'research';
 }

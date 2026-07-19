@@ -11,6 +11,7 @@ export const EducationDegreeEnum = {
 export const ProjectTypeEnum = {
     Project: 'project',
     Achievement: 'achievement',
+    Research: 'research',
 };
 
 export const SkillsLevelEnum = {

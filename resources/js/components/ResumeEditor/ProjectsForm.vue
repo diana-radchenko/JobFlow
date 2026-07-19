@@ -142,7 +142,7 @@ const formatDate = (date: string) => {
     <div class="space-y-6">
         <Card>
             <CardHeader>
-                <CardTitle>Projects & Achievements</CardTitle>
+                <CardTitle>Projects, Achievements & Research</CardTitle>
                 <CardDescription>
                     Choose which projects to include in "{{ resume.title }}"
                 </CardDescription>
@@ -373,7 +373,7 @@ const formatDate = (date: string) => {
                         class="w-full"
                     >
                         <Plus class="mr-2 h-4 w-4" />
-                        Add Project or Achievement
+                        Add Project, Achievement, or Research
                     </Button>
                 </div>
 

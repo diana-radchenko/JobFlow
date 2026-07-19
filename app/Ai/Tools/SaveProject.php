@@ -15,7 +15,7 @@ class SaveProject implements Tool
 
     public function description(): Stringable|string
     {
-        return 'Save one project or achievement to the resume. Call this once per project.';
+        return 'Save one project, achievement, or research item to the resume. Call this once per item.';
     }
 
     public function handle(Request $request): Stringable|string
@@ -45,7 +45,7 @@ class SaveProject implements Tool
             'title' => $schema->string()->description('Project or achievement title.')->required(),
             'type' => $schema->string()
                 ->enum(array_column(ProjectType::cases(), 'value'))
-                ->description('Whether this is a project or an achievement.')
+                ->description('Whether this is a project, an achievement, or a research item.')
                 ->nullable()
                 ->required(),
             'description' => $schema->string()->description('What the project involved and the impact/outcome.')->nullable()->required(),
