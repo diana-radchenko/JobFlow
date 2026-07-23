@@ -271,7 +271,7 @@ const mobileMenuOpen = ref(false);
         </main>
 
         <!-- Footer -->
-        <footer class="absolute bottom-0 z-50 w-full p-6">
+<!--         <footer class="absolute bottom-0 z-50 w-full p-6">
             <div
                 class="flex flex-col items-center gap-4 text-[12px] font-bold tracking-[0.1em] text-gray-500 uppercase sm:flex-row sm:gap-18 sm:text-[14px]"
             >
@@ -287,6 +287,6 @@ const mobileMenuOpen = ref(false);
                     >
                 </div>
             </div>
-        </footer>
+        </footer> -->
     </div>
 </template>

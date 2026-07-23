@@ -299,7 +299,7 @@ const scoreButtonLabel = (job: AiJobMock) => {
         return 'SCORING…';
     }
 
-    return jobScores[job.id] ? 'VIEW RECOMMENDATIONS' : 'SCORE RESUME';
+    return jobScores[job.id] ? 'RESULT' : 'SCORE RESUME';
 };
 
 const scoreResumeForJob = async (job: AiJobMock, resumeId: number) => {
@@ -340,17 +340,7 @@ const scoreResumeForJob = async (job: AiJobMock, resumeId: number) => {
     }
 };
 
-const onScoreResume = (job: AiJobMock) => {
-    if (scoringJobId.value !== null) {
-        return;
-    }
-
-    if (jobScores[job.id]) {
-        recommendationsJob.value = job;
-        recommendationsOpen.value = true;
-        return;
-    }
-
+const startScoring = (job: AiJobMock) => {
     if (props.resumes.length === 0) {
         router.visit('/resumes');
         return;
@@ -363,6 +353,28 @@ const onScoreResume = (job: AiJobMock) => {
 
     resumePickerJob.value = job;
     resumePickerOpen.value = true;
+};
+
+const onScoreResume = (job: AiJobMock) => {
+    if (scoringJobId.value !== null) {
+        return;
+    }
+
+    if (jobScores[job.id]) {
+        recommendationsJob.value = job;
+        recommendationsOpen.value = true;
+        return;
+    }
+
+    startScoring(job);
+};
+
+const onRescoreResume = (job: AiJobMock) => {
+    if (scoringJobId.value !== null) {
+        return;
+    }
+
+    startScoring(job);
 };
 
 const selectResumeForScoring = (resumeId: number) => {
@@ -738,18 +750,30 @@ const articlesMock = [
                                         >
                                             AI SCORE: {{ scoreLabel(job) }}
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            class="h-9 rounded-lg border border-slate-100 bg-white text-xs font-bold text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                                            :disabled="scoringJobId === job.id"
-                                            @click="onScoreResume(job)"
-                                        >
-                                            <Spinner
-                                                v-if="scoringJobId === job.id"
-                                                class="mr-2 h-3 w-3"
-                                            />
-                                            {{ scoreButtonLabel(job) }}
-                                        </Button>
+                                        <div class="flex items-center gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                class="h-9 rounded-lg border border-slate-100 bg-white text-xs font-bold text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                                                :disabled="scoringJobId === job.id"
+                                                @click="onScoreResume(job)"
+                                            >
+                                                <Spinner
+                                                    v-if="scoringJobId === job.id"
+                                                    class="mr-2 h-3 w-3"
+                                                />
+                                                {{ scoreButtonLabel(job) }}
+                                            </Button>
+                                            <Button
+                                                v-if="jobScores[job.id]"
+                                                variant="ghost"
+                                                class="h-9 shrink-0 rounded-lg border border-slate-100 bg-white text-xs font-bold text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                                                :disabled="scoringJobId === job.id"
+                                                title="Score again"
+                                                @click="onRescoreResume(job)"
+                                            >
+                                                SCORE
+                                            </Button>
+                                        </div>
                                     </div>
                                     <p
                                         v-if="scoreErrors[job.id]"
