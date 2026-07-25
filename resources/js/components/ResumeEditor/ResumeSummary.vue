@@ -380,10 +380,10 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                         </Button>
                     </div>
                     <div class="space-y-2 text-sm">
-                        <div v-if="additionalInfo.languages">
+                        <div v-if="additionalInfo.languages?.length">
                             <strong>Languages:</strong>
-                            <p class="whitespace-pre-wrap text-foreground/70">
-                                {{ additionalInfo.languages }}
+                            <p class="text-foreground/70">
+                                {{ additionalInfo.languages.join(', ') }}
                             </p>
                         </div>
                         <div v-if="additionalInfo.certifications">
@@ -392,10 +392,10 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                                 {{ additionalInfo.certifications }}
                             </p>
                         </div>
-                        <div v-if="additionalInfo.interests">
+                        <div v-if="additionalInfo.interests?.length">
                             <strong>Interests:</strong>
-                            <p class="whitespace-pre-wrap text-foreground/70">
-                                {{ additionalInfo.interests }}
+                            <p class="text-foreground/70">
+                                {{ additionalInfo.interests.join(', ') }}
                             </p>
                         </div>
                         <div v-if="additionalInfo.notes">

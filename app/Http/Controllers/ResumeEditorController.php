@@ -192,9 +192,11 @@ class ResumeEditorController extends Controller
         $this->authorize('update', $resume);
 
         $validated = $request->validate([
-            'languages' => 'nullable|string',
+            'languages' => 'nullable|array',
+            'languages.*' => 'string|max:255',
             'certifications' => 'nullable|string',
-            'interests' => 'nullable|string',
+            'interests' => 'nullable|array',
+            'interests.*' => 'string|max:255',
             'notes' => 'nullable|string',
         ]);
 

@@ -3,6 +3,7 @@ import { useForm } from '@inertiajs/vue3';
 import { ChevronLeft, ChevronRight, Save } from 'lucide-vue-next';
 import { ref } from 'vue';
 import AlertSuccess from '@/components/AlertSuccess.vue';
+import TagSelect from '@/components/ResumeEditor/TagSelect.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -28,10 +29,56 @@ const props = defineProps<Props>();
 
 defineEmits<Emits>();
 
+const LANGUAGE_OPTIONS = [
+    'English',
+    'Spanish',
+    'French',
+    'German',
+    'Mandarin Chinese',
+    'Arabic',
+    'Portuguese',
+    'Russian',
+    'Japanese',
+    'Korean',
+    'Italian',
+    'Hindi',
+    'Turkish',
+    'Dutch',
+    'Polish',
+    'Vietnamese',
+    'Urdu',
+    'Persian',
+    'Swedish',
+    'Greek',
+];
+
+const INTEREST_OPTIONS = [
+    'Machine Learning',
+    'Open Source',
+    'Mentoring',
+    'Photography',
+    'Traveling',
+    'Reading',
+    'Writing',
+    'Public Speaking',
+    'Chess',
+    'Music Production',
+    'Gaming',
+    'Hiking',
+    'Cooking',
+    'Volunteering',
+    'Sports',
+    'Painting',
+    'Blogging',
+    'Robotics',
+    'Cycling',
+    'Yoga',
+];
+
 const toFormValues = (info: AdditionalInformation | null) => ({
-    languages: info?.languages ?? '',
+    languages: info?.languages ?? [],
     certifications: info?.certifications ?? '',
-    interests: info?.interests ?? '',
+    interests: info?.interests ?? [],
     notes: info?.notes ?? '',
 });
 
@@ -74,11 +121,10 @@ const submit = () => {
                         >
                             Languages
                         </label>
-                        <Textarea
-                            id="languages"
+                        <TagSelect
                             v-model="form.languages"
-                            placeholder="e.g., English (Native), Spanish (Fluent), French (Intermediate)"
-                            :rows="3"
+                            :options="LANGUAGE_OPTIONS"
+                            placeholder="Search and add a language..."
                         />
                     </div>
 
@@ -104,11 +150,10 @@ const submit = () => {
                         >
                             Interests
                         </label>
-                        <Textarea
-                            id="interests"
+                        <TagSelect
                             v-model="form.interests"
-                            placeholder="e.g., Machine Learning, Open Source, Mentoring"
-                            :rows="3"
+                            :options="INTEREST_OPTIONS"
+                            placeholder="Search and add an interest..."
                         />
                     </div>
 

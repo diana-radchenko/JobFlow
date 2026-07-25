@@ -251,7 +251,7 @@ const comparisonRoles = [
 
                         <!-- Years of Exp. -->
                         <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Years of Exp.</label>
+                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Years of experience</label>
                             <div class="relative">
                                 <select 
                                     v-model="selectedExperience"

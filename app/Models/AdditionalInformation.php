@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['user_id', 'resume_id', 'languages', 'certifications', 'interests', 'notes'])]
 class AdditionalInformation extends Model
 {
+    protected $casts = [
+        'languages' => 'array',
+        'interests' => 'array',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

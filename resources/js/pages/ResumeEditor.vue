@@ -7,6 +7,7 @@ import AdditionalInfoForm from '@/components/ResumeEditor/AdditionalInfoForm.vue
 import EducationForm from '@/components/ResumeEditor/EducationForm.vue';
 import PersonalInfoForm from '@/components/ResumeEditor/PersonalInfoForm.vue';
 import ProjectsForm from '@/components/ResumeEditor/ProjectsForm.vue';
+import ResumeAiAnalysis from '@/components/ResumeEditor/ResumeAiAnalysis.vue';
 import ResumeEditorSidebar from '@/components/ResumeEditor/ResumeEditorSidebar.vue';
 import ResumeSummary from '@/components/ResumeEditor/ResumeSummary.vue';
 import SkillsForm from '@/components/ResumeEditor/SkillsForm.vue';
@@ -42,6 +43,7 @@ const sectionComponents: Record<string, any> = {
     projects: ProjectsForm,
     additionalInfo: AdditionalInfoForm,
     summary: ResumeSummary,
+    aiAnalysis: ResumeAiAnalysis,
 };
 
 const currentComponent = computed(() => {

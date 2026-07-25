@@ -5,6 +5,7 @@ use App\Http\Controllers\InterviewPreparationController;
 use App\Http\Controllers\InterviewSessionController;
 use App\Http\Controllers\JobSelectionController;
 use App\Http\Controllers\RequestTrackerController;
+use App\Http\Controllers\ResumeAnalysisController;
 use App\Http\Controllers\ResumeAssistantController;
 use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\ResumeEditorController;
@@ -36,6 +37,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // AI Resume Scoring (dashboard "Score Resume" action)
     Route::post('resume-score', [ResumeScoreController::class, 'store'])->name('resume-score.store');
+
+    // AI Resume Analysis (resume editor summary "Analyze Resume" action)
+    Route::post('resume-analysis', [ResumeAnalysisController::class, 'store'])->name('resume-analysis.store');
 
     // Resume Editor Routes
     Route::get('resume-editor/{resume}', [ResumeEditorController::class, 'show'])->name('resume-editor.show');

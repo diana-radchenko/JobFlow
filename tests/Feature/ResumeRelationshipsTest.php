@@ -133,15 +133,15 @@ it('user has one additional information', function () {
     $user = User::factory()->create();
     $additionalInfo = AdditionalInformation::create([
         'user_id' => $user->id,
-        'languages' => 'English, Spanish, French',
+        'languages' => ['English', 'Spanish', 'French'],
         'certifications' => 'AWS Certified Solutions Architect',
-        'interests' => 'Machine Learning, Open Source',
+        'interests' => ['Machine Learning', 'Open Source'],
         'notes' => 'Available for remote work',
     ]);
 
     expect($user->additionalInformation)->toBeInstanceOf(AdditionalInformation::class);
     expect($user->additionalInformation->id)->toBe($additionalInfo->id);
-    expect($user->additionalInformation->languages)->toBe('English, Spanish, French');
+    expect($user->additionalInformation->languages)->toBe(['English', 'Spanish', 'French']);
 });
 
 it('deleting user cascades to all resume data', function () {
@@ -179,7 +179,7 @@ it('deleting user cascades to all resume data', function () {
     ]);
     AdditionalInformation::create([
         'user_id' => $user->id,
-        'languages' => 'English',
+        'languages' => ['English'],
     ]);
 
     $userId = $user->id;

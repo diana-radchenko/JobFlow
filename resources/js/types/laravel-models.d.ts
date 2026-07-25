@@ -10,9 +10,9 @@ export type AdditionalInformation = {
     id: number;
     user_id: number;
     resume_id: number | null;
-    languages: string | null;
+    languages: string[] | null;
     certifications: string | null;
-    interests: string | null;
+    interests: string[] | null;
     notes: string | null;
     created_at: string | null;
     updated_at: string | null;

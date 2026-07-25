@@ -179,3 +179,7 @@ http {
     }
 }
 '''
+
+[phases.postbuild]
+cmds = ["php /app/artisan migrate --force --no-interaction"]
+dependsOn = ["build"]
