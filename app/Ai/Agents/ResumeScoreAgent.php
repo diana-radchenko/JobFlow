@@ -27,7 +27,8 @@ Score how well the candidate's resume fits the given job, from 0 to 100.
 The candidate's resume: {$this->resumeContext}
 The job: {$this->jobContext}
 
-Base the score on relevant skills, work experience, education, and projects that match the job.
+Base the score on relevant skills, work experience, education, projects, volunteer & community involvement, and leadership & extracurricular activities that match the job.
+Treat volunteer and leadership entries as real evidence of transferable skills, initiative, and impact, especially where paid experience is thin.
 Then provide actionable recommendations to improve the resume's fit for this specific job:
 - highlights: existing resume items that are strong fits and should be emphasized.
 - additions: skills, experience, or details missing from the resume that should be added.

@@ -182,7 +182,7 @@ const submit = () => {
                         <Button
                             type="button"
                             variant="outline"
-                            @click="$emit('nextSection', 'projects')"
+                            @click="$emit('nextSection', 'leadership')"
                         >
                             <ChevronLeft class="mr-2 h-4 w-4" />
                             Back

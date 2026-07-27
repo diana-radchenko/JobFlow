@@ -11,6 +11,8 @@ class ResumeScoreContextData
      * @param  array<int, array<string, mixed>>  $educations
      * @param  array<int, array<string, mixed>>  $skills
      * @param  array<int, array<string, mixed>>  $projects
+     * @param  array<int, array<string, mixed>>  $volunteerExperiences
+     * @param  array<int, array<string, mixed>>  $leadershipActivities
      * @param  array<string, mixed>|null  $additionalInfo
      * @param  array<string, mixed>  $job
      */
@@ -19,6 +21,8 @@ class ResumeScoreContextData
         public array $educations,
         public array $skills,
         public array $projects,
+        public array $volunteerExperiences,
+        public array $leadershipActivities,
         public ?array $additionalInfo,
         public array $job,
     ) {}
@@ -71,6 +75,36 @@ class ResumeScoreContextData
                     'end_date',
                 ])
                 ->all(),
+            volunteerExperiences: $resume->volunteerExperiences()
+                ->orderBy('start_date', 'desc')
+                ->get()
+                ->map->only([
+                    'organization',
+                    'role',
+                    'description',
+                    'url',
+                    'city',
+                    'country',
+                    'start_date',
+                    'end_date',
+                    'is_current',
+                ])
+                ->all(),
+            leadershipActivities: $resume->leadershipActivities()
+                ->orderBy('start_date', 'desc')
+                ->get()
+                ->map->only([
+                    'organization',
+                    'role',
+                    'description',
+                    'url',
+                    'city',
+                    'country',
+                    'start_date',
+                    'end_date',
+                    'is_current',
+                ])
+                ->all(),
             additionalInfo: $resume->additionalInformation?->only([
                 'languages',
                 'certifications',
@@ -88,6 +122,8 @@ class ResumeScoreContextData
             'educations' => $this->educations,
             'skills' => $this->skills,
             'projects' => $this->projects,
+            'volunteer_experiences' => $this->volunteerExperiences,
+            'leadership_activities' => $this->leadershipActivities,
             'additional_info' => $this->additionalInfo,
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) ?: '{}';
     }

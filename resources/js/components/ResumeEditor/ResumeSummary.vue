@@ -5,6 +5,8 @@ import {
     BookOpen,
     Award,
     FolderOpen,
+    HeartHandshake,
+    Users,
     Zap,
     Edit2,
     ChevronLeft,
@@ -29,6 +31,8 @@ interface Props {
     educations: any[];
     skills: any[];
     projects: any[];
+    volunteerExperiences: any[];
+    leadershipActivities: any[];
     additionalInfo: any;
 }
 
@@ -48,6 +52,17 @@ const includedSkills = computed(() => props.skills.filter((s) => s.included));
 const includedProjects = computed(() =>
     props.projects.filter((p) => p.included),
 );
+const includedVolunteerExperiences = computed(() =>
+    props.volunteerExperiences.filter((v) => v.included),
+);
+const includedLeadershipActivities = computed(() =>
+    props.leadershipActivities.filter((l) => l.included),
+);
+
+const formatActivityLocationLine = (item: any): string =>
+    [item.city, item.country]
+        .filter((x) => x != null && String(x).trim() !== '')
+        .join(', ');
 
 const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -105,8 +120,8 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
             <CardHeader>
                 <CardTitle>{{ resume.title }}</CardTitle>
                 <CardDescription>
-                    Review this resume before finalizing — only the items
-                    you've included are shown below
+                    Review this resume before finalizing — only the items you've
+                    included are shown below
                 </CardDescription>
             </CardHeader>
             <CardContent class="space-y-8">
@@ -179,7 +194,10 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                             <Edit2 class="h-4 w-4" />
                         </Button>
                     </div>
-                    <div v-if="includedWorkExperiences.length > 0" class="space-y-4">
+                    <div
+                        v-if="includedWorkExperiences.length > 0"
+                        class="space-y-4"
+                    >
                         <div
                             v-for="exp in includedWorkExperiences"
                             :key="exp.id"
@@ -287,7 +305,10 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                             <Edit2 class="h-4 w-4" />
                         </Button>
                     </div>
-                    <div v-if="includedSkills.length > 0" class="flex flex-wrap gap-2">
+                    <div
+                        v-if="includedSkills.length > 0"
+                        class="flex flex-wrap gap-2"
+                    >
                         <span
                             v-for="skill in includedSkills"
                             :key="skill.id"
@@ -360,6 +381,120 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                     </div>
                     <p v-else class="text-sm text-foreground/60 italic">
                         No projects added yet
+                    </p>
+                </div>
+
+                <!-- Volunteer & Community Section -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <HeartHandshake class="h-5 w-5 text-primary" />
+                        <h3 class="text-lg font-semibold">
+                            Volunteer &amp; Community
+                        </h3>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            @click="$emit('nextSection', 'volunteer')"
+                            class="ml-auto"
+                        >
+                            <Edit2 class="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div
+                        v-if="includedVolunteerExperiences.length > 0"
+                        class="space-y-4"
+                    >
+                        <div
+                            v-for="item in includedVolunteerExperiences"
+                            :key="item.id"
+                            class="rounded-lg border border-border p-3"
+                        >
+                            <h4 class="font-semibold">{{ item.role }}</h4>
+                            <p class="text-sm text-foreground/70">
+                                {{ item.organization }}
+                            </p>
+                            <p class="mt-1 text-xs text-foreground/60">
+                                {{ formatDate(item.start_date) }} -
+                                <span v-if="item.is_current">Present</span>
+                                <span v-else>{{
+                                    item.end_date
+                                        ? formatDate(item.end_date)
+                                        : '—'
+                                }}</span>
+                            </p>
+                            <p
+                                v-if="formatActivityLocationLine(item)"
+                                class="text-xs text-foreground/60"
+                            >
+                                📍 {{ formatActivityLocationLine(item) }}
+                            </p>
+                            <p
+                                v-if="item.description"
+                                class="mt-2 text-sm text-foreground/70"
+                            >
+                                {{ item.description }}
+                            </p>
+                        </div>
+                    </div>
+                    <p v-else class="text-sm text-foreground/60 italic">
+                        No volunteer experience added yet
+                    </p>
+                </div>
+
+                <!-- Leadership & Extracurricular Section -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <Users class="h-5 w-5 text-primary" />
+                        <h3 class="text-lg font-semibold">
+                            Leadership &amp; Extracurricular
+                        </h3>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            @click="$emit('nextSection', 'leadership')"
+                            class="ml-auto"
+                        >
+                            <Edit2 class="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div
+                        v-if="includedLeadershipActivities.length > 0"
+                        class="space-y-4"
+                    >
+                        <div
+                            v-for="item in includedLeadershipActivities"
+                            :key="item.id"
+                            class="rounded-lg border border-border p-3"
+                        >
+                            <h4 class="font-semibold">{{ item.role }}</h4>
+                            <p class="text-sm text-foreground/70">
+                                {{ item.organization }}
+                            </p>
+                            <p class="mt-1 text-xs text-foreground/60">
+                                {{ formatDate(item.start_date) }} -
+                                <span v-if="item.is_current">Present</span>
+                                <span v-else>{{
+                                    item.end_date
+                                        ? formatDate(item.end_date)
+                                        : '—'
+                                }}</span>
+                            </p>
+                            <p
+                                v-if="formatActivityLocationLine(item)"
+                                class="text-xs text-foreground/60"
+                            >
+                                📍 {{ formatActivityLocationLine(item) }}
+                            </p>
+                            <p
+                                v-if="item.description"
+                                class="mt-2 text-sm text-foreground/70"
+                            >
+                                {{ item.description }}
+                            </p>
+                        </div>
+                    </div>
+                    <p v-else class="text-sm text-foreground/60 italic">
+                        No leadership activities added yet
                     </p>
                 </div>
 

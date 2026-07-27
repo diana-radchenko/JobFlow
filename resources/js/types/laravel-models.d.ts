@@ -87,6 +87,56 @@ export type Project = {
     order?: number | null;
 };
 
+export type VolunteerExperience = {
+    // columns
+    id: number;
+    user_id: number;
+    organization: string;
+    role: string;
+    description: string | null;
+    url: string | null;
+    city: string | null;
+    country: string | null;
+    start_date: string;
+    end_date: string | null;
+    is_current: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+    // relations
+    user: User;
+    // counts
+    // exists
+    user_exists: boolean;
+    // resume inclusion (present when returned from ResumeEditorController)
+    included?: boolean;
+    order?: number | null;
+};
+
+export type LeadershipActivity = {
+    // columns
+    id: number;
+    user_id: number;
+    organization: string;
+    role: string;
+    description: string | null;
+    url: string | null;
+    city: string | null;
+    country: string | null;
+    start_date: string;
+    end_date: string | null;
+    is_current: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+    // relations
+    user: User;
+    // counts
+    // exists
+    user_exists: boolean;
+    // resume inclusion (present when returned from ResumeEditorController)
+    included?: boolean;
+    order?: number | null;
+};
+
 export type Resume = {
     // columns
     id: number;
@@ -100,12 +150,16 @@ export type Resume = {
     projects: Project[];
     educations: Education[];
     work_experiences: WorkExperience[];
+    volunteer_experiences: VolunteerExperience[];
+    leadership_activities: LeadershipActivity[];
     additional_information: AdditionalInformation;
     // counts
     skills_count: number;
     projects_count: number;
     educations_count: number;
     work_experiences_count: number;
+    volunteer_experiences_count: number;
+    leadership_activities_count: number;
     // exists
     user_exists: boolean;
     additional_information_exists: boolean;

@@ -25,11 +25,13 @@ class ResumeAnalysisAgent implements Agent, HasStructuredOutput
 Analyze the candidate's resume in general, without scoring it against any specific job.
 The candidate's resume: {$this->resumeContext}
 
+Consider every section, including volunteer & community involvement and leadership & extracurricular activities. Treat these as real evidence of transferable skills, initiative, and impact rather than filler, and call out when they are missing or too vague to be useful.
+
 Provide:
 - strengths: what stands out and works well in this resume.
 - weaknesses: gaps, weak phrasing, or missing information that hold the resume back.
 - recommendations: actionable advice to improve the resume overall.
-- professionalSummary: a concise, polished 2-4 sentence professional summary the candidate could place at the top of their resume, written in first person voice and based on their actual experience.";
+- professionalSummary: a concise, polished 2-4 sentence professional summary the candidate could place at the top of their resume, written in first person voice and based on their actual experience. Draw on volunteer and leadership entries where they add meaningful signal.";
     }
 
     /**

@@ -4,13 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Enums\SkillsLevel;
 use App\Http\Requests\StoreEducationRequest;
+use App\Http\Requests\StoreLeadershipActivityRequest;
 use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\StoreVolunteerExperienceRequest;
 use App\Http\Requests\StoreWorkExperienceRequest;
 use App\Http\Requests\UpdatePersonalInfoRequest;
 use App\Models\Education;
+use App\Models\LeadershipActivity;
 use App\Models\Project;
 use App\Models\Resume;
 use App\Models\Skill;
+use App\Models\VolunteerExperience;
 use App\Models\WorkExperience;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -28,6 +32,8 @@ class ResumeEditorController extends Controller
         'project' => Project::class,
         'education' => Education::class,
         'work-experience' => WorkExperience::class,
+        'volunteer-experience' => VolunteerExperience::class,
+        'leadership-activity' => LeadershipActivity::class,
     ];
 
     public function show(Resume $resume): Response
@@ -187,6 +193,62 @@ class ResumeEditorController extends Controller
         return back()->with('success', 'Project deleted successfully.');
     }
 
+    public function storeVolunteerExperience(StoreVolunteerExperienceRequest $request, Resume $resume): RedirectResponse
+    {
+        $this->authorize('update', $resume);
+
+        $volunteerExperience = auth()->user()->volunteerExperiences()->create($request->validated());
+        $resume->volunteerExperiences()->attach($volunteerExperience->id, ['order' => $resume->volunteerExperiences()->count()]);
+
+        return back()->with('success', 'Volunteer experience added successfully.');
+    }
+
+    public function updateVolunteerExperience(StoreVolunteerExperienceRequest $request, Resume $resume, VolunteerExperience $volunteerExperience): RedirectResponse
+    {
+        $this->authorize('update', $volunteerExperience);
+
+        $volunteerExperience->update($request->validated());
+
+        return back()->with('success', 'Volunteer experience updated successfully.');
+    }
+
+    public function destroyVolunteerExperience(Resume $resume, VolunteerExperience $volunteerExperience): RedirectResponse
+    {
+        $this->authorize('delete', $volunteerExperience);
+
+        $volunteerExperience->delete();
+
+        return back()->with('success', 'Volunteer experience deleted successfully.');
+    }
+
+    public function storeLeadershipActivity(StoreLeadershipActivityRequest $request, Resume $resume): RedirectResponse
+    {
+        $this->authorize('update', $resume);
+
+        $leadershipActivity = auth()->user()->leadershipActivities()->create($request->validated());
+        $resume->leadershipActivities()->attach($leadershipActivity->id, ['order' => $resume->leadershipActivities()->count()]);
+
+        return back()->with('success', 'Leadership activity added successfully.');
+    }
+
+    public function updateLeadershipActivity(StoreLeadershipActivityRequest $request, Resume $resume, LeadershipActivity $leadershipActivity): RedirectResponse
+    {
+        $this->authorize('update', $leadershipActivity);
+
+        $leadershipActivity->update($request->validated());
+
+        return back()->with('success', 'Leadership activity updated successfully.');
+    }
+
+    public function destroyLeadershipActivity(Resume $resume, LeadershipActivity $leadershipActivity): RedirectResponse
+    {
+        $this->authorize('delete', $leadershipActivity);
+
+        $leadershipActivity->delete();
+
+        return back()->with('success', 'Leadership activity deleted successfully.');
+    }
+
     public function updateAdditionalInfo(Request $request, Resume $resume): RedirectResponse
     {
         $this->authorize('update', $resume);
@@ -257,6 +319,8 @@ class ResumeEditorController extends Controller
             'project' => $resume->projects(),
             'education' => $resume->educations(),
             'work-experience' => $resume->workExperiences(),
+            'volunteer-experience' => $resume->volunteerExperiences(),
+            'leadership-activity' => $resume->leadershipActivities(),
             default => abort(404),
         };
     }
@@ -292,6 +356,14 @@ class ResumeEditorController extends Controller
             ),
             'skills' => $this->itemsWithInclusion($user->skills()->get(), $resume->skills),
             'projects' => $this->itemsWithInclusion($user->projects()->get(), $resume->projects),
+            'volunteerExperiences' => $this->itemsWithInclusion(
+                $user->volunteerExperiences()->orderBy('start_date', 'desc')->get(),
+                $resume->volunteerExperiences,
+            ),
+            'leadershipActivities' => $this->itemsWithInclusion(
+                $user->leadershipActivities()->orderBy('start_date', 'desc')->get(),
+                $resume->leadershipActivities,
+            ),
             'additionalInfo' => $resume->additionalInformation?->only(['languages', 'certifications', 'interests', 'notes']),
             'aiMessages' => $this->aiMessages($resume),
             'showSummary' => $showSummary,

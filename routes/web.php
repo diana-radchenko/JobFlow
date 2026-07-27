@@ -69,6 +69,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('resume-editor/{resume}/project/{project}', [ResumeEditorController::class, 'updateProject'])->name('resume-editor.project.update');
     Route::delete('resume-editor/{resume}/project/{project}', [ResumeEditorController::class, 'destroyProject'])->name('resume-editor.project.destroy');
 
+    // Volunteer & Community
+    Route::post('resume-editor/{resume}/volunteer-experience', [ResumeEditorController::class, 'storeVolunteerExperience'])->name('resume-editor.volunteer-experience.store');
+    Route::put('resume-editor/{resume}/volunteer-experience/{volunteerExperience}', [ResumeEditorController::class, 'updateVolunteerExperience'])->name('resume-editor.volunteer-experience.update');
+    Route::delete('resume-editor/{resume}/volunteer-experience/{volunteerExperience}', [ResumeEditorController::class, 'destroyVolunteerExperience'])->name('resume-editor.volunteer-experience.destroy');
+
+    // Leadership & Extracurricular
+    Route::post('resume-editor/{resume}/leadership-activity', [ResumeEditorController::class, 'storeLeadershipActivity'])->name('resume-editor.leadership-activity.store');
+    Route::put('resume-editor/{resume}/leadership-activity/{leadershipActivity}', [ResumeEditorController::class, 'updateLeadershipActivity'])->name('resume-editor.leadership-activity.update');
+    Route::delete('resume-editor/{resume}/leadership-activity/{leadershipActivity}', [ResumeEditorController::class, 'destroyLeadershipActivity'])->name('resume-editor.leadership-activity.destroy');
+
     // Additional Info (per resume; new resumes start with a copy of the most recent one)
     Route::post('resume-editor/{resume}/additional-info', [ResumeEditorController::class, 'updateAdditionalInfo'])->name('resume-editor.additional-info.update');
 

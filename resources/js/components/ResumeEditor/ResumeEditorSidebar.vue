@@ -5,6 +5,8 @@ import {
     BookOpen,
     Award,
     FolderOpen,
+    HeartHandshake,
+    Users,
     Zap,
     FileText,
     Sparkles,
@@ -53,6 +55,18 @@ const sections = computed(() => [
         description: 'Your work samples',
     },
     {
+        id: 'volunteer',
+        label: 'Volunteer & Community',
+        icon: HeartHandshake,
+        description: 'Community involvement',
+    },
+    {
+        id: 'leadership',
+        label: 'Leadership & Extracurricular',
+        icon: Users,
+        description: 'Roles & activities',
+    },
+    {
         id: 'additionalInfo',
         label: 'Additional Info',
         icon: Zap,
@@ -90,7 +104,7 @@ const sections = computed(() => [
                     :key="section.id"
                     @click="emit('selectSection', section.id)"
                     :class="[
-                        'flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition-all duration-200',
+                        'flex items-center gap-3 rounded-full px-4 py-3 text-xs font-medium transition-all duration-200',
                         currentSection === section.id
                             ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-md dark:bg-green-200 dark:text-green-900'
                             : 'bg-white text-sidebar-foreground hover:shadow-lg dark:bg-slate-800 dark:text-slate-100',

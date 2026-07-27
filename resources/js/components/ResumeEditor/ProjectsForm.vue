@@ -389,7 +389,7 @@ const formatDate = (date: string) => {
                     </Button>
                     <Button
                         type="button"
-                        @click="$emit('nextSection', 'additionalInfo')"
+                        @click="$emit('nextSection', 'volunteer')"
                     >
                         Next
                         <ChevronRight class="ml-2 h-4 w-4" />

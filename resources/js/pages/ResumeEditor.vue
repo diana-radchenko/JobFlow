@@ -5,12 +5,14 @@ import { ref, computed } from 'vue';
 import AlertError from '@/components/AlertError.vue';
 import AdditionalInfoForm from '@/components/ResumeEditor/AdditionalInfoForm.vue';
 import EducationForm from '@/components/ResumeEditor/EducationForm.vue';
+import LeadershipForm from '@/components/ResumeEditor/LeadershipForm.vue';
 import PersonalInfoForm from '@/components/ResumeEditor/PersonalInfoForm.vue';
 import ProjectsForm from '@/components/ResumeEditor/ProjectsForm.vue';
 import ResumeAiAnalysis from '@/components/ResumeEditor/ResumeAiAnalysis.vue';
 import ResumeEditorSidebar from '@/components/ResumeEditor/ResumeEditorSidebar.vue';
 import ResumeSummary from '@/components/ResumeEditor/ResumeSummary.vue';
 import SkillsForm from '@/components/ResumeEditor/SkillsForm.vue';
+import VolunteerForm from '@/components/ResumeEditor/VolunteerForm.vue';
 import WorkExperienceForm from '@/components/ResumeEditor/WorkExperienceForm.vue';
 import resumeEditor from '@/routes/resume-editor';
 import resumes from '@/routes/resumes';
@@ -41,6 +43,8 @@ const sectionComponents: Record<string, any> = {
     education: EducationForm,
     skills: SkillsForm,
     projects: ProjectsForm,
+    volunteer: VolunteerForm,
+    leadership: LeadershipForm,
     additionalInfo: AdditionalInfoForm,
     summary: ResumeSummary,
     aiAnalysis: ResumeAiAnalysis,
@@ -101,6 +105,8 @@ const currentComponent = computed(() => {
                     :educations="props.educations"
                     :skills="props.skills"
                     :projects="props.projects"
+                    :volunteer-experiences="props.volunteerExperiences"
+                    :leadership-activities="props.leadershipActivities"
                     :additional-info="props.additionalInfo"
                     :ai-messages="props.aiMessages"
                     @next-section="currentSection = $event"

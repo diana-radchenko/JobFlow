@@ -52,4 +52,20 @@ class Resume extends Model
             ->withTimestamps()
             ->orderByPivot('order');
     }
+
+    public function volunteerExperiences(): BelongsToMany
+    {
+        return $this->belongsToMany(VolunteerExperience::class, 'resume_volunteer_experience')
+            ->withPivot('order')
+            ->withTimestamps()
+            ->orderByPivot('order');
+    }
+
+    public function leadershipActivities(): BelongsToMany
+    {
+        return $this->belongsToMany(LeadershipActivity::class, 'resume_leadership_activity')
+            ->withPivot('order')
+            ->withTimestamps()
+            ->orderByPivot('order');
+    }
 }

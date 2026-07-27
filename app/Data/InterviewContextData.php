@@ -11,6 +11,8 @@ class InterviewContextData
      * @param  array<int, array<string, mixed>>  $educations
      * @param  array<int, array<string, mixed>>  $skills
      * @param  array<int, array<string, mixed>>  $projects
+     * @param  array<int, array<string, mixed>>  $volunteerExperiences
+     * @param  array<int, array<string, mixed>>  $leadershipActivities
      * @param  array<string, mixed>|null  $additionalInfo
      * @param  array<string, mixed>|null  $job
      */
@@ -19,6 +21,8 @@ class InterviewContextData
         public array $educations,
         public array $skills,
         public array $projects,
+        public array $volunteerExperiences,
+        public array $leadershipActivities,
         public ?array $additionalInfo,
         public ?array $job,
     ) {}
@@ -74,6 +78,36 @@ class InterviewContextData
                     'end_date',
                 ])
                 ->all(),
+            volunteerExperiences: $user->volunteerExperiences()
+                ->orderBy('start_date', 'desc')
+                ->get()
+                ->map->only([
+                    'organization',
+                    'role',
+                    'description',
+                    'url',
+                    'city',
+                    'country',
+                    'start_date',
+                    'end_date',
+                    'is_current',
+                ])
+                ->all(),
+            leadershipActivities: $user->leadershipActivities()
+                ->orderBy('start_date', 'desc')
+                ->get()
+                ->map->only([
+                    'organization',
+                    'role',
+                    'description',
+                    'url',
+                    'city',
+                    'country',
+                    'start_date',
+                    'end_date',
+                    'is_current',
+                ])
+                ->all(),
             additionalInfo: $user->additionalInformation?->only([
                 'languages',
                 'certifications',
@@ -99,6 +133,8 @@ class InterviewContextData
             'educations' => $this->educations,
             'skills' => $this->skills,
             'projects' => $this->projects,
+            'volunteer_experiences' => $this->volunteerExperiences,
+            'leadership_activities' => $this->leadershipActivities,
             'additional_info' => $this->additionalInfo,
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) ?: '{}';
     }

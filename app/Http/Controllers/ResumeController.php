@@ -15,7 +15,7 @@ class ResumeController extends Controller
     public function index(): Response
     {
         $resumes = auth()->user()->resumes()
-            ->withCount(['skills', 'projects', 'educations', 'workExperiences'])
+            ->withCount(['skills', 'projects', 'educations', 'workExperiences', 'volunteerExperiences', 'leadershipActivities'])
             ->orderByDesc('updated_at')
             ->get();
 
@@ -37,6 +37,8 @@ class ResumeController extends Controller
         $resume->projects()->sync($this->orderedIds($user->projects));
         $resume->educations()->sync($this->orderedIds($user->educations));
         $resume->workExperiences()->sync($this->orderedIds($user->workExperiences));
+        $resume->volunteerExperiences()->sync($this->orderedIds($user->volunteerExperiences));
+        $resume->leadershipActivities()->sync($this->orderedIds($user->leadershipActivities));
 
         $this->copyLatestAdditionalInfo($user->id, $resume);
 
@@ -77,6 +79,8 @@ class ResumeController extends Controller
         $copy->projects()->sync($this->pivotOrderIds($resume->projects));
         $copy->educations()->sync($this->pivotOrderIds($resume->educations));
         $copy->workExperiences()->sync($this->pivotOrderIds($resume->workExperiences));
+        $copy->volunteerExperiences()->sync($this->pivotOrderIds($resume->volunteerExperiences));
+        $copy->leadershipActivities()->sync($this->pivotOrderIds($resume->leadershipActivities));
 
         if ($resume->additionalInformation) {
             $copy->additionalInformation()->create([

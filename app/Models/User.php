@@ -60,6 +60,16 @@ class User extends Authenticatable
         return $this->hasMany(Project::class);
     }
 
+    public function volunteerExperiences(): HasMany
+    {
+        return $this->hasMany(VolunteerExperience::class);
+    }
+
+    public function leadershipActivities(): HasMany
+    {
+        return $this->hasMany(LeadershipActivity::class);
+    }
+
     public function additionalInformation(): HasOne
     {
         return $this->hasOne(AdditionalInformation::class);

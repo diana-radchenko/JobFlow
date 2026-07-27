@@ -71,7 +71,7 @@ const mainNavItems = computed<NavItem[]>(() => [
         isActive: isCurrentUrl(requestTrackerUrl),
     },
     {
-        title: 'Interview Preparing',
+        title: 'Interview',
         href: interviewPreparationRoute(),
         icon: BrainCircuit,
         isActive: isCurrentUrl(interviewPreparationRoute()),
