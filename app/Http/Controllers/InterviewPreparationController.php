@@ -23,9 +23,25 @@ class InterviewPreparationController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(3);
 
+        $resumes = $request->user()->resumes()
+            ->orderByDesc('updated_at')
+            ->get(['id', 'title']);
+
+        $applications = $request->user()->applications()
+            ->with('workJob:id,title,company')
+            ->latest()
+            ->get()
+            ->map(fn ($application) => [
+                'id' => $application->id,
+                'work_job_id' => $application->work_job_id,
+                'work_job' => $application->workJob?->only(['id', 'title', 'company']),
+            ]);
+
         return Inertia::render('InterviewPreparation', [
             'activeSession' => $activeSession,
             'pastSessions' => Inertia::scroll($pastSessions),
+            'resumes' => $resumes,
+            'applications' => $applications,
         ]);
     }
 }

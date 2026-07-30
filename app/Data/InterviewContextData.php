@@ -2,7 +2,9 @@
 
 namespace App\Data;
 
+use App\Models\Resume;
 use App\Models\User;
+use App\Models\WorkJob;
 
 class InterviewContextData
 {
@@ -109,6 +111,102 @@ class InterviewContextData
                 ])
                 ->all(),
             additionalInfo: $user->additionalInformation?->only([
+                'languages',
+                'certifications',
+                'interests',
+                'notes',
+            ]),
+            job: $job?->only([
+                'title',
+                'company',
+                'description',
+                'location',
+                'technologies',
+                'salary_start',
+                'salary_end',
+            ]),
+        );
+    }
+
+    public static function fromResume(Resume $resume, ?WorkJob $job): self
+    {
+        return new self(
+            workExperiences: $resume->workExperiences()
+                ->orderBy('start_date', 'desc')
+                ->get()
+                ->map->only([
+                    'company_name',
+                    'job_title',
+                    'city',
+                    'country',
+                    'is_remote',
+                    'start_date',
+                    'end_date',
+                    'is_current',
+                    'description',
+                ])
+                ->all(),
+            educations: $resume->educations()
+                ->orderBy('start_date', 'desc')
+                ->get()
+                ->map->only([
+                    'degree',
+                    'institution',
+                    'field_of_study',
+                    'start_date',
+                    'end_date',
+                    'description',
+                ])
+                ->all(),
+            skills: $resume->skills()
+                ->get()
+                ->map->only([
+                    'name',
+                    'proficiency_level',
+                ])
+                ->all(),
+            projects: $resume->projects()
+                ->get()
+                ->map->only([
+                    'title',
+                    'type',
+                    'description',
+                    'url',
+                    'start_date',
+                    'end_date',
+                ])
+                ->all(),
+            volunteerExperiences: $resume->volunteerExperiences()
+                ->orderBy('start_date', 'desc')
+                ->get()
+                ->map->only([
+                    'organization',
+                    'role',
+                    'description',
+                    'url',
+                    'city',
+                    'country',
+                    'start_date',
+                    'end_date',
+                    'is_current',
+                ])
+                ->all(),
+            leadershipActivities: $resume->leadershipActivities()
+                ->orderBy('start_date', 'desc')
+                ->get()
+                ->map->only([
+                    'organization',
+                    'role',
+                    'description',
+                    'url',
+                    'city',
+                    'country',
+                    'start_date',
+                    'end_date',
+                    'is_current',
+                ])
+                ->all(),
+            additionalInfo: $resume->additionalInformation?->only([
                 'languages',
                 'certifications',
                 'interests',

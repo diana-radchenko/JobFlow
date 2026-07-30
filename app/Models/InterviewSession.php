@@ -12,6 +12,8 @@ class InterviewSession extends Model
 
     protected $fillable = [
         'user_id',
+        'resume_id',
+        'work_job_id',
         'conversation_id',
         'type',
         'complexity',
@@ -22,5 +24,15 @@ class InterviewSession extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function resume(): BelongsTo
+    {
+        return $this->belongsTo(Resume::class);
+    }
+
+    public function workJob(): BelongsTo
+    {
+        return $this->belongsTo(WorkJob::class);
     }
 }

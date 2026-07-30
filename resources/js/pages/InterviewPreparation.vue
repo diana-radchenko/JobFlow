@@ -20,6 +20,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { stringForHuman } from '@/helpers/strings';
 import { interviewPreparation } from '@/routes';
 
@@ -38,10 +45,20 @@ const props = defineProps<{
             created_at: string;
         }[];
     };
+    resumes: { id: number; title: string }[];
+    applications: {
+        id: number;
+        work_job_id: number;
+        work_job: { id: number; title: string; company: string } | null;
+    }[];
 }>();
 
 const interviewType = ref('resume-based');
 const complexity = ref('advanced');
+const resumeId = ref<string>(
+    props.resumes.length > 0 ? String(props.resumes[0].id) : '',
+);
+const workJobId = ref<string>('none');
 
 const interviewTypes = [
     { id: 'behavioral', label: 'General Behavioral Questions' },
@@ -63,6 +80,8 @@ const form = useForm({
     type: '',
     complexity: '',
     mode: '',
+    resume_id: '',
+    work_job_id: '',
 });
 const isCompletingInterview = ref(false);
 
@@ -83,9 +102,17 @@ function startInterview() {
         return;
     }
 
+    if (!resumeId.value) {
+        alert('Please select which resume to use for this interview.');
+
+        return;
+    }
+
     form.type = interviewType.value;
     form.complexity = complexity.value;
     form.mode = 'live';
+    form.resume_id = resumeId.value;
+    form.work_job_id = workJobId.value === 'none' ? '' : workJobId.value;
     form.post(interviewSessionStore.url());
 }
 
@@ -190,6 +217,79 @@ defineOptions({
                     </CardContent>
                 </Card>
 
+                <!-- Resume & Job Card -->
+                <Card
+                    class="rounded-[24px] border-0 bg-slate-100/50 shadow-none dark:bg-slate-900/50"
+                >
+                    <CardContent class="space-y-6 p-6">
+                        <div>
+                            <h3
+                                class="mb-3 text-lg leading-tight font-bold text-slate-900 dark:text-slate-100"
+                            >
+                                Which resume should the AI use?
+                            </h3>
+                            <Select
+                                v-model="resumeId"
+                                :disabled="!!activeSession"
+                            >
+                                <SelectTrigger class="w-full">
+                                    <SelectValue
+                                        placeholder="Select a resume"
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem
+                                        v-for="resume in resumes"
+                                        :key="resume.id"
+                                        :value="String(resume.id)"
+                                    >
+                                        {{ resume.title }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p
+                                v-if="resumes.length === 0"
+                                class="mt-2 text-xs text-slate-500"
+                            >
+                                You don't have any resumes yet. Create one first
+                                to personalize your interview.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h3
+                                class="mb-3 text-lg leading-tight font-bold text-slate-900 dark:text-slate-100"
+                            >
+                                Which job application is this for?
+                            </h3>
+                            <Select
+                                v-model="workJobId"
+                                :disabled="!!activeSession"
+                            >
+                                <SelectTrigger class="w-full">
+                                    <SelectValue
+                                        placeholder="General interview"
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">
+                                        General (no specific job)
+                                    </SelectItem>
+                                    <SelectItem
+                                        v-for="application in applications"
+                                        :key="application.id"
+                                        :value="String(application.work_job_id)"
+                                    >
+                                        {{ application.work_job?.title }}
+                                        &bull;
+                                        {{ application.work_job?.company }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 <!-- Interview Type Card -->
                 <Card
                     class="rounded-[24px] border-0 bg-slate-100/50 shadow-none dark:bg-slate-900/50"
@@ -274,7 +374,9 @@ defineOptions({
                     <CardContent class="flex flex-col items-start p-0">
                         <button
                             @click="startInterview"
-                            :disabled="form.processing || !!activeSession"
+                            :disabled="
+                                form.processing || !!activeSession || !resumeId
+                            "
                             class="group relative flex w-full max-w-md flex-col items-center justify-center gap-3 overflow-hidden rounded-[24px] border border-primary/20 bg-gradient-to-br from-primary/10 via-white to-primary/5 p-6 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 dark:border-primary/20 dark:from-primary/15 dark:via-slate-950 dark:to-slate-950"
                         >
                             <div
@@ -300,9 +402,9 @@ defineOptions({
                                 <p
                                     class="mx-auto max-w-sm text-xs leading-relaxed text-slate-600 dark:text-slate-400"
                                 >
-                                    The AI asks questions, you respond with
-                                    your voice, and the system analyzes your
-                                    tone, pauses, and confidence in real time.
+                                    The AI asks questions, you respond with your
+                                    voice, and the system analyzes your tone,
+                                    pauses, and confidence in real time.
                                 </p>
                             </div>
 

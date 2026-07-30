@@ -8,6 +8,7 @@ use App\Models\InterviewSession;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Ai\Audio;
@@ -26,6 +27,16 @@ class InterviewSessionController extends Controller
             'type' => ['required', 'string'],
             'complexity' => ['required', 'string'],
             'mode' => ['required', 'string', 'in:text,live'],
+            'resume_id' => [
+                'required',
+                'integer',
+                Rule::exists('resumes', 'id')->where('user_id', $user->id),
+            ],
+            'work_job_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('user_work_job_applications', 'work_job_id')->where('user_id', $user->id),
+            ],
         ]);
 
         // Check if there is an active session
@@ -40,6 +51,8 @@ class InterviewSessionController extends Controller
 
         $session = InterviewSession::create([
             'user_id' => $user->id,
+            'resume_id' => $validated['resume_id'],
+            'work_job_id' => $validated['work_job_id'] ?? null,
             'type' => $validated['type'],
             'complexity' => $validated['complexity'],
             'mode' => $validated['mode'],
@@ -180,7 +193,9 @@ class InterviewSessionController extends Controller
 
     private function makeInterviewAgent(User $user, InterviewSession $session): InterviewAgent
     {
-        $context = InterviewContextData::fromUser($user);
+        $context = $session->resume
+            ? InterviewContextData::fromResume($session->resume, $session->workJob)
+            : InterviewContextData::fromUser($user);
 
         return new InterviewAgent(
             $session->type,
