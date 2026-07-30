@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { stringForHuman } from '@/helpers/strings';
-import { requestTracker } from '@/routes';
+import { requestTracker, interviewPreparation } from '@/routes';
 import type { UserWorkJobApplication } from '@/types/laravel-models';
 
 const visitJob = (app: any) => {
@@ -104,7 +104,7 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'Request Tracker',
+                title: 'Request Tracker (Update)',
                 href: requestTracker(),
             },
         ],
@@ -232,7 +232,7 @@ const allApplications = computed(() => {
 </script>
 
 <template>
-    <Head title="Request Tracker" />
+    <Head title="Request Tracker (Update)" />
 
     <Dialog :open="deleteDialogOpen" @update:open="onDeleteDialogOpen">
         <DialogContent class="sm:max-w-md">
@@ -274,7 +274,7 @@ const allApplications = computed(() => {
             <h1
                 class="mr-2 shrink-0 text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50"
             >
-                Request tracker
+                Request tracker (Update)
             </h1>
 
             <div class="relative w-64 max-w-full">
@@ -306,6 +306,7 @@ const allApplications = computed(() => {
 
             <Button
                 class="ml-2 h-10 shrink-0 rounded-full bg-primary px-6 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+                @click="router.visit(interviewPreparation().url)"
             >
                 AI INTERVIEW PREP
             </Button>
@@ -367,7 +368,7 @@ const allApplications = computed(() => {
                             </Badge>
 
                             <!-- Progress Circle -->
-                            <div
+                    <!--         <div
                                 class="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center"
                             >
                                 <svg
@@ -395,10 +396,10 @@ const allApplications = computed(() => {
                                     class="absolute text-[11px] font-bold text-slate-900 dark:text-slate-100"
                                     >{{ app.percentage }}%</span
                                 >
-                            </div>
+                            </div> -->
 
                             <!-- Action Buttons -->
-                            <Button
+                            <!-- <Button
                                 variant="ghost"
                                 size="icon"
                                 class="h-[42px] w-[42px] shrink-0 rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground dark:hover:bg-primary/20 dark:hover:text-primary"
@@ -407,7 +408,7 @@ const allApplications = computed(() => {
                                     :is="app.actionIcon"
                                     class="h-4 w-4"
                                 />
-                            </Button>
+                            </Button>-->
                             <Button
                                 v-if="typeof app.id === 'number'"
                                 variant="ghost"
@@ -418,7 +419,7 @@ const allApplications = computed(() => {
                                 @click.stop="openDeleteDialog(app)"
                             >
                                 <X class="h-4 w-4" />
-                            </Button>
+                            </Button> 
                         </div>
                     </CardContent>
                 </Card>

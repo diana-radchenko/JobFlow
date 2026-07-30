@@ -231,7 +231,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                         </div>
                     </div>
                     <p v-else class="text-sm text-foreground/60 italic">
-                        No work experience added yet
+                        Complete your profile to receive AI recommendations
                     </p>
                 </div>
 
@@ -285,7 +285,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                         </div>
                     </div>
                     <p v-else class="text-sm text-foreground/60 italic">
-                        No education added yet
+                        Complete your profile to receive AI recommendations
                     </p>
                 </div>
 
@@ -319,7 +319,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                         </span>
                     </div>
                     <p v-else class="text-sm text-foreground/60 italic">
-                        No skills added yet
+                        Complete your profile to receive AI recommendations
                     </p>
                 </div>
 
@@ -380,7 +380,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                         </div>
                     </div>
                     <p v-else class="text-sm text-foreground/60 italic">
-                        No projects added yet
+                        Complete your profile to receive AI recommendations
                     </p>
                 </div>
 
@@ -437,7 +437,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                         </div>
                     </div>
                     <p v-else class="text-sm text-foreground/60 italic">
-                        No volunteer experience added yet
+                        Complete your profile to receive AI recommendations
                     </p>
                 </div>
 
@@ -494,7 +494,7 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                         </div>
                     </div>
                     <p v-else class="text-sm text-foreground/60 italic">
-                        No leadership activities added yet
+                        Complete your profile to receive AI recommendations
                     </p>
                 </div>
 

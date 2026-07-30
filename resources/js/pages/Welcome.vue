@@ -36,7 +36,7 @@ const mobileMenuOpen = ref(false);
             "
         >
             <!-- Left Nav Box -->
-            <nav
+  <!--           <nav
                 class="hidden rounded-br-3xl rounded-bl-3xl bg-white px-8 py-5 lg:flex xl:px-12 xl:py-6"
             >
                 <ul
@@ -49,14 +49,14 @@ const mobileMenuOpen = ref(false);
                     <li><a href="#" class="hover:text-black">About us</a></li>
                 </ul>
             </nav>
-
+ -->
             <!-- Mobile Menu Button -->
-            <div class="rounded-br-2xl bg-white p-5 lg:hidden">
+           
+       <!--      <div class="rounded-br-2xl bg-white p-5 lg:hidden">
                 <button
                     @click="mobileMenuOpen = !mobileMenuOpen"
                     class="flex items-center justify-center text-black"
                 >
-                    <!-- Hamburger Icon -->
                     <svg
                         v-if="!mobileMenuOpen"
                         xmlns="http://www.w3.org/2000/svg"
@@ -73,7 +73,6 @@ const mobileMenuOpen = ref(false);
                         <line x1="4" x2="20" y1="6" y2="6" />
                         <line x1="4" x2="20" y1="18" y2="18" />
                     </svg>
-                    <!-- Close Icon (X) -->
                     <svg
                         v-else
                         xmlns="http://www.w3.org/2000/svg"
@@ -91,7 +90,7 @@ const mobileMenuOpen = ref(false);
                     </svg>
                 </button>
             </div>
-
+ -->
             <!-- Right Language Switcher Pill -->
             <!--             <div class="p-5 lg:p-6 xl:p-8">
                 <div class="flex cursor-pointer items-center gap-3 rounded-lg bg-[#010c16] px-4 py-2.5 text-sm font-bold text-white shadow-lg ring-1 ring-white/10 hover:bg-[#010c16]/80">
@@ -105,7 +104,7 @@ const mobileMenuOpen = ref(false);
         </header>
 
         <!-- Mobile Menu -->
-        <transition
+<!--         <transition
             enter-active-class="transition duration-200"
             leave-active-class="transition duration-200"
             enter-from-class="opacity-0"
@@ -115,9 +114,9 @@ const mobileMenuOpen = ref(false);
                 v-if="mobileMenuOpen"
                 class="fixed inset-0 top-16 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
             ></div>
-        </transition>
+        </transition> -->
 
-        <transition
+<!--         <transition
             enter-active-class="transition duration-200"
             leave-active-class="transition duration-200"
             enter-from-class="-translate-x-full"
@@ -172,7 +171,7 @@ const mobileMenuOpen = ref(false);
                     </li>
                 </ul>
             </nav>
-        </transition>
+        </transition> -->
 
         <!-- Main Content -->
         <main class="flex flex-1 flex-col pt-16 lg:flex-row lg:pt-0">
@@ -256,7 +255,7 @@ const mobileMenuOpen = ref(false);
             <!-- Right Column (Image) -->
             <section class="relative w-full overflow-hidden lg:w-[45%]">
                 <img
-                    src="/robot_interview_scene.svg"
+                    src="/robot_interview_scene_edited.png"
                     alt="AI Interview"
                     class="h-full w-full object-cover contrast-[1.1] grayscale-[0.2]"
                 />

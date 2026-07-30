@@ -64,6 +64,10 @@ const visitSession = (session: InterviewSession) => {
     router.visit(interviewSessionShow(session.id).url);
 };
 
+const visitRequestTracker = () => {
+    router.visit('/request-tracker');
+};
+
 defineOptions({
     layout: {
         breadcrumbs: [
@@ -575,11 +579,17 @@ const articlesMock = [
                 <!-- Application Tracker -->
                 <div>
                     <div class="mt-2 mb-4 flex items-center justify-between">
-                        <h2
-                            class="text-xl font-bold text-slate-900 dark:text-slate-100"
+                        <button
+                            type="button"
+                            @click="visitRequestTracker"
+                            class="cursor-pointer rounded-lg px-2 py-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
                         >
-                            Application Tracker
-                        </h2>
+                            <h2
+                                class="text-xl font-bold text-slate-900 dark:text-slate-100 hover:text-primary"
+                            >
+                                Application Tracker (Update)
+                            </h2>
+                        </button>
                         <div class="flex gap-2">
                             <Button
                                 variant="outline"
@@ -630,7 +640,13 @@ const articlesMock = [
                                         <th
                                             class="px-6 py-4 text-right font-bold whitespace-nowrap text-slate-900 dark:text-slate-100"
                                         >
-                                            Application Status
+                                            <button
+                                                type="button"
+                                                @click="visitRequestTracker"
+                                                class="cursor-pointer transition-colors hover:text-primary"
+                                            >
+                                                Application Status
+                                            </button>
                                         </th>
                                     </tr>
                                 </thead>
