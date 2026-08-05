@@ -83,6 +83,28 @@ test('assistant message endpoint prompts the agent and returns its reply', funct
     });
 });
 
+test('agent starts from scratch when nothing is on file', function () {
+    $user = User::factory()->create();
+    $resume = $user->resumes()->create(['title' => 'My Resume']);
+
+    $instructions = (new ResumeBuilderAgent($resume, '{}'))->instructions();
+
+    expect($instructions)->toContain('build it from scratch')
+        ->and($instructions)->not->toContain('FIRST message must briefly list the sections');
+});
+
+test('agent asks which section to start from when data already exists', function () {
+    $user = User::factory()->create();
+    $user->profile()->create(['first_name' => 'Ada', 'last_name' => 'Lovelace']);
+    $resume = $user->resumes()->create(['title' => 'My Resume']);
+
+    $instructions = (new ResumeBuilderAgent($resume->fresh(), '{}'))->instructions();
+
+    expect($instructions)->toContain('FIRST message must briefly list the sections')
+        ->and($instructions)->toContain('Ada')
+        ->and($instructions)->not->toContain('build it from scratch');
+});
+
 test('assistant message endpoint forbids acting on another users resume', function () {
     $owner = User::factory()->create();
     $resume = $owner->resumes()->create(['title' => 'My Resume']);
