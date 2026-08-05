@@ -24,6 +24,16 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import { stringForHuman } from '@/helpers/strings';
 import { dashboard } from '@/routes';
@@ -131,6 +141,53 @@ const tableApplications = computed(() => {
     return [...realApps];
 });
 
+const trackerStatusOptions = computed(() =>
+    Array.from(
+        new Set(tableApplications.value.map((app) => app.status)),
+    ).sort(),
+);
+
+const trackerStatusFilter = ref<string[]>([]);
+
+type TrackerSortOption =
+    | 'company-asc'
+    | 'company-desc'
+    | 'title-asc'
+    | 'title-desc'
+    | 'salary-asc'
+    | 'salary-desc'
+    | 'status-asc'
+    | 'status-desc';
+
+const trackerSort = ref<TrackerSortOption>('company-asc');
+
+const trackerSalaryValue = (salary: string) =>
+    Number(salary.replace(/[^0-9.-]/g, '')) || 0;
+
+const filteredSortedApplications = computed(() => {
+    const filtered = trackerStatusFilter.value.length
+        ? tableApplications.value.filter((app) =>
+              trackerStatusFilter.value.includes(app.status),
+          )
+        : tableApplications.value;
+
+    const [key, direction] = trackerSort.value.split('-') as [
+        'company' | 'title' | 'salary' | 'status',
+        'asc' | 'desc',
+    ];
+
+    const sorted = [...filtered].sort((a, b) => {
+        const result =
+            key === 'salary'
+                ? trackerSalaryValue(a.salary) - trackerSalaryValue(b.salary)
+                : a[key].localeCompare(b[key]);
+
+        return direction === 'asc' ? result : -result;
+    });
+
+    return sorted;
+});
+
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const startOfDay = (date: Date) => {
@@ -209,8 +266,8 @@ const sessionsByDay = computed(() => {
 
     for (const session of props.interviewSessions || []) {
         if (!session.created_at) {
-continue;
-}
+            continue;
+        }
 
         const key = new Date(session.created_at).toDateString();
         const bucket = map.get(key) ?? [];
@@ -250,7 +307,7 @@ const timelineEvents = computed(() => {
 const aiJobsMock = [
     {
         id: 1,
-        url: "https://www.innovatetechinc.com/careers.php",
+        url: 'https://www.innovatetechinc.com/careers.php',
         company: 'InnovateTech',
         logoText: 'IT',
         title: 'InnovateTech is looking for a Software Engineer to join our team!',
@@ -259,14 +316,14 @@ const aiJobsMock = [
     },
     {
         id: 2,
-        url: "https://www.data-wise-inc.com/career-opportunities",
+        url: 'https://www.data-wise-inc.com/career-opportunities',
         company: 'DataWise',
         logoText: 'DW',
         title: 'DataWise is hiring a Data Scientist to drive data-driven decision-making.',
         salary: '$105,000',
         tags: ['Machine learning'],
     },
-/*     {
+    /*     {
         id: 3,
         url: "#",
         company: 'SecureNet',
@@ -289,7 +346,9 @@ const resumePickerJob = ref<AiJobMock | null>(null);
 const recommendationsOpen = ref(false);
 const recommendationsJob = ref<AiJobMock | null>(null);
 const activeRecommendations = computed<ResumeScoreResult | null>(() =>
-    recommendationsJob.value ? (jobScores[recommendationsJob.value.id] ?? null) : null,
+    recommendationsJob.value
+        ? (jobScores[recommendationsJob.value.id] ?? null)
+        : null,
 );
 
 const scoreLabel = (job: AiJobMock) => {
@@ -337,8 +396,7 @@ const scoreResumeForJob = async (job: AiJobMock, resumeId: number) => {
         recommendationsOpen.value = true;
     } catch (error) {
         console.error('Failed to score resume:', error);
-        scoreErrors[job.id] =
-            'Could not score this resume. Please try again.';
+        scoreErrors[job.id] = 'Could not score this resume. Please try again.';
     } finally {
         scoringJobId.value = null;
     }
@@ -347,11 +405,13 @@ const scoreResumeForJob = async (job: AiJobMock, resumeId: number) => {
 const startScoring = (job: AiJobMock) => {
     if (props.resumes.length === 0) {
         router.visit('/resumes');
+
         return;
     }
 
     if (props.resumes.length === 1) {
         scoreResumeForJob(job, props.resumes[0].id);
+
         return;
     }
 
@@ -367,6 +427,7 @@ const onScoreResume = (job: AiJobMock) => {
     if (jobScores[job.id]) {
         recommendationsJob.value = job;
         recommendationsOpen.value = true;
+
         return;
     }
 
@@ -585,33 +646,108 @@ const articlesMock = [
                             class="cursor-pointer rounded-lg px-2 py-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
                         >
                             <h2
-                                class="text-xl font-bold text-slate-900 dark:text-slate-100 hover:text-primary"
+                                class="text-xl font-bold text-slate-900 hover:text-primary dark:text-slate-100"
                             >
                                 Application Tracker (Update)
                             </h2>
                         </button>
                         <div class="flex gap-2">
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                class="h-9 w-9 rounded-full border-0 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground"
-                            >
-                                <SlidersHorizontal class="h-4 w-4" />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                class="h-9 w-9 rounded-full border-0 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground"
-                            >
-                                <ArrowDownUp class="h-4 w-4" />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                class="h-9 w-9 rounded-full border-0 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground"
-                            >
-                                <Maximize2 class="h-4 w-4" />
-                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger as-child>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        class="h-9 w-9 rounded-full border-0 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground"
+                                    >
+                                        <SlidersHorizontal class="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel
+                                        >Filter by status</DropdownMenuLabel
+                                    >
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuCheckboxItem
+                                        v-for="status in trackerStatusOptions"
+                                        :key="status"
+                                        :checked="
+                                            trackerStatusFilter.includes(status)
+                                        "
+                                        @update:checked="
+                                            (checked: boolean) => {
+                                                trackerStatusFilter = checked
+                                                    ? [
+                                                          ...trackerStatusFilter,
+                                                          status,
+                                                      ]
+                                                    : trackerStatusFilter.filter(
+                                                          (s) => s !== status,
+                                                      );
+                                            }
+                                        "
+                                    >
+                                        {{ status }}
+                                    </DropdownMenuCheckboxItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger as-child>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        class="h-9 w-9 rounded-full border-0 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground"
+                                    >
+                                        <ArrowDownUp class="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel
+                                        >Sort by</DropdownMenuLabel
+                                    >
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuRadioGroup
+                                        v-model="trackerSort"
+                                    >
+                                        <DropdownMenuRadioItem
+                                            value="company-asc"
+                                            >Company
+                                            (A-Z)</DropdownMenuRadioItem
+                                        >
+                                        <DropdownMenuRadioItem
+                                            value="company-desc"
+                                            >Company
+                                            (Z-A)</DropdownMenuRadioItem
+                                        >
+                                        <DropdownMenuRadioItem value="title-asc"
+                                            >Job Title
+                                            (A-Z)</DropdownMenuRadioItem
+                                        >
+                                        <DropdownMenuRadioItem
+                                            value="title-desc"
+                                            >Job Title
+                                            (Z-A)</DropdownMenuRadioItem
+                                        >
+                                        <DropdownMenuRadioItem
+                                            value="salary-desc"
+                                            >Salary
+                                            (High-Low)</DropdownMenuRadioItem
+                                        >
+                                        <DropdownMenuRadioItem
+                                            value="salary-asc"
+                                            >Salary
+                                            (Low-High)</DropdownMenuRadioItem
+                                        >
+                                        <DropdownMenuRadioItem
+                                            value="status-asc"
+                                            >Status (A-Z)</DropdownMenuRadioItem
+                                        >
+                                        <DropdownMenuRadioItem
+                                            value="status-desc"
+                                            >Status (Z-A)</DropdownMenuRadioItem
+                                        >
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
 
@@ -654,10 +790,14 @@ const articlesMock = [
                                     class="divide-y divide-white dark:divide-slate-800"
                                 >
                                     <tr
-                                        v-for="app in tableApplications"
+                                        v-for="app in filteredSortedApplications"
                                         :key="app.id"
                                         @click="visitJob(app)"
-                                        :class="app.jobId ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800' : ''"
+                                        :class="
+                                            app.jobId
+                                                ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800'
+                                                : ''
+                                        "
                                         class="bg-white transition-colors duration-200 dark:bg-slate-950"
                                     >
                                         <td
@@ -728,10 +868,10 @@ const articlesMock = [
                                             <a
                                                 :href="job.url"
                                                 target="_blank"
-                                                class="block text-[15px] leading-snug font-bold text-slate-900 hover:text-primary transition-colors dark:text-slate-100"
+                                                class="block text-[15px] leading-snug font-bold text-slate-900 transition-colors hover:text-primary dark:text-slate-100"
                                             >
                                                 {{ job.title }}
-                                        </a>
+                                            </a>
                                         </div>
                                         <Button
                                             variant="ghost"
@@ -770,11 +910,15 @@ const articlesMock = [
                                             <Button
                                                 variant="ghost"
                                                 class="h-9 rounded-lg border border-slate-100 bg-white text-xs font-bold text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                                                :disabled="scoringJobId === job.id"
+                                                :disabled="
+                                                    scoringJobId === job.id
+                                                "
                                                 @click="onScoreResume(job)"
                                             >
                                                 <Spinner
-                                                    v-if="scoringJobId === job.id"
+                                                    v-if="
+                                                        scoringJobId === job.id
+                                                    "
                                                     class="mr-2 h-3 w-3"
                                                 />
                                                 {{ scoreButtonLabel(job) }}
@@ -783,7 +927,9 @@ const articlesMock = [
                                                 v-if="jobScores[job.id]"
                                                 variant="ghost"
                                                 class="h-9 shrink-0 rounded-lg border border-slate-100 bg-white text-xs font-bold text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                                                :disabled="scoringJobId === job.id"
+                                                :disabled="
+                                                    scoringJobId === job.id
+                                                "
                                                 title="Score again"
                                                 @click="onRescoreResume(job)"
                                             >
@@ -818,7 +964,7 @@ const articlesMock = [
                                 :key="article.id"
                                 :href="article.url"
                                 target="_blank"
-                                class="flex flex-col gap-3 overflow-hidden rounded-[24px] border border-slate-200/60 bg-white py-0 shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+                                class="flex flex-col gap-3 overflow-hidden rounded-[24px] border border-slate-200/60 bg-white py-0 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
                             >
                                 <img
                                     :src="article.image"
@@ -846,8 +992,9 @@ const articlesMock = [
                 <DialogHeader>
                     <DialogTitle>Choose a resume to score</DialogTitle>
                     <DialogDescription>
-                        Which resume should the AI use to score your fit for
-                        "{{ resumePickerJob?.title }}"?
+                        Which resume should the AI use to score your fit for "{{
+                            resumePickerJob?.title
+                        }}"?
                     </DialogDescription>
                 </DialogHeader>
                 <div class="space-y-2">
@@ -888,7 +1035,9 @@ const articlesMock = [
                             class="list-disc space-y-1 pl-5 text-sm text-foreground/70"
                         >
                             <li
-                                v-for="(item, index) in activeRecommendations.highlights"
+                                v-for="(
+                                    item, index
+                                ) in activeRecommendations.highlights"
                                 :key="index"
                             >
                                 {{ item }}
@@ -903,7 +1052,9 @@ const articlesMock = [
                             class="list-disc space-y-1 pl-5 text-sm text-foreground/70"
                         >
                             <li
-                                v-for="(item, index) in activeRecommendations.additions"
+                                v-for="(
+                                    item, index
+                                ) in activeRecommendations.additions"
                                 :key="index"
                             >
                                 {{ item }}
@@ -918,7 +1069,9 @@ const articlesMock = [
                             class="list-disc space-y-1 pl-5 text-sm text-foreground/70"
                         >
                             <li
-                                v-for="(item, index) in activeRecommendations.removals"
+                                v-for="(
+                                    item, index
+                                ) in activeRecommendations.removals"
                                 :key="index"
                             >
                                 {{ item }}
