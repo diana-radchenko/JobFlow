@@ -85,11 +85,6 @@ The following parts are visible in the interface but are not yet complete produc
 - **Schedule:** displays interview sessions but does not yet create meetings or synchronize with external calendars.
 - **Support:** the sidebar link does not yet open a support workflow.
 
-## Next Development Priorities
-
-- Build HRFlow employer accounts and a verified vacancy-publishing workflow.
-- Connect one complete route from an employer vacancy to a selected JobFlow resume, application, tracker, and interview.
-- Replace remaining demonstration data with stored records and connect Salary to vacancies published on the platform and verified market information.
 - Save AI scores and scoring history in the database.
 - Expand scheduling and add optional calendar integrations.
 - Complete privacy, backup, monitoring, accessibility, and data-recovery procedures 
