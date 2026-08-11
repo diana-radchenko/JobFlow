@@ -255,16 +255,20 @@ export type UserWorkJobApplication = {
     id: number;
     user_id: number;
     work_job_id: number;
+    resume_id: number | null;
     status: ApplicationStatus;
+    viewed_at: string | null;
     created_at: string | null;
     updated_at: string | null;
     // relations
     user: User;
     work_job: WorkJob;
+    resume: Resume;
     // counts
     // exists
     user_exists: boolean;
     work_job_exists: boolean;
+    resume_exists: boolean;
 };
 
 export type WorkExperience = {
@@ -295,6 +299,7 @@ export type WorkExperience = {
 export type WorkJob = {
     // columns
     id: number;
+    user_id: number | null;
     title: string;
     salary_start: number | null;
     salary_end: number | null;
@@ -306,6 +311,7 @@ export type WorkJob = {
     created_at: string | null;
     updated_at: string | null;
     // relations
+    employer: User | null;
     applications: UserWorkJobApplication[];
     applicants: User[];
     // counts

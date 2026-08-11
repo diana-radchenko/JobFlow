@@ -19,7 +19,13 @@ defineOptions({
     },
 });
 
-const selectedProfileType = ref<'candidate' | 'employer'>('candidate');
+// Preselected from /register?type=employer, which the landing page's HRFlow
+// "Manage your best team" call to action links to.
+const { accountType = 'candidate' } = defineProps<{
+    accountType?: 'candidate' | 'employer';
+}>();
+
+const selectedProfileType = ref<'candidate' | 'employer'>(accountType);
 </script>
 
 <template>

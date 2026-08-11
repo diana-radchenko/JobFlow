@@ -18,6 +18,36 @@ test('authenticated users can visit the request tracker page', function () {
     $response->assertOk();
 });
 
+test('the tracker ships the status and viewed state the charts are built from', function () {
+    $user = User::factory()->create();
+    $job = WorkJob::factory()->create();
+    $otherJob = WorkJob::factory()->create();
+
+    $viewed = UserWorkJobApplication::create([
+        'user_id' => $user->id,
+        'work_job_id' => $job->id,
+        'status' => ApplicationStatus::Rejected,
+        'viewed_at' => now(),
+    ]);
+    UserWorkJobApplication::create([
+        'user_id' => $user->id,
+        'work_job_id' => $otherJob->id,
+        'status' => ApplicationStatus::Applied,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('request-tracker'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('RequestTracker')
+            ->has('applications', 2)
+            ->where('applications.0.id', $viewed->id)
+            ->where('applications.0.status', ApplicationStatus::Rejected->value)
+            ->where('applications.0.viewed_at', fn ($viewedAt) => $viewedAt !== null)
+            ->where('applications.1.viewed_at', null)
+        );
+});
+
 test('guests cannot delete an application', function () {
     $user = User::factory()->create();
     $job = WorkJob::create([

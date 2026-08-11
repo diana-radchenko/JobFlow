@@ -1,6 +1,9 @@
 <?php
 
+use App\Enums\UserRole;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationController;
+use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\InterviewPreparationController;
 use App\Http\Controllers\InterviewSessionController;
 use App\Http\Controllers\JobSelectionController;
@@ -18,7 +21,25 @@ Route::inertia('/', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:'.UserRole::Employer->value])
+    ->prefix('employer')
+    ->name('employer.')
+    ->scopeBindings()
+    ->group(function () {
+        Route::get('jobs', [EmployerJobController::class, 'index'])->name('jobs.index');
+        Route::get('jobs/create', [EmployerJobController::class, 'create'])->name('jobs.create');
+        Route::post('jobs', [EmployerJobController::class, 'store'])->name('jobs.store');
+        Route::get('jobs/{job}', [EmployerJobController::class, 'show'])->name('jobs.show');
+        Route::get('jobs/{job}/edit', [EmployerJobController::class, 'edit'])->name('jobs.edit');
+        Route::put('jobs/{job}', [EmployerJobController::class, 'update'])->name('jobs.update');
+        Route::delete('jobs/{job}', [EmployerJobController::class, 'destroy'])->name('jobs.destroy');
+
+        // scopeBindings keeps {application} constrained to the parent {job}.
+        Route::get('jobs/{job}/applications/{application}', [EmployerApplicationController::class, 'show'])->name('applications.show');
+        Route::patch('jobs/{job}/applications/{application}', [EmployerApplicationController::class, 'update'])->name('applications.update');
+    });
+
+Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('request-tracker', [RequestTrackerController::class, 'show'])->name('request-tracker');

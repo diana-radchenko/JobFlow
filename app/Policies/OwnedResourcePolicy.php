@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class OwnedResourcePolicy
 {
+    public function view(User $user, Model $model): bool
+    {
+        return $user->id === $model->user_id;
+    }
+
     public function update(User $user, Model $model): bool
     {
         return $user->id === $model->user_id;

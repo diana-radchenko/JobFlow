@@ -10,6 +10,7 @@ use App\Models\Resume;
 use App\Models\Skill;
 use App\Models\VolunteerExperience;
 use App\Models\WorkExperience;
+use App\Models\WorkJob;
 use App\Policies\OwnedResourcePolicy;
 use App\Policies\ResumePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -29,6 +30,7 @@ class AuthServiceProvider extends ServiceProvider
         VolunteerExperience::class => OwnedResourcePolicy::class,
         LeadershipActivity::class => OwnedResourcePolicy::class,
         AdditionalInformation::class => OwnedResourcePolicy::class,
+        WorkJob::class => OwnedResourcePolicy::class,
         Resume::class => ResumePolicy::class,
     ];
 

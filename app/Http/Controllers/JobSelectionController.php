@@ -6,6 +6,8 @@ use App\Http\Requests\JobSelectionRequest;
 use App\Models\UserWorkJobApplication;
 use App\Models\WorkJob;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -46,16 +48,22 @@ class JobSelectionController extends Controller
         return Inertia::render('JobDetail', [
             'job' => $job,
             'userApplication' => $userApplication,
+            'resumes' => auth()->user()->resumes()->select('id', 'title')->orderByDesc('updated_at')->get(),
         ]);
     }
 
-    public function apply(WorkJob $job): RedirectResponse
+    public function apply(Request $request, WorkJob $job): RedirectResponse
     {
+        $validated = $request->validate([
+            'resume_id' => ['required', Rule::exists('resumes', 'id')->where('user_id', auth()->id())],
+        ]);
+
         UserWorkJobApplication::firstOrCreate(
             [
                 'user_id' => auth()->id(),
                 'work_job_id' => $job->id,
             ],
+            $validated,
         );
 
         return redirect()->route('job-selection.show', $job)->with('success', 'Application submitted successfully!');

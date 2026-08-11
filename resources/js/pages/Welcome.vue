@@ -36,7 +36,7 @@ const mobileMenuOpen = ref(false);
             "
         >
             <!-- Left Nav Box -->
-  <!--           <nav
+            <!--           <nav
                 class="hidden rounded-br-3xl rounded-bl-3xl bg-white px-8 py-5 lg:flex xl:px-12 xl:py-6"
             >
                 <ul
@@ -51,8 +51,8 @@ const mobileMenuOpen = ref(false);
             </nav>
  -->
             <!-- Mobile Menu Button -->
-           
-       <!--      <div class="rounded-br-2xl bg-white p-5 lg:hidden">
+
+            <!--      <div class="rounded-br-2xl bg-white p-5 lg:hidden">
                 <button
                     @click="mobileMenuOpen = !mobileMenuOpen"
                     class="flex items-center justify-center text-black"
@@ -104,7 +104,7 @@ const mobileMenuOpen = ref(false);
         </header>
 
         <!-- Mobile Menu -->
-<!--         <transition
+        <!--         <transition
             enter-active-class="transition duration-200"
             leave-active-class="transition duration-200"
             enter-from-class="opacity-0"
@@ -116,7 +116,7 @@ const mobileMenuOpen = ref(false);
             ></div>
         </transition> -->
 
-<!--         <transition
+        <!--         <transition
             enter-active-class="transition duration-200"
             leave-active-class="transition duration-200"
             enter-from-class="-translate-x-full"
@@ -177,7 +177,7 @@ const mobileMenuOpen = ref(false);
         <main class="flex flex-1 flex-col pt-16 lg:flex-row lg:pt-0">
             <!-- Left Column -->
             <section
-                class="relative flex w-full flex-col justify-center px-6 pt-16 pb-8 lg:w-[55%] lg:px-12 lg:pt-0 lg:pb-0 [@media(max-width:1179px)]:scale-90 [@media(max-width:1179px)]:origin-left"
+                class="relative flex w-full flex-col justify-center px-6 pt-16 pb-8 lg:w-[55%] lg:px-12 lg:pt-0 lg:pb-0 [@media(max-width:1179px)]:origin-left [@media(max-width:1179px)]:scale-90"
             >
                 <div class="max-w-xl">
                     <!-- Logo -->
@@ -216,11 +216,17 @@ const mobileMenuOpen = ref(false);
                     </div>
 
                     <!-- Split Actions -->
-                    <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 [@media(max-width:1179px)]:gap-4">
+                    <div
+                        class="grid grid-cols-1 gap-8 sm:grid-cols-2 [@media(max-width:1179px)]:gap-4"
+                    >
                         <!-- JobFlow -->
-                        <div class="flex flex-col gap-4 [@media(max-width:1179px)]:gap-2">
+                        <div
+                            class="flex flex-col gap-4 [@media(max-width:1179px)]:gap-2"
+                        >
                             <div class="flex flex-col gap-1">
-                                <h2 class="text-xl font-bold text-white [@media(max-width:1179px)]:text-lg">
+                                <h2
+                                    class="text-xl font-bold text-white [@media(max-width:1179px)]:text-lg"
+                                >
                                     JobFlow
                                 </h2>
                                 <div class="h-px w-full bg-white/20"></div>
@@ -234,15 +240,21 @@ const mobileMenuOpen = ref(false);
                         </div>
 
                         <!-- HRFlow -->
-                        <div class="flex flex-col gap-4 [@media(max-width:1179px)]:gap-2">
+                        <div
+                            class="flex flex-col gap-4 [@media(max-width:1179px)]:gap-2"
+                        >
                             <div class="flex flex-col gap-1">
-                                <h2 class="text-xl font-bold text-white [@media(max-width:1179px)]:text-lg">
+                                <h2
+                                    class="text-xl font-bold text-white [@media(max-width:1179px)]:text-lg"
+                                >
                                     HRFlow
                                 </h2>
                                 <div class="h-px w-full bg-white/20"></div>
                             </div>
                             <Link
-                                href="#"
+                                :href="
+                                    register({ query: { type: 'employer' } })
+                                "
                                 class="inline-flex h-10 items-center justify-center rounded-full bg-white px-6 text-xs font-bold tracking-wide text-black uppercase transition-transform hover:scale-103 active:scale-95 [@media(max-width:1179px)]:h-10 [@media(max-width:1179px)]:px-6 [@media(max-width:1179px)]:text-xs"
                             >
                                 Manage your best team
@@ -270,7 +282,7 @@ const mobileMenuOpen = ref(false);
         </main>
 
         <!-- Footer -->
-<!--         <footer class="absolute bottom-0 z-50 w-full p-6">
+        <!--         <footer class="absolute bottom-0 z-50 w-full p-6">
             <div
                 class="flex flex-col items-center gap-4 text-[12px] font-bold tracking-[0.1em] text-gray-500 uppercase sm:flex-row sm:gap-18 sm:text-[14px]"
             >

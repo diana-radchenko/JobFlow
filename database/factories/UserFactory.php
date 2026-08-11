@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -34,6 +35,24 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
         ];
+    }
+
+    /**
+     * Every user carries exactly one role; routes are gated on it. Default to
+     * candidate so the bulk of the suite exercises the candidate side.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole(UserRole::Candidate->value));
+    }
+
+    /**
+     * Registers as an HRFlow employer instead. Runs after configure()'s callback,
+     * so syncRoles replaces the default candidate role.
+     */
+    public function employer(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->syncRoles(UserRole::Employer->value));
     }
 
     /**

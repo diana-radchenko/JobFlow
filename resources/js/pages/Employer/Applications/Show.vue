@@ -1,0 +1,288 @@
+<script setup lang="ts">
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { CalendarCheck, ChevronLeft, Mail, X } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { getApplicationStatusColor } from '@/helpers/job-applications';
+import { stringForHuman } from '@/helpers/strings';
+import applications from '@/routes/employer/applications';
+import jobs from '@/routes/employer/jobs';
+import type { UserWorkJobApplication, WorkJob } from '@/types/laravel-models';
+
+const props = defineProps<{
+    job: WorkJob;
+    application: UserWorkJobApplication;
+}>();
+
+defineOptions({
+    layout: {
+        breadcrumbs: [
+            {
+                title: 'My Jobs',
+                href: '/employer/jobs',
+            },
+            {
+                title: 'Application',
+            },
+        ],
+    },
+});
+
+const form = useForm({ status: props.application.status });
+
+const setStatus = (status: 'rejected' | 'interview_scheduled') => {
+    form.status = status;
+    form.patch(applications.update.url([props.job.id, props.application.id]), {
+        preserveScroll: true,
+    });
+};
+
+const formatDate = (date: string | null) =>
+    date
+        ? new Date(date).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+          })
+        : '';
+</script>
+
+<template>
+    <Head title="Application" />
+
+    <div class="mx-auto max-w-5xl space-y-6 p-6">
+        <Link
+            :href="jobs.show(props.job.id)"
+            class="inline-flex items-center gap-1 text-sm text-foreground/60 transition-colors hover:text-foreground"
+        >
+            <ChevronLeft class="h-4 w-4" />
+            Back to {{ props.job.title }}
+        </Link>
+
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="space-y-1">
+                <h1 class="text-2xl font-semibold">
+                    {{
+                        props.application.user?.name ??
+                        props.application.user?.email
+                    }}
+                </h1>
+                <p class="text-sm text-foreground/60">
+                    Applied to {{ props.job.title }} on
+                    {{ formatDate(props.application.created_at) }}
+                </p>
+            </div>
+            <span
+                :class="`rounded-full px-3 py-1 text-xs font-medium ${getApplicationStatusColor(props.application.status)}`"
+            >
+                {{ stringForHuman(props.application.status) }}
+            </span>
+        </div>
+
+        <Card>
+            <CardContent class="space-y-3 pt-6 text-sm">
+                <div class="flex items-center gap-2">
+                    <Mail class="h-4 w-4 text-foreground/60" />
+                    <a
+                        :href="`mailto:${props.application.user?.email}`"
+                        class="underline underline-offset-4"
+                    >
+                        {{ props.application.user?.email }}
+                    </a>
+                </div>
+                <p class="text-foreground/60">
+                    Viewed on {{ formatDate(props.application.viewed_at) }}
+                </p>
+            </CardContent>
+        </Card>
+
+        <Card v-if="props.application.resume">
+            <CardContent class="space-y-5 pt-6 text-sm">
+                <h2 class="text-lg font-semibold">
+                    Resume: {{ props.application.resume.title }}
+                </h2>
+
+                <div v-if="props.application.resume.skills.length">
+                    <h3 class="mb-2 font-medium text-foreground/80">Skills</h3>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span
+                            v-for="skill in props.application.resume.skills"
+                            :key="skill.id"
+                            class="rounded-full bg-accent px-3 py-1 text-xs"
+                        >
+                            {{ skill.name }} ({{
+                                stringForHuman(skill.proficiency_level)
+                            }})
+                        </span>
+                    </div>
+                </div>
+
+                <div v-if="props.application.resume.work_experiences.length">
+                    <h3 class="mb-2 font-medium text-foreground/80">
+                        Work Experience
+                    </h3>
+                    <div class="space-y-2">
+                        <div
+                            v-for="experience in props.application.resume
+                                .work_experiences"
+                            :key="experience.id"
+                        >
+                            <p class="font-medium">
+                                {{ experience.job_title }} —
+                                {{ experience.company_name }}
+                            </p>
+                            <p class="text-xs text-foreground/60">
+                                {{ formatDate(experience.start_date) }} –
+                                {{
+                                    experience.is_current
+                                        ? 'Present'
+                                        : formatDate(experience.end_date)
+                                }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="props.application.resume.educations.length">
+                    <h3 class="mb-2 font-medium text-foreground/80">
+                        Education
+                    </h3>
+                    <div class="space-y-2">
+                        <div
+                            v-for="education in props.application.resume
+                                .educations"
+                            :key="education.id"
+                        >
+                            <p class="font-medium">
+                                {{ stringForHuman(education.degree) }},
+                                {{ education.field_of_study }}
+                            </p>
+                            <p class="text-xs text-foreground/60">
+                                {{ education.institution }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="props.application.resume.projects.length">
+                    <h3 class="mb-2 font-medium text-foreground/80">
+                        Projects
+                    </h3>
+                    <div class="space-y-2">
+                        <div
+                            v-for="project in props.application.resume.projects"
+                            :key="project.id"
+                        >
+                            <p class="font-medium">{{ project.title }}</p>
+                            <p
+                                v-if="project.description"
+                                class="text-xs text-foreground/60"
+                            >
+                                {{ project.description }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    v-if="props.application.resume.volunteer_experiences.length"
+                >
+                    <h3 class="mb-2 font-medium text-foreground/80">
+                        Volunteer Experience
+                    </h3>
+                    <div class="space-y-2">
+                        <div
+                            v-for="volunteer in props.application.resume
+                                .volunteer_experiences"
+                            :key="volunteer.id"
+                        >
+                            <p class="font-medium">
+                                {{ volunteer.role }} —
+                                {{ volunteer.organization }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    v-if="props.application.resume.leadership_activities.length"
+                >
+                    <h3 class="mb-2 font-medium text-foreground/80">
+                        Leadership Activities
+                    </h3>
+                    <div class="space-y-2">
+                        <div
+                            v-for="activity in props.application.resume
+                                .leadership_activities"
+                            :key="activity.id"
+                        >
+                            <p class="font-medium">
+                                {{ activity.role }} —
+                                {{ activity.organization }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="props.application.resume.additional_information">
+                    <h3 class="mb-2 font-medium text-foreground/80">
+                        Additional Information
+                    </h3>
+                    <p
+                        v-if="
+                            props.application.resume.additional_information
+                                .languages?.length
+                        "
+                    >
+                        Languages:
+                        {{
+                            props.application.resume.additional_information.languages.join(
+                                ', ',
+                            )
+                        }}
+                    </p>
+                    <p
+                        v-if="
+                            props.application.resume.additional_information
+                                .certifications
+                        "
+                    >
+                        Certifications:
+                        {{
+                            props.application.resume.additional_information
+                                .certifications
+                        }}
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
+        <p v-else class="text-sm text-foreground/60">
+            No resume was attached to this application.
+        </p>
+
+        <div class="flex flex-wrap gap-3">
+            <Button
+                type="button"
+                :disabled="
+                    form.processing ||
+                    props.application.status === 'interview_scheduled'
+                "
+                @click="setStatus('interview_scheduled')"
+            >
+                <CalendarCheck class="mr-2 h-4 w-4" />
+                Schedule an Interview
+            </Button>
+            <Button
+                type="button"
+                variant="destructive"
+                :disabled="
+                    form.processing || props.application.status === 'rejected'
+                "
+                @click="setStatus('rejected')"
+            >
+                <X class="mr-2 h-4 w-4" />
+                Reject
+            </Button>
+        </div>
+    </div>
+</template>

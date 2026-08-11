@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     LayoutGrid,
     FileText,
@@ -35,6 +35,7 @@ import {
     requestTracker as requestTrackerRoute,
     salary,
 } from '@/routes';
+import employerJobs from '@/routes/employer/jobs';
 import resumes from '@/routes/resumes';
 import type { NavItem } from '@/types';
 
@@ -45,7 +46,24 @@ const requestTrackerUrl = requestTrackerRoute();
 const resumesUrl = resumes.index();
 const settingsUrl = '/settings';
 
-const mainNavItems = computed<NavItem[]>(() => [
+const page = usePage();
+
+const employerNavItems = computed<NavItem[]>(() => [
+    {
+        title: 'My Jobs',
+        href: employerJobs.index(),
+        icon: BriefcaseBusiness,
+        isActive: isCurrentOrParentUrl(employerJobs.index()),
+    },
+    {
+        title: 'Settings',
+        href: settingsUrl,
+        icon: Settings,
+        isActive: isCurrentOrParentUrl(settingsUrl),
+    },
+]);
+
+const candidateNavItems = computed<NavItem[]>(() => [
     {
         title: 'Dashboard',
         href: dashboardUrl,
@@ -96,6 +114,16 @@ const mainNavItems = computed<NavItem[]>(() => [
     },
 ]);
 
+const isEmployer = computed(() => page.props.auth?.role === 'employer');
+
+const mainNavItems = computed<NavItem[]>(() =>
+    isEmployer.value ? employerNavItems.value : candidateNavItems.value,
+);
+
+const logoUrl = computed(() =>
+    isEmployer.value ? employerJobs.index() : dashboardUrl,
+);
+
 const { state, isMobile, setOpenMobile } = useSidebar();
 
 const handleLogout = () => {
@@ -112,11 +140,15 @@ function handleNavigation() {
 
 <template>
     <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader class="no-hover-header">
+        <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()" @click="handleNavigation">
+                    <SidebarMenuButton
+                        size="lg"
+                        as-child
+                        class="hover:bg-transparent hover:text-inherit active:bg-transparent active:text-inherit"
+                    >
+                        <Link :href="logoUrl" @click="handleNavigation">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>
@@ -160,10 +192,3 @@ function handleNavigation() {
     </Sidebar>
     <slot />
 </template>
-
-<style scoped>
-.no-hover-header :hover {
-    background-color: inherit;
-    color: inherit;
-}
-</style>

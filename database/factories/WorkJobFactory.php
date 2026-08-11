@@ -21,13 +21,15 @@ class WorkJobFactory extends Factory
         $salaryEnd = $salaryStart + $this->faker->numberBetween(10000, 50000);
 
         return [
+            // Platform listings have no employer behind them; pass ->for($employer) for owned ones.
+            'user_id' => null,
             'title' => $this->faker->jobTitle(),
             'salary_start' => $salaryStart,
             'salary_end' => $salaryEnd,
             'company' => $this->faker->company(),
             'description' => $this->faker->paragraphs(3, true),
             'contacts' => $this->faker->email(),
-            'location' => $this->faker->city() . ', ' . $this->faker->country(),
+            'location' => $this->faker->city().', '.$this->faker->country(),
             'technologies' => $this->faker->randomElements(
                 ['PHP', 'Laravel', 'React', 'Vue.js', 'JavaScript', 'TypeScript', 'MySQL', 'PostgreSQL', 'Node.js', 'Tailwind CSS', 'Docker', 'AWS', 'Git', 'GitHub', 'GitLab', 'Bitbucket', 'Jira', 'Confluence', 'Slack', 'Zoom', 'Microsoft Teams', 'Google Meet', 'Google Calendar', 'Google Docs', 'Google Sheets', 'Google Slides', 'Google Forms', 'Google Sites', 'Google Drive', 'Google Calendar', 'Google Docs', 'Google Sheets', 'Google Slides', 'Google Forms', 'Google Sites', 'Google Drive'],
                 $this->faker->numberBetween(2, 5)

@@ -211,7 +211,13 @@ const isSameDay = (a: Date, b: Date) =>
 
 const today = startOfDay(new Date());
 const selectedDate = ref(today);
-const weekStart = ref(startOfWeek(today));
+
+type CalendarViewMode = 'week' | 'month' | 'year';
+const calendarViewModes: CalendarViewMode[] = ['week', 'month', 'year'];
+const viewMode = ref<CalendarViewMode>('week');
+const anchorDate = ref(today);
+
+const weekStart = computed(() => startOfWeek(anchorDate.value));
 
 const weekDays = computed(() =>
     Array.from({ length: 7 }, (_, i) => {
@@ -228,7 +234,81 @@ const weekDays = computed(() =>
     }),
 );
 
-const weekRangeLabel = computed(() => {
+const monthStart = computed(() => {
+    const d = new Date(anchorDate.value);
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+
+    return d;
+});
+
+const monthDays = computed(() => {
+    const start = monthStart.value;
+    const lastDayOfMonth = new Date(
+        start.getFullYear(),
+        start.getMonth() + 1,
+        0,
+    );
+    const gridStart = startOfWeek(start);
+    const gridEnd = startOfWeek(lastDayOfMonth);
+    gridEnd.setDate(gridEnd.getDate() + 6);
+
+    const days = [];
+
+    for (
+        let date = new Date(gridStart);
+        date <= gridEnd;
+        date.setDate(date.getDate() + 1)
+    ) {
+        const day = new Date(date);
+
+        days.push({
+            date: day,
+            dateLabel: String(day.getDate()),
+            inCurrentMonth: day.getMonth() === start.getMonth(),
+            active: isSameDay(day, selectedDate.value),
+            hasEvent: !!sessionsByDay.value.get(day.toDateString())?.length,
+        });
+    }
+
+    return days;
+});
+
+const yearMonths = computed(() => {
+    const year = anchorDate.value.getFullYear();
+
+    return Array.from({ length: 12 }, (_, month) => {
+        const date = new Date(year, month, 1);
+        const hasEvent = Array.from(sessionsByDay.value.keys()).some((key) => {
+            const eventDate = new Date(key);
+
+            return (
+                eventDate.getFullYear() === year &&
+                eventDate.getMonth() === month
+            );
+        });
+
+        return {
+            date,
+            label: date.toLocaleDateString(undefined, { month: 'short' }),
+            active: today.getFullYear() === year && today.getMonth() === month,
+            hasEvent,
+        };
+    });
+});
+
+const periodLabel = computed(() => {
+    if (viewMode.value === 'month') {
+        return monthStart.value.toLocaleDateString(undefined, {
+            month: 'long',
+            year: 'numeric',
+        });
+    }
+
+    if (viewMode.value === 'year') {
+        return String(anchorDate.value.getFullYear());
+    }
+
     const start = weekDays.value[0].date;
     const end = weekDays.value[6].date;
     const startLabel = start.toLocaleDateString(undefined, {
@@ -245,20 +325,42 @@ const weekRangeLabel = computed(() => {
     return `${startLabel} - ${endLabel}`;
 });
 
-const goToPreviousWeek = () => {
-    const date = new Date(weekStart.value);
-    date.setDate(date.getDate() - 7);
-    weekStart.value = date;
+const goToPrevious = () => {
+    const date = new Date(anchorDate.value);
+
+    if (viewMode.value === 'week') {
+        date.setDate(date.getDate() - 7);
+    } else if (viewMode.value === 'month') {
+        date.setMonth(date.getMonth() - 1);
+    } else {
+        date.setFullYear(date.getFullYear() - 1);
+    }
+
+    anchorDate.value = date;
 };
 
-const goToNextWeek = () => {
-    const date = new Date(weekStart.value);
-    date.setDate(date.getDate() + 7);
-    weekStart.value = date;
+const goToNext = () => {
+    const date = new Date(anchorDate.value);
+
+    if (viewMode.value === 'week') {
+        date.setDate(date.getDate() + 7);
+    } else if (viewMode.value === 'month') {
+        date.setMonth(date.getMonth() + 1);
+    } else {
+        date.setFullYear(date.getFullYear() + 1);
+    }
+
+    anchorDate.value = date;
 };
 
 const selectDay = (date: Date) => {
     selectedDate.value = date;
+    anchorDate.value = date;
+};
+
+const selectMonth = (date: Date) => {
+    anchorDate.value = date;
+    viewMode.value = 'month';
 };
 
 const sessionsByDay = computed(() => {
@@ -514,6 +616,25 @@ const articlesMock = [
                     class="overflow-hidden rounded-[24px] border-0 bg-slate-50 shadow-sm dark:bg-slate-900"
                 >
                     <CardContent class="p-0">
+                        <!-- View Mode Switch -->
+                        <div
+                            class="flex items-center justify-center gap-1 border-b border-slate-200/60 px-4 pt-4 pb-2 dark:border-slate-800"
+                        >
+                            <Button
+                                v-for="mode in calendarViewModes"
+                                :key="mode"
+                                type="button"
+                                size="sm"
+                                :variant="
+                                    viewMode === mode ? 'default' : 'ghost'
+                                "
+                                class="rounded-full px-3 capitalize"
+                                @click="viewMode = mode"
+                            >
+                                {{ mode }}
+                            </Button>
+                        </div>
+
                         <!-- Calendar Header -->
                         <div
                             class="flex items-center justify-between border-b border-slate-200/60 px-4 pt-4 dark:border-slate-800"
@@ -522,25 +643,28 @@ const articlesMock = [
                                 variant="ghost"
                                 size="icon"
                                 class="h-8 w-8 rounded-full text-slate-500 hover:text-primary"
-                                @click="goToPreviousWeek"
+                                @click="goToPrevious"
                             >
                                 <ChevronLeft class="h-4 w-4" />
                             </Button>
                             <span
                                 class="text-xs font-bold text-slate-500 dark:text-slate-400"
                             >
-                                {{ weekRangeLabel }}
+                                {{ periodLabel }}
                             </span>
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 class="h-8 w-8 rounded-full text-slate-500 hover:text-primary"
-                                @click="goToNextWeek"
+                                @click="goToNext"
                             >
                                 <ChevronRight class="h-4 w-4" />
                             </Button>
                         </div>
+
+                        <!-- Week View -->
                         <div
+                            v-if="viewMode === 'week'"
                             class="flex justify-between border-b border-slate-200/60 px-4 py-6 dark:border-slate-800"
                         >
                             <button
@@ -578,6 +702,88 @@ const articlesMock = [
                                     "
                                 ></span>
                             </button>
+                        </div>
+
+                        <!-- Month View -->
+                        <div
+                            v-else-if="viewMode === 'month'"
+                            class="border-b border-slate-200/60 px-4 py-6 dark:border-slate-800"
+                        >
+                            <div
+                                class="mb-2 grid grid-cols-7 text-center text-xs font-medium text-slate-500 dark:text-slate-400"
+                            >
+                                <span
+                                    v-for="label in DAY_LABELS"
+                                    :key="label"
+                                    >{{ label }}</span
+                                >
+                            </div>
+                            <div class="grid grid-cols-7 gap-y-2">
+                                <button
+                                    v-for="day in monthDays"
+                                    :key="day.date.toISOString()"
+                                    type="button"
+                                    class="flex cursor-pointer flex-col items-center gap-1 rounded-lg py-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    :class="{
+                                        'opacity-40': !day.inCurrentMonth,
+                                    }"
+                                    @click="selectDay(day.date)"
+                                >
+                                    <span
+                                        class="flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold"
+                                        :class="
+                                            day.active
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'text-slate-500 dark:text-slate-400'
+                                        "
+                                    >
+                                        {{ day.dateLabel }}
+                                    </span>
+                                    <span
+                                        class="h-1.5 w-1.5 rounded-full"
+                                        :class="
+                                            day.hasEvent
+                                                ? 'bg-primary'
+                                                : 'bg-transparent'
+                                        "
+                                    ></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Year View -->
+                        <div
+                            v-else
+                            class="border-b border-slate-200/60 px-4 py-6 dark:border-slate-800"
+                        >
+                            <div class="grid grid-cols-3 gap-3">
+                                <button
+                                    v-for="month in yearMonths"
+                                    :key="month.date.toISOString()"
+                                    type="button"
+                                    class="flex cursor-pointer flex-col items-center gap-1 rounded-lg py-3 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    @click="selectMonth(month.date)"
+                                >
+                                    <span
+                                        class="text-sm font-bold"
+                                        :class="
+                                            month.active
+                                                ? 'text-primary'
+                                                : 'text-slate-500 dark:text-slate-400'
+                                        "
+                                    >
+                                        {{ month.label }}
+                                    </span>
+                                    <span
+                                        class="h-1.5 w-1.5 rounded-full"
+                                        :class="
+                                            month.hasEvent
+                                                ? 'bg-primary'
+                                                : 'bg-transparent'
+                                        "
+                                    ></span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Timeline -->

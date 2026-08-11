@@ -1,25 +1,17 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import {
-    Search,
-    Filter,
-    SlidersHorizontal,
-    Monitor,
-    Code,
-    Shield,
-    BrainCircuit,
-    FileCode,
-    Cloud,
-    RefreshCw,
-    Bell,
-    X,
-    MoreVertical,
     Clock,
+    Code,
+    Filter,
+    MoreVertical,
+    Search,
+    SlidersHorizontal,
+    X,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import type { Component } from 'vue';
 import { destroy as destroyApplication } from '@/actions/App/Http/Controllers/RequestTrackerController';
-import { show as jobSelectionShow } from '@/routes/job-selection';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,8 +26,10 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { stringForHuman } from '@/helpers/strings';
+import { getApplicationStatusColor } from '@/helpers/job-applications';
 import { requestTracker, interviewPreparation } from '@/routes';
-import type { UserWorkJobApplication } from '@/types/laravel-models';
+import { show as jobSelectionShow } from '@/routes/job-selection';
+import type { UserWorkJobApplication, ApplicationStatus } from '@/types/laravel-models';
 
 const visitJob = (app: any) => {
     if (app.jobId) {
@@ -50,9 +44,8 @@ type TrackerRow = {
     dateType: string;
     dateValue: string;
     status: string;
-    percentage: number;
+    rawStatus: ApplicationStatus;
     icon: Component;
-    actionIcon: Component;
 };
 
 const props = defineProps<{
@@ -111,123 +104,51 @@ defineOptions({
     },
 });
 
-// Mock applications
-const mockApplications = [
-    // {
-    //     id: 'm1',
-    //     title: 'Software Engineer (Backend)',
-    //     company: 'TechNova Solutions',
-    //     dateType: 'Submission Date',
-    //     dateValue: 'March 5, 2025',
-    //     status: 'Viewed',
-    //     percentage: 15,
-    //     icon: Monitor,
-    //     actionIcon: RefreshCw,
-    // },
-    // {
-    //     id: 'm2',
-    //     title: 'Frontend Developer',
-    //     company: 'PixelCraft Studios',
-    //     dateType: 'Interview Date',
-    //     dateValue: 'March 10, 2025',
-    //     status: 'Interview Scheduled',
-    //     percentage: 94,
-    //     icon: Code,
-    //     actionIcon: Bell,
-    // },
-    // {
-    //     id: 'm3',
-    //     title: 'Full-Stack Developer',
-    //     company: 'CodeSphere Inc.',
-    //     dateType: 'Submission Date',
-    //     dateValue: 'February 28, 2025',
-    //     status: 'Rejected',
-    //     percentage: 0,
-    //     icon: BrainCircuit,
-    //     actionIcon: RefreshCw,
-    // },
-    // {
-    //     id: 'm4',
-    //     title: 'DevOps Engineer',
-    //     company: 'CloudSync Technologies',
-    //     dateType: 'Submission Date',
-    //     dateValue: 'March 3, 2025',
-    //     status: 'Viewed',
-    //     percentage: 15,
-    //     icon: RefreshCw,
-    //     actionIcon: RefreshCw,
-    // },
-    // {
-    //     id: 'm5',
-    //     title: 'Cybersecurity Analyst',
-    //     company: 'SecureNet Solutions',
-    //     dateType: 'Interview Date',
-    //     dateValue: 'March 12, 2025',
-    //     status: 'Interview Scheduled',
-    //     percentage: 94,
-    //     icon: Shield,
-    //     actionIcon: RefreshCw,
-    // },
-    // {
-    //     id: 'm6',
-    //     title: 'AI/ML Engineer',
-    //     company: 'NeuralTech AI',
-    //     dateType: 'Submission Date',
-    //     dateValue: 'March 6, 2025',
-    //     status: 'Pending Review',
-    //     percentage: 76,
-    //     icon: BrainCircuit,
-    //     actionIcon: RefreshCw,
-    // },
-    // {
-    //     id: 'm7',
-    //     title: 'Web Developer (PHP Specialization)',
-    //     company: 'WebFlex Digital',
-    //     dateType: 'Submission Date',
-    //     dateValue: 'February 27, 2025',
-    //     status: 'Rejected',
-    //     percentage: 0,
-    //     icon: FileCode, // Using file code to represent php in this mock context
-    //     actionIcon: RefreshCw,
-    // },
-    // {
-    //     id: 'm8',
-    //     title: 'Cloud Engineer',
-    //     company: 'SkyTech Cloud Services',
-    //     dateType: 'Submission Date',
-    //     dateValue: 'March 4, 2025',
-    //     status: 'Shortlisted',
-    //     percentage: 87,
-    //     icon: Cloud,
-    //     actionIcon: RefreshCw,
-    // },
-];
+const allApplications = computed(() =>
+    (props.applications ?? []).map((app) => ({
+        id: app.id,
+        jobId: app.work_job_id,
+        title: app.work_job?.title || 'Unknown Job',
+        company: app.work_job?.company || 'Unknown Company',
+        dateType: 'Submission Date',
+        dateValue: new Date(app.created_at || '').toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+        }),
+        status: stringForHuman(app.status),
+        rawStatus: app.status,
+        icon: Code,
+    })),
+);
 
-// Combine real and mock
-const allApplications = computed(() => {
-    const realApps = (props.applications || []).map((app) => {
-        return {
-            id: app.id,
-            jobId: app.work_job_id,
-            title: app.work_job?.title || 'Unknown Job',
-            company: app.work_job?.company || 'Unknown Company',
-            dateType: 'Submission Date',
-            dateValue: new Date(app.created_at || '').toLocaleDateString(
-                'en-US',
-                {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                },
-            ),
-            status: stringForHuman(app.status),
-            percentage: 50, // default dummy
-            icon: Code,
-            actionIcon: RefreshCw,
-        };
-    });
+const share = (count: number, total: number): number =>
+    total === 0 ? 0 : Math.round((count / total) * 100);
 
-    return [...realApps, ...mockApplications];
+/** Chart 1: share of applications that reached each outcome. */
+const outcomes = computed(() => {
+    const apps = props.applications ?? [];
+    const percentageWithStatus = (status: string) =>
+        share(apps.filter((app) => app.status === status).length, apps.length);
+
+    return {
+        interviewScheduled: percentageWithStatus('interview_scheduled'),
+        rejected: percentageWithStatus('rejected'),
+        offer: percentageWithStatus('offer'),
+    };
+});
+
+/** Chart 2: how many applications an employer has actually opened. */
+const viewedStats = computed(() => {
+    const apps = props.applications ?? [];
+    const viewed = apps.filter((app) => app.viewed_at !== null).length;
+
+    return {
+        viewed,
+        notViewed: apps.length - viewed,
+        viewedPercentage: share(viewed, apps.length),
+        notViewedPercentage: share(apps.length - viewed, apps.length),
+    };
 });
 </script>
 
@@ -362,13 +283,16 @@ const allApplications = computed(() => {
                         >
                             <!-- Badge -->
                             <Badge
-                                class="flex flex-1 justify-center rounded-full bg-primary px-4 py-1 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 sm:w-[160px] sm:flex-none"
+                                :class="[
+                                    'flex flex-1 justify-center rounded-full px-4 py-1 text-xs font-semibold shadow-sm sm:w-[160px] sm:flex-none',
+                                    getApplicationStatusColor(app.rawStatus),
+                                ]"
                             >
                                 {{ app.status }}
                             </Badge>
 
                             <!-- Progress Circle -->
-                    <!--         <div
+                            <!--         <div
                                 class="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center"
                             >
                                 <svg
@@ -419,7 +343,7 @@ const allApplications = computed(() => {
                                 @click.stop="openDeleteDialog(app)"
                             >
                                 <X class="h-4 w-4" />
-                            </Button> 
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -508,7 +432,10 @@ const allApplications = computed(() => {
                                     class="relative flex h-full w-12 flex-col items-center justify-end"
                                 >
                                     <div
-                                        class="relative z-10 h-[40%] w-8 rounded-t-md bg-slate-200 dark:bg-slate-700"
+                                        class="relative z-10 w-8 rounded-t-md bg-slate-200 dark:bg-slate-700"
+                                        :style="{
+                                            height: `${outcomes.interviewScheduled}%`,
+                                        }"
                                     ></div>
                                     <span
                                         class="absolute -bottom-8 mt-2 w-16 text-center text-[10px] leading-tight text-slate-600 dark:text-slate-400"
@@ -520,7 +447,10 @@ const allApplications = computed(() => {
                                     class="relative flex h-full w-12 flex-col items-center justify-end"
                                 >
                                     <div
-                                        class="relative z-10 h-[75%] w-8 rounded-t-md bg-primary shadow-sm"
+                                        class="relative z-10 w-8 rounded-t-md bg-primary shadow-sm"
+                                        :style="{
+                                            height: `${outcomes.rejected}%`,
+                                        }"
                                     ></div>
                                     <span
                                         class="absolute -bottom-6 mt-2 w-16 text-center text-[10px] leading-tight text-slate-600 dark:text-slate-400"
@@ -532,11 +462,14 @@ const allApplications = computed(() => {
                                     class="relative flex h-full w-12 flex-col items-center justify-end"
                                 >
                                     <div
-                                        class="relative z-10 h-[20%] w-8 rounded-t-md bg-slate-200 dark:bg-slate-700"
+                                        class="relative z-10 w-8 rounded-t-md bg-slate-200 dark:bg-slate-700"
+                                        :style="{
+                                            height: `${outcomes.offer}%`,
+                                        }"
                                     ></div>
                                     <span
                                         class="absolute -bottom-6 mt-2 w-16 text-center text-[10px] leading-tight text-slate-600 dark:text-slate-400"
-                                        >Shortlisted</span
+                                        >Offer</span
                                     >
                                 </div>
                             </div>
@@ -576,20 +509,15 @@ const allApplications = computed(() => {
                             </Button>
                         </div>
 
-                        <!-- Mock Pie Chart -->
                         <div
                             class="mt-4 flex flex-col items-center rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950"
                         >
                             <!-- Pie Chart Circle -->
                             <div
                                 class="relative flex h-48 w-48 items-center justify-center overflow-hidden rounded-full bg-slate-100 shadow-inner dark:bg-slate-800"
-                                style="
-                                    background-image: conic-gradient(
-                                        from 0deg,
-                                        var(--primary) 0% 70%,
-                                        transparent 70% 100%
-                                    );
-                                "
+                                :style="{
+                                    backgroundImage: `conic-gradient(from 0deg, var(--primary) 0% ${viewedStats.viewedPercentage}%, transparent ${viewedStats.viewedPercentage}% 100%)`,
+                                }"
                             >
                                 <!-- Inner shadow overlay for smooth edges -->
                                 <div
@@ -600,12 +528,12 @@ const allApplications = computed(() => {
                                 <div
                                     class="absolute top-[35%] left-[25%] z-10 text-[15px] font-bold text-slate-800 dark:text-slate-200"
                                 >
-                                    30%
+                                    {{ viewedStats.notViewedPercentage }}%
                                 </div>
                                 <div
                                     class="absolute right-[30%] bottom-[30%] z-10 text-[15px] font-bold text-primary-foreground"
                                 >
-                                    70%
+                                    {{ viewedStats.viewedPercentage }}%
                                 </div>
                             </div>
 
@@ -616,7 +544,7 @@ const allApplications = computed(() => {
                                 >
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="h-4 w-8 rounded-[4px] border border-slate-200 bg-white dark:border-slate-600 dark:bg-slate-800"
+                                            class="h-4 w-8 rounded-[4px] bg-primary"
                                         ></div>
                                         <span
                                             class="font-bold text-slate-900 dark:text-slate-100"
@@ -625,7 +553,10 @@ const allApplications = computed(() => {
                                     </div>
                                     <span
                                         class="text-xs text-slate-500 dark:text-slate-400"
-                                        >3 applications</span
+                                        >{{
+                                            viewedStats.viewed
+                                        }}
+                                        applications</span
                                     >
                                 </div>
                                 <div
@@ -633,16 +564,19 @@ const allApplications = computed(() => {
                                 >
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="h-4 w-8 rounded-[4px] bg-primary"
+                                            class="h-4 w-8 rounded-[4px] border border-slate-200 bg-white dark:border-slate-600 dark:bg-slate-800"
                                         ></div>
                                         <span
                                             class="font-bold text-slate-900 dark:text-slate-100"
-                                            >Other</span
+                                            >Not viewed</span
                                         >
                                     </div>
                                     <span
                                         class="text-xs text-slate-500 dark:text-slate-400"
-                                        >7 applications</span
+                                        >{{
+                                            viewedStats.notViewed
+                                        }}
+                                        applications</span
                                     >
                                 </div>
                             </div>

@@ -4,6 +4,13 @@ import { BadgeCheck, MapPin, Heart, ChevronLeft } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { getApplicationStatusColor } from '@/helpers/job-applications';
 import { stringForHuman } from '@/helpers/strings';
 import { jobSelection as jobSelectionRoute } from '@/routes';
@@ -14,15 +21,23 @@ import type { UserWorkJobApplication } from '@/types/laravel-models';
 const props = defineProps<{
     job: WorkJob;
     userApplication: UserWorkJobApplication | null;
+    resumes: { id: number; title: string }[];
 }>();
 
 const isLoading = ref(false);
+const resumeId = ref<string>(
+    props.resumes.length > 0 ? String(props.resumes[0].id) : '',
+);
 
 const handleApply = () => {
+    if (!resumeId.value) {
+        return;
+    }
+
     isLoading.value = true;
     router.post(
         jobSelectionApply(props.job.id),
-        {},
+        { resume_id: resumeId.value },
         {
             onFinish: () => {
                 isLoading.value = false;
@@ -176,15 +191,46 @@ defineOptions({
                         </Button>
                     </template>
                     <template v-else>
-                        <Button
-                            @click="handleApply"
-                            :disabled="isLoading"
-                            class="flex-1 rounded-lg bg-primary px-8 py-6 text-base font-semibold tracking-wide text-primary-foreground hover:bg-primary/90"
-                        >
-                            {{
-                                isLoading ? 'Applying...' : 'Apply for Position'
-                            }}
-                        </Button>
+                        <div class="flex flex-1 flex-col gap-2">
+                            <h2 class=" text-lg font-semibold text-stone-900 dark:text-white">
+                                Resume to apply
+                            </h2>
+                            <Select v-model="resumeId" :disabled="isLoading">
+                                <SelectTrigger class="w-full">
+                                    <SelectValue placeholder="Select a resume to apply with" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem
+                                        v-for="resume in resumes"
+                                        :key="resume.id"
+                                        :value="String(resume.id)"
+                                    >
+                                        {{ resume.title }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p
+                                v-if="resumes.length === 0"
+                                class="text-sm text-stone-500"
+                            >
+                                You don't have any resumes yet.
+                                <Link href="/resumes" class="underline"
+                                    >Create one first</Link
+                                >
+                                to apply.
+                            </p>
+                            <Button
+                                @click="handleApply"
+                                :disabled="isLoading || !resumeId"
+                                class="mt-6 rounded-lg bg-primary px-8 py-6 text-base font-semibold tracking-wide text-primary-foreground hover:bg-primary/90"
+                            >
+                                {{
+                                    isLoading
+                                        ? 'Applying...'
+                                        : 'Apply for Position'
+                                }}
+                            </Button>
+                        </div>
                     </template>
                 </div>
             </div>
