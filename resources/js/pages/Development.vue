@@ -221,7 +221,8 @@ const currentTime = ref(0); // in seconds
 const playbackSpeed = ref(1); // multiplier
 let playerInterval: NodeJS.Timeout | null = null;
 
-function togglePlayAudiobook(book: typeof audiobooksData.value[0]) {
+// Audiobook playback disabled while in development — not wired to any @click.
+/* function togglePlayAudiobook(book: typeof audiobooksData.value[0]) {
     if (playingTrack.value?.id === book.id) {
         // Toggle play/pause
         isPlaying.value = !isPlaying.value;
@@ -248,7 +249,7 @@ function togglePlayAudiobook(book: typeof audiobooksData.value[0]) {
         startPlaybackTimer();
         showToast(`Playing "${book.title}"`);
     }
-}
+} */
 
 function startPlaybackTimer() {
     if (playerInterval) clearInterval(playerInterval);
@@ -497,8 +498,8 @@ onUnmounted(() => {
 
                                 <!-- Central Interactive Play Button -->
                                 <div class="absolute inset-0 flex items-center justify-center">
-                                    <button 
-                                        @click="togglePlayAudiobook(book)"
+                                    <!-- @click="togglePlayAudiobook(book)" — audio player disabled while in development -->
+                                    <button
                                         class="w-13 h-13 rounded-full bg-[#021F35]/85 text-white flex items-center justify-center hover:bg-[#021F35] shadow-lg cursor-pointer transform transition-all duration-200 hover:scale-110 active:scale-95"
                                         :title="playingTrack?.id === book.id && isPlaying ? 'Pause' : 'Play'"
                                     >
