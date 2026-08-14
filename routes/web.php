@@ -14,6 +14,7 @@ use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\ResumeEditorController;
 use App\Http\Controllers\ResumeSalaryAnalysisController;
 use App\Http\Controllers\ResumeScoreController;
+use App\Models\WorkJob;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -118,6 +119,11 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
     Route::get('salary', function () {
         return Inertia::render('Salary', [
             'resumes' => auth()->user()->resumes()->orderByDesc('updated_at')->get(['id', 'title']),
+            'jobs' => WorkJob::query()
+                ->whereNotNull('salary_start')
+                ->whereNotNull('salary_end')
+                ->orderByDesc('updated_at')
+                ->get(['id', 'title', 'company', 'salary_start', 'salary_end']),
         ]);
     })->name('salary');
     Route::get('development', function () {

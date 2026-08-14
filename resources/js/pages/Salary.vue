@@ -47,8 +47,17 @@ defineOptions({
     },
 });
 
+interface JobOption {
+    id: number;
+    title: string;
+    company: string;
+    salary_start: number;
+    salary_end: number;
+}
+
 interface Props {
     resumes: { id: number; title: string }[];
+    jobs: JobOption[];
 }
 
 const props = defineProps<Props>();
@@ -87,14 +96,59 @@ const showCompareModal = ref(false);
 // Active compared role index
 const activeCompareIndex = ref(0);
 
-// Base Salary Percentiles (Annual values)
-const baseSalaries = {
-    p10: 72078,
-    p25: 81000,
-    p50: 90800, // Median (Peak)
-    p75: 102500,
-    p90: 113152
-};
+// Roles = distinct job titles posted on the platform, each with every listing filed under it.
+// The Market Salary Range card selects a role (job title is used as the role), not a single listing.
+const roles = computed(() => {
+    const byTitle = new Map<string, JobOption[]>();
+
+    for (const job of props.jobs) {
+        const list = byTitle.get(job.title) ?? [];
+        list.push(job);
+        byTitle.set(job.title, list);
+    }
+
+    return Array.from(byTitle, ([title, jobs]) => ({ title, jobs }));
+});
+
+const selectedRoleTitle = ref<string | null>(roles.value[0]?.title ?? null);
+const selectedRoleJobs = computed(() => roles.value.find((r) => r.title === selectedRoleTitle.value)?.jobs ?? []);
+
+// A percentile distribution needs real samples from more than one listing to mean anything.
+// With a single listing there's nothing to interpolate — just show that listing's own range.
+const hasEnoughRoleData = computed(() => selectedRoleJobs.value.length >= 2);
+
+/** True percentile via linear interpolation over sorted real samples — no distribution shape assumed. */
+function percentile(sorted: number[], p: number): number {
+    if (sorted.length === 0) {
+        return 0;
+    }
+
+    const idx = (p / 100) * (sorted.length - 1);
+    const lo = Math.floor(idx);
+    const hi = Math.ceil(idx);
+
+    if (lo === hi) {
+        return sorted[lo];
+    }
+
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+
+/** Every listing for a role contributes its posted low and high as real salary samples. */
+function computePercentiles(jobs: JobOption[]) {
+    const values = jobs.flatMap((j) => [Number(j.salary_start), Number(j.salary_end)]).sort((a, b) => a - b);
+
+    return {
+        p10: Math.round(percentile(values, 10)),
+        p25: Math.round(percentile(values, 25)),
+        p50: Math.round(percentile(values, 50)),
+        p75: Math.round(percentile(values, 75)),
+        p90: Math.round(percentile(values, 90)),
+    };
+}
+
+// Base Salary Percentiles (Annual values), derived from every real listing posted for the selected role
+const baseSalaries = computed(() => computePercentiles(selectedRoleJobs.value));
 
 // Compute multiplier based on selections
 const currentMultiplier = computed(() => {
@@ -141,12 +195,30 @@ const currentMultiplier = computed(() => {
 // Compute scaled salaries according to multiplier
 const scaledSalaries = computed(() => {
     const m = currentMultiplier.value;
+    const base = baseSalaries.value;
+
     return {
-        p10: Math.round(baseSalaries.p10 * m),
-        p25: Math.round(baseSalaries.p25 * m),
-        p50: Math.round(baseSalaries.p50 * m),
-        p75: Math.round(baseSalaries.p75 * m),
-        p90: Math.round(baseSalaries.p90 * m)
+        p10: Math.round(base.p10 * m),
+        p25: Math.round(base.p25 * m),
+        p50: Math.round(base.p50 * m),
+        p75: Math.round(base.p75 * m),
+        p90: Math.round(base.p90 * m)
+    };
+});
+
+// When there's only one listing for the role, show its posted range directly instead of a percentile graph.
+const singleListingRange = computed(() => {
+    const job = selectedRoleJobs.value[0];
+
+    if (!job) {
+        return { start: 0, end: 0 };
+    }
+
+    const m = currentMultiplier.value;
+
+    return {
+        start: Math.round(Number(job.salary_start) * m),
+        end: Math.round(Number(job.salary_end) * m),
     };
 });
 
@@ -226,15 +298,17 @@ function resetUpload() {
     analysisError.value = null;
 }
 
-// Comparison mock roles
-const comparisonRoles = [
-    { title: 'Software Engineer', p10: 72000, p50: 98000, p90: 135000 },
-    { title: 'Senior Software Engineer', p10: 110000, p50: 145000, p90: 195000 },
-    { title: 'Engineering Manager', p10: 130000, p50: 172000, p90: 220000 },
-    { title: 'Product Manager', p10: 85000, p50: 115000, p90: 160000 },
-    { title: 'Data Scientist', p10: 90000, p50: 125000, p90: 175000 },
-    { title: 'UX Designer', p10: 68000, p50: 92000, p90: 128000 }
-];
+// Comparison roles: every distinct role posted on the platform. Percentiles only shown once
+// a role has 2+ listings to draw real samples from; otherwise the single listing's range is shown.
+const comparisonRoles = computed(() =>
+    roles.value.map((r) => ({
+        title: r.title,
+        companies: [...new Set(r.jobs.map((j) => j.company))],
+        hasEnoughData: r.jobs.length >= 2,
+        single: r.jobs.length === 1 ? { start: Math.round(Number(r.jobs[0].salary_start)), end: Math.round(Number(r.jobs[0].salary_end)) } : null,
+        ...computePercentiles(r.jobs),
+    }))
+);
 </script>
 
 <template>
@@ -245,84 +319,7 @@ const comparisonRoles = [
             
             <!-- Left Column: Factors & AI Upload -->
             <div class="space-y-6">
-                <!-- Factors Card -->
-                <Card class="rounded-[24px] border border-slate-200/60 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-all duration-300">
-                    <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50 leading-snug mb-6">
-                        Did you know these factors can impact your salary? Explore them to discover your true market value.
-                    </h2>
-                    
-                    <div class="space-y-4">
-                        <!-- Education -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Education</label>
-                            <div class="relative">
-                                <select 
-                                    v-model="selectedEducation"
-                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-700 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 cursor-pointer"
-                                >
-                                    <option v-for="opt in educationOptions" :key="opt" :value="opt">{{ opt }}</option>
-                                </select>
-                                <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                            </div>
-                        </div>
-
-                        <!-- Direct Reports -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Direct Reports</label>
-                            <div class="relative">
-                                <select 
-                                    v-model="selectedDirectReports"
-                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-700 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 cursor-pointer"
-                                >
-                                    <option v-for="opt in directReportsOptions" :key="opt" :value="opt">{{ opt }}</option>
-                                </select>
-                                <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                            </div>
-                        </div>
-
-                        <!-- Performance -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Performance</label>
-                            <div class="relative">
-                                <select 
-                                    v-model="selectedPerformance"
-                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-700 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 cursor-pointer"
-                                >
-                                    <option v-for="opt in performanceOptions" :key="opt" :value="opt">{{ opt }}</option>
-                                </select>
-                                <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                            </div>
-                        </div>
-
-                        <!-- Years of Exp. -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Years of experience</label>
-                            <div class="relative">
-                                <select 
-                                    v-model="selectedExperience"
-                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-700 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 cursor-pointer"
-                                >
-                                    <option v-for="opt in experienceOptions" :key="opt" :value="opt">{{ opt }}</option>
-                                </select>
-                                <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                            </div>
-                        </div>
-
-                        <!-- Reports To -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Reports To</label>
-                            <div class="relative">
-                                <select 
-                                    v-model="selectedReportsTo"
-                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-700 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 cursor-pointer"
-                                >
-                                    <option v-for="opt in reportsToOptions" :key="opt" :value="opt">{{ opt }}</option>
-                                </select>
-                                <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                            </div>
-                        </div>
-                    </div>
-                </Card>
+                <!-- Factors Card -->   
 
                 <!-- AI Resume Review Card -->
                 <Card class="rounded-[24px] border border-slate-200/60 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-all duration-300">
@@ -447,13 +444,14 @@ const comparisonRoles = [
                     <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
                     <!-- Header inside Card -->
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10 relative z-10">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 relative z-10">
                         <div>
                             <span class="text-blue-400 font-bold tracking-widest text-xs uppercase">Estimated Distribution</span>
                             <h3 class="text-xl md:text-2xl font-extrabold text-white mt-1">Market Salary Range</h3>
                         </div>
-                        
-                        <button 
+
+                        <button
+                            v-if="hasEnoughRoleData"
                             @click="viewType = viewType === 'graph' ? 'table' : 'graph'"
                             class="self-start sm:self-center bg-white text-slate-900 hover:bg-slate-100 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-lg hover:scale-102 flex items-center gap-2 cursor-pointer"
                         >
@@ -462,9 +460,36 @@ const comparisonRoles = [
                         </button>
                     </div>
 
+                    <!-- Role selector -->
+                    <div v-if="roles.length" class="relative z-10 mb-8 max-w-sm">
+                        <label class="text-xs font-bold text-blue-300 uppercase tracking-wider">Role</label>
+                        <div class="relative mt-1.5">
+                            <select
+                                v-model="selectedRoleTitle"
+                                class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-sm font-bold text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
+                            >
+                                <option v-for="role in roles" :key="role.title" :value="role.title" class="text-slate-900">
+                                    {{ role.title }} ({{ role.jobs.length }} listing{{ role.jobs.length > 1 ? 's' : '' }})
+                                </option>
+                            </select>
+                            <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-300 pointer-events-none" />
+                        </div>
+                    </div>
+                    <p v-else class="relative z-10 mb-8 text-sm text-blue-200/70">No job listings with salary data on the platform yet.</p>
+
+                    <!-- Not enough data: only one listing for this role, show its range instead of a percentile graph -->
+                    <div v-if="roles.length && !hasEnoughRoleData" class="relative z-10 flex flex-col items-center justify-center min-h-[240px] text-center gap-3">
+                        <p class="text-sm text-blue-200/70 max-w-sm">
+                            Only 1 listing found for "{{ selectedRoleTitle }}" — not enough data yet to build a percentile distribution.
+                        </p>
+                        <p class="text-2xl md:text-3xl font-black text-white">
+                            {{ formatSalary(singleListingRange.start) }} – {{ formatSalary(singleListingRange.end) }}
+                        </p>
+                    </div>
+
                     <!-- Dynamic Content Area -->
-                    <div class="relative min-h-[300px] z-10">
-                        
+                    <div v-else-if="hasEnoughRoleData" class="relative min-h-[300px] z-10">
+
                         <!-- Graph View (SVG bell-curve) -->
                         <div v-if="viewType === 'graph'" class="w-full">
                             
@@ -613,9 +638,10 @@ const comparisonRoles = [
                                 Compare with Similar Roles
                             </h3>
                         </div>
-                        <button 
+                        <button
                             @click="showCompareModal = true"
-                            class="px-8 py-3.5 bg-white text-[#011B2C] hover:bg-slate-100 font-bold text-sm tracking-wide rounded-full uppercase shadow-lg hover:shadow-xl transition-all duration-200 shrink-0 select-none cursor-pointer"
+                            :disabled="props.jobs.length === 0"
+                            class="px-8 py-3.5 bg-white text-[#011B2C] hover:bg-slate-100 font-bold text-sm tracking-wide rounded-full uppercase shadow-lg hover:shadow-xl transition-all duration-200 shrink-0 select-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             Compare Salaries
                         </button>
@@ -631,15 +657,15 @@ const comparisonRoles = [
                 <DialogHeader class="mb-6">
                     <DialogTitle class="text-2xl font-black text-slate-900 dark:text-slate-50">Compare Market Salaries</DialogTitle>
                     <DialogDescription class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                        Review simulated benchmarking data across various industry roles based on current live market distributions.
+                        Benchmark against real job listings currently posted on the platform.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div class="space-y-6">
                     <!-- Tabs for roles -->
                     <div class="flex flex-wrap gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                        <button 
-                            v-for="(role, index) in comparisonRoles" 
+                        <button
+                            v-for="(role, index) in comparisonRoles"
                             :key="role.title"
                             @click="activeCompareIndex = index"
                             :class="activeCompareIndex === index ? 'bg-primary text-primary-foreground font-bold' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-slate-800'"
@@ -655,8 +681,21 @@ const comparisonRoles = [
                             <span>Salary Structure for:</span>
                             <span class="text-indigo-600 dark:text-indigo-400">{{ comparisonRoles[activeCompareIndex].title }}</span>
                         </h4>
+                        <p class="text-xs font-semibold text-slate-400 mt-1">
+                            {{ comparisonRoles[activeCompareIndex].companies.join(', ') }}
+                        </p>
 
-                        <div class="space-y-5 mt-6">
+                        <!-- Not enough listings for this role to build percentiles -->
+                        <div v-if="!comparisonRoles[activeCompareIndex].hasEnoughData" class="mt-6 text-center py-6">
+                            <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                                Only 1 listing found for this role — not enough data yet to build a percentile distribution.
+                            </p>
+                            <p class="text-xl font-black text-slate-900 dark:text-slate-50 mt-3">
+                                ${{ comparisonRoles[activeCompareIndex].single?.start.toLocaleString() }} – ${{ comparisonRoles[activeCompareIndex].single?.end.toLocaleString() }}
+                            </p>
+                        </div>
+
+                        <div v-else class="space-y-5 mt-6">
                             <!-- 10th percentile bar -->
                             <div class="space-y-1.5">
                                 <div class="flex items-center justify-between text-xs font-bold">
@@ -664,7 +703,7 @@ const comparisonRoles = [
                                     <span class="text-slate-900 dark:text-slate-100">${{ comparisonRoles[activeCompareIndex].p10.toLocaleString() }}</span>
                                 </div>
                                 <div class="w-full bg-slate-200/60 dark:bg-slate-800 h-4 rounded-full overflow-hidden">
-                                    <div 
+                                    <div
                                         class="bg-blue-400 h-full rounded-full transition-all duration-500"
                                         :style="{ width: (comparisonRoles[activeCompareIndex].p10 / comparisonRoles[activeCompareIndex].p90 * 100) + '%' }"
                                     ></div>
@@ -678,7 +717,7 @@ const comparisonRoles = [
                                     <span class="text-slate-900 dark:text-slate-100">${{ comparisonRoles[activeCompareIndex].p50.toLocaleString() }}</span>
                                 </div>
                                 <div class="w-full bg-slate-200/60 dark:bg-slate-800 h-4 rounded-full overflow-hidden">
-                                    <div 
+                                    <div
                                         class="bg-green-500 h-full rounded-full transition-all duration-500"
                                         :style="{ width: (comparisonRoles[activeCompareIndex].p50 / comparisonRoles[activeCompareIndex].p90 * 100) + '%' }"
                                     ></div>
@@ -692,7 +731,7 @@ const comparisonRoles = [
                                     <span class="text-slate-900 dark:text-slate-100">${{ comparisonRoles[activeCompareIndex].p90.toLocaleString() }}</span>
                                 </div>
                                 <div class="w-full bg-slate-200/60 dark:bg-slate-800 h-4 rounded-full overflow-hidden">
-                                    <div 
+                                    <div
                                         class="bg-indigo-500 h-full rounded-full transition-all duration-500"
                                         :style="{ width: '100%' }"
                                     ></div>
