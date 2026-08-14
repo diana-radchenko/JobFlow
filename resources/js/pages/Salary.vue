@@ -32,7 +32,7 @@ import {
     DialogTitle,
     DialogFooter
 } from '@/components/ui/dialog';
-import { store as scoreResumeRequest } from '@/routes/resume-score';
+import { store as analyzeResumeRequest } from '@/routes/resume-salary-analysis';
 import resumeRoutes from '@/routes/resumes';
 
 // Define breadcrumbs for Layout
@@ -77,9 +77,11 @@ const viewType = ref<'graph' | 'table'>('graph');
 const uploadState = ref<'idle' | 'uploading' | 'analyzed'>('idle');
 const selectedResumeId = ref<number | null>(props.resumes[0]?.id ?? null);
 const analysisError = ref<string | null>(null);
-const analysisScore = ref(0);
 const analysisStrengths = ref<string[]>([]);
 const analysisWeaknesses = ref<string[]>([]);
+const analysisSalaryMin = ref(0);
+const analysisSalaryMax = ref(0);
+const analysisSalaryRationale = ref('');
 const showCompareModal = ref(false);
 
 // Active compared role index
@@ -164,7 +166,7 @@ const selectedResumeTitle = computed(
     () => props.resumes.find((r) => r.id === selectedResumeId.value)?.title ?? ''
 );
 
-// Send the selected resume to the AI scoring endpoint, against the role currently being compared
+// Send the selected resume to the AI salary analysis endpoint
 async function analyzeResume() {
     if (!selectedResumeId.value) return;
 
@@ -172,18 +174,14 @@ async function analyzeResume() {
     analysisError.value = null;
 
     try {
-        const response = await fetch(scoreResumeRequest.url(), {
+        const response = await fetch(analyzeResumeRequest.url(), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
                 'X-CSRF-TOKEN': usePage().props.csrf_token as string,
             },
-            body: JSON.stringify({
-                resume_id: selectedResumeId.value,
-                job_title: comparisonRoles[activeCompareIndex.value].title,
-                job_company: 'Market Average',
-            }),
+            body: JSON.stringify({ resume_id: selectedResumeId.value }),
         });
 
         if (!response.ok) {
@@ -191,13 +189,17 @@ async function analyzeResume() {
         }
 
         const result = (await response.json()) as {
-            score: number;
-            highlights: string[];
-            additions: string[];
+            strengths: string[];
+            weaknesses: string[];
+            expectedSalaryMin: number;
+            expectedSalaryMax: number;
+            salaryRationale: string;
         };
-        analysisScore.value = result.score;
-        analysisStrengths.value = result.highlights;
-        analysisWeaknesses.value = result.additions;
+        analysisStrengths.value = result.strengths;
+        analysisWeaknesses.value = result.weaknesses;
+        analysisSalaryMin.value = result.expectedSalaryMin;
+        analysisSalaryMax.value = result.expectedSalaryMax;
+        analysisSalaryRationale.value = result.salaryRationale;
         uploadState.value = 'analyzed';
 
         // Auto-adjust factors based on AI analysis of resume for premium feel!
@@ -218,6 +220,9 @@ function resetUpload() {
     uploadState.value = 'idle';
     analysisStrengths.value = [];
     analysisWeaknesses.value = [];
+    analysisSalaryMin.value = 0;
+    analysisSalaryMax.value = 0;
+    analysisSalaryRationale.value = '';
     analysisError.value = null;
 }
 
@@ -371,14 +376,11 @@ const comparisonRoles = [
                         <div class="flex items-start gap-3">
                             <CheckCircle2 class="h-6 w-6 text-green-500 shrink-0 mt-0.5" />
                             <div class="min-w-0 flex-1">
-                                <div class="flex items-center justify-between gap-2">
-                                    <h4 class="text-sm font-bold text-slate-900 dark:text-slate-50 leading-tight">
-                                        Resume Analyzed Successfully!
-                                    </h4>
-                                    <Badge class="shrink-0">{{ analysisScore }}/100 fit</Badge>
-                                </div>
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-50 leading-tight">
+                                    Resume Analyzed Successfully!
+                                </h4>
                                 <p class="text-xs text-slate-500 mt-1 font-semibold truncate max-w-[240px]">
-                                    {{ selectedResumeTitle }} vs. {{ comparisonRoles[activeCompareIndex].title }}
+                                    {{ selectedResumeTitle }}
                                 </p>
 
                                 <div v-if="analysisStrengths.length" class="mt-3">
@@ -395,9 +397,16 @@ const comparisonRoles = [
                                     </ul>
                                 </div>
 
-                                <p class="text-[13px] text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
-                                    We've optimized your criteria
-                                </p>
+                                <div class="mt-4 rounded-xl border border-indigo-200/60 dark:border-indigo-900 bg-white dark:bg-slate-900 p-3">
+                                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Expected Salary</span>
+                                    <p class="text-lg font-extrabold text-indigo-600 dark:text-indigo-400">
+                                        {{ formatSalary(analysisSalaryMin) }} – {{ formatSalary(analysisSalaryMax) }}
+                                        <span class="text-xs font-semibold text-slate-400">/ {{ paymentFrequency }}</span>
+                                    </p>
+                                    <p class="text-[13px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                        {{ analysisSalaryRationale }}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

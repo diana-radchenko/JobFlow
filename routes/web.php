@@ -12,6 +12,7 @@ use App\Http\Controllers\ResumeAnalysisController;
 use App\Http\Controllers\ResumeAssistantController;
 use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\ResumeEditorController;
+use App\Http\Controllers\ResumeSalaryAnalysisController;
 use App\Http\Controllers\ResumeScoreController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -61,6 +62,9 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
 
     // AI Resume Analysis (resume editor summary "Analyze Resume" action)
     Route::post('resume-analysis', [ResumeAnalysisController::class, 'store'])->name('resume-analysis.store');
+
+    // AI Resume Salary Analysis (salary page "Let AI review your resume" card)
+    Route::post('resume-salary-analysis', [ResumeSalaryAnalysisController::class, 'store'])->name('resume-salary-analysis.store');
 
     // Resume Editor Routes
     Route::get('resume-editor/{resume}', [ResumeEditorController::class, 'show'])->name('resume-editor.show');
