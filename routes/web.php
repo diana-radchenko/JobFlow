@@ -112,7 +112,9 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
 
     Route::get('interview-preparation', InterviewPreparationController::class)->name('interview-preparation');
     Route::get('salary', function () {
-        return Inertia::render('Salary');
+        return Inertia::render('Salary', [
+            'resumes' => auth()->user()->resumes()->orderByDesc('updated_at')->get(['id', 'title']),
+        ]);
     })->name('salary');
     Route::get('development', function () {
         return Inertia::render('Development');

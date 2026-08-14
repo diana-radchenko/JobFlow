@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import {
     Sparkles,
     UploadCloud,
@@ -32,6 +32,8 @@ import {
     DialogTitle,
     DialogFooter
 } from '@/components/ui/dialog';
+import { store as scoreResumeRequest } from '@/routes/resume-score';
+import resumeRoutes from '@/routes/resumes';
 
 // Define breadcrumbs for Layout
 defineOptions({
@@ -44,6 +46,12 @@ defineOptions({
         ],
     },
 });
+
+interface Props {
+    resumes: { id: number; title: string }[];
+}
+
+const props = defineProps<Props>();
 
 // Dropdown/Factor Selection values
 const selectedEducation = ref("Bachelor's");
@@ -65,10 +73,13 @@ const paymentFrequency = ref<'weekly' | 'monthly' | 'annually'>('annually');
 // View type: 'graph' | 'table'
 const viewType = ref<'graph' | 'table'>('graph');
 
-// Resume Upload & AI Parser Simulation state
+// Resume AI Review state
 const uploadState = ref<'idle' | 'uploading' | 'analyzed'>('idle');
-const fileName = ref('');
-const uploadProgress = ref(0);
+const selectedResumeId = ref<number | null>(props.resumes[0]?.id ?? null);
+const analysisError = ref<string | null>(null);
+const analysisScore = ref(0);
+const analysisStrengths = ref<string[]>([]);
+const analysisWeaknesses = ref<string[]>([]);
 const showCompareModal = ref(false);
 
 // Active compared role index
@@ -148,37 +159,66 @@ function formatSalary(value: number): string {
     return '$' + Math.round(finalValue).toLocaleString();
 }
 
-// Simulated Resume upload action
-function triggerUpload(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
-    
-    const file = input.files[0];
-    fileName.value = file.name;
-    uploadState.value = 'uploading';
-    uploadProgress.value = 0;
+// Selected resume's title, for display
+const selectedResumeTitle = computed(
+    () => props.resumes.find((r) => r.id === selectedResumeId.value)?.title ?? ''
+);
 
-    const interval = setInterval(() => {
-        uploadProgress.value += 10;
-        if (uploadProgress.value >= 100) {
-            clearInterval(interval);
-            uploadState.value = 'analyzed';
-            
-            // Auto-adjust factors based on "AI analysis of resume" for premium feel!
-            selectedEducation.value = "Master's";
-            selectedExperience.value = "5-9 years";
-            selectedPerformance.value = "Outstanding";
-            selectedDirectReports.value = "6-15";
-            selectedReportsTo.value = "Director";
+// Send the selected resume to the AI scoring endpoint, against the role currently being compared
+async function analyzeResume() {
+    if (!selectedResumeId.value) return;
+
+    uploadState.value = 'uploading';
+    analysisError.value = null;
+
+    try {
+        const response = await fetch(scoreResumeRequest.url(), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': usePage().props.csrf_token as string,
+            },
+            body: JSON.stringify({
+                resume_id: selectedResumeId.value,
+                job_title: comparisonRoles[activeCompareIndex.value].title,
+                job_company: 'Market Average',
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Request failed');
         }
-    }, 150);
+
+        const result = (await response.json()) as {
+            score: number;
+            highlights: string[];
+            additions: string[];
+        };
+        analysisScore.value = result.score;
+        analysisStrengths.value = result.highlights;
+        analysisWeaknesses.value = result.additions;
+        uploadState.value = 'analyzed';
+
+        // Auto-adjust factors based on AI analysis of resume for premium feel!
+        selectedEducation.value = "Master's";
+        selectedExperience.value = "5-9 years";
+        selectedPerformance.value = "Outstanding";
+        selectedDirectReports.value = "6-15";
+        selectedReportsTo.value = "Director";
+    } catch (error) {
+        console.error('Failed to analyze resume:', error);
+        analysisError.value = 'Could not analyze this resume. Please try again.';
+        uploadState.value = 'idle';
+    }
 }
 
-// Reset upload state
+// Reset back to resume selection
 function resetUpload() {
     uploadState.value = 'idle';
-    fileName.value = '';
-    uploadProgress.value = 0;
+    analysisStrengths.value = [];
+    analysisWeaknesses.value = [];
+    analysisError.value = null;
 }
 
 // Comparison mock roles
@@ -283,59 +323,80 @@ const comparisonRoles = [
                 <Card class="rounded-[24px] border border-slate-200/60 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-all duration-300">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-base font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
-                            Let AI review your resume – just upload it here
+                            Let AI review your resume – just pick one you've made
                         </h3>
                         <Sparkles class="h-5 w-5 text-indigo-500 animate-pulse shrink-0" />
                     </div>
 
-                    <!-- Idle State -->
-                    <div v-if="uploadState === 'idle'" class="relative">
-                        <label class="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl h-44 cursor-pointer hover:border-indigo-500/60 dark:hover:border-indigo-500/60 bg-slate-50/50 dark:bg-slate-950/50 transition-all duration-200 group">
-                            <input 
-                                type="file" 
-                                accept=".pdf,.doc,.docx"
-                                class="hidden" 
-                                @change="triggerUpload"
-                            />
-                            <UploadCloud class="h-10 w-10 text-slate-400 group-hover:text-indigo-500 transition-colors duration-200 mb-3" />
-                            <span class="text-[15px] font-bold text-slate-600 dark:text-slate-300">Upload your CV</span>
-                            <span class="text-xs text-slate-400 mt-1">Supports PDF, DOCX up to 5MB</span>
-                        </label>
+                    <!-- No resumes yet -->
+                    <div v-if="props.resumes.length === 0" class="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl h-44 bg-slate-50/50 dark:bg-slate-950/50 text-center px-4">
+                        <UploadCloud class="h-10 w-10 text-slate-400 mb-3" />
+                        <span class="text-[15px] font-bold text-slate-600 dark:text-slate-300">No resumes yet</span>
+                        <a :href="resumeRoutes.index().url" class="text-xs text-indigo-500 hover:underline mt-1">Create a resume to get an AI review</a>
+                    </div>
+
+                    <!-- Idle State: pick a resume -->
+                    <div v-else-if="uploadState === 'idle'" class="flex flex-col justify-center gap-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl min-h-44 bg-slate-50/50 dark:bg-slate-950/50 p-6">
+                        <div class="relative">
+                            <select
+                                v-model="selectedResumeId"
+                                class="w-full bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-700 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 cursor-pointer"
+                            >
+                                <option v-for="r in props.resumes" :key="r.id" :value="r.id">{{ r.title }}</option>
+                            </select>
+                            <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                        </div>
+                        <Button type="button" :disabled="!selectedResumeId" @click="analyzeResume">
+                            <Sparkles class="mr-2 h-4 w-4" />
+                            Analyze Resume
+                        </Button>
+                        <p v-if="analysisError" class="text-sm text-destructive">{{ analysisError }}</p>
                     </div>
 
                     <!-- Uploading State -->
                     <div v-else-if="uploadState === 'uploading'" class="flex flex-col items-center justify-center border border-slate-100 dark:border-slate-800 rounded-2xl h-44 bg-slate-50/50 dark:bg-slate-950/50 p-6">
                         <Loader2 class="h-8 w-8 text-indigo-500 animate-spin mb-3" />
                         <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Analyzing resume with AI...</span>
-                        <div class="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
-                            <div 
-                                class="bg-indigo-600 h-full rounded-full transition-all duration-150"
-                                :style="{ width: uploadProgress + '%' }"
-                            ></div>
-                        </div>
-                        <span class="text-xs text-slate-400 mt-1.5">{{ uploadProgress }}%</span>
                     </div>
 
                     <!-- Analyzed State -->
                     <div v-else-if="uploadState === 'analyzed'" class="border border-indigo-100 dark:border-indigo-950 bg-indigo-50/20 dark:bg-indigo-950/20 rounded-2xl p-5 relative">
-                        <button 
-                            @click="resetUpload" 
+                        <button
+                            @click="resetUpload"
                             class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                         >
                             <X class="h-4 w-4" />
                         </button>
-                        
+
                         <div class="flex items-start gap-3">
                             <CheckCircle2 class="h-6 w-6 text-green-500 shrink-0 mt-0.5" />
-                            <div>
-                                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-50 leading-tight">
-                                    Resume Analyzed Successfully!
-                                </h4>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <h4 class="text-sm font-bold text-slate-900 dark:text-slate-50 leading-tight">
+                                        Resume Analyzed Successfully!
+                                    </h4>
+                                    <Badge class="shrink-0">{{ analysisScore }}/100 fit</Badge>
+                                </div>
                                 <p class="text-xs text-slate-500 mt-1 font-semibold truncate max-w-[240px]">
-                                    {{ fileName }}
+                                    {{ selectedResumeTitle }} vs. {{ comparisonRoles[activeCompareIndex].title }}
                                 </p>
+
+                                <div v-if="analysisStrengths.length" class="mt-3">
+                                    <h5 class="text-xs font-bold text-slate-700 dark:text-slate-200">Strengths</h5>
+                                    <ul class="list-disc space-y-1 pl-4 text-[13px] text-slate-600 dark:text-slate-300 mt-1">
+                                        <li v-for="(item, index) in analysisStrengths" :key="index">{{ item }}</li>
+                                    </ul>
+                                </div>
+
+                                <div v-if="analysisWeaknesses.length" class="mt-3">
+                                    <h5 class="text-xs font-bold text-slate-700 dark:text-slate-200">Weaknesses</h5>
+                                    <ul class="list-disc space-y-1 pl-4 text-[13px] text-slate-600 dark:text-slate-300 mt-1">
+                                        <li v-for="(item, index) in analysisWeaknesses" :key="index">{{ item }}</li>
+                                    </ul>
+                                </div>
+
                                 <p class="text-[13px] text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
-                                    AI parsed your profile as a Mid-to-Senior specialist. We've optimized your criteria and unlocked a <span class="font-bold text-indigo-600 dark:text-indigo-400">+10% market value premium</span>!
+                                    We've optimized your criteria
                                 </p>
                             </div>
                         </div>
@@ -542,9 +603,6 @@ const comparisonRoles = [
                             <h3 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
                                 Compare with Similar Roles
                             </h3>
-                            <p class="text-slate-300 text-sm leading-relaxed max-w-xl">
-                                The AI asks questions, the user responds with his voice, the system analyzes tone, pauses, and confidence.
-                            </p>
                         </div>
                         <button 
                             @click="showCompareModal = true"
