@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import DOMPurify from 'dompurify';
 import { BadgeCheck, MapPin, Heart, ChevronLeft } from 'lucide-vue-next';
+import { marked } from 'marked';
 import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +25,13 @@ const props = defineProps<{
     userApplication: UserWorkJobApplication | null;
     resumes: { id: number; title: string }[];
 }>();
+
+marked.setOptions({ gfm: true, breaks: true });
+
+/** Job descriptions are authored as Markdown; render as sanitized HTML. */
+const descriptionHtml = DOMPurify.sanitize(
+    marked.parse(props.job.description, { async: false }) as string,
+);
 
 const isLoading = ref(false);
 const resumeId = ref<string>(
@@ -155,13 +164,10 @@ defineOptions({
                     >
                         Job Description
                     </h2>
-                    <div class="prose prose-sm dark:prose-invert max-w-none">
-                        <p
-                            class="leading-relaxed whitespace-pre-wrap text-stone-600 dark:text-stone-300"
-                        >
-                            {{ job.description }}
-                        </p>
-                    </div>
+                    <div
+                        class="markdown-body max-w-none text-stone-600 dark:text-stone-300"
+                        v-html="descriptionHtml"
+                    />
                 </div>
 
                 <!-- Contacts -->
@@ -192,12 +198,16 @@ defineOptions({
                     </template>
                     <template v-else>
                         <div class="flex flex-1 flex-col gap-2">
-                            <h2 class=" text-lg font-semibold text-stone-900 dark:text-white">
+                            <h2
+                                class="text-lg font-semibold text-stone-900 dark:text-white"
+                            >
                                 Resume to apply
                             </h2>
                             <Select v-model="resumeId" :disabled="isLoading">
                                 <SelectTrigger class="w-full">
-                                    <SelectValue placeholder="Select a resume to apply with" />
+                                    <SelectValue
+                                        placeholder="Select a resume to apply with"
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem

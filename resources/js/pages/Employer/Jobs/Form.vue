@@ -2,11 +2,11 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ChevronLeft } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
+import MarkdownEditor from '@/components/MarkdownEditor.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import jobs from '@/routes/employer/jobs';
 import type { WorkJob } from '@/types/laravel-models';
 
@@ -163,11 +163,12 @@ const submit = () => {
 
                     <div class="grid gap-2">
                         <Label for="description">Description</Label>
-                        <Textarea
+                        <MarkdownEditor
                             id="description"
                             v-model="form.description"
                             required
                             :rows="8"
+                            placeholder="Describe the role, responsibilities, and requirements. Supports Markdown: ## headings, **bold**, _italic_, - lists."
                         />
                         <InputError :message="form.errors.description" />
                     </div>
