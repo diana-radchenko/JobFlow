@@ -40,7 +40,7 @@ services:
             timeout: 10s
             retries: 3
         depends_on:
-            laravel_php_fpm
+            - laravel_php_fpm
 
 networks:
     queryverify:
