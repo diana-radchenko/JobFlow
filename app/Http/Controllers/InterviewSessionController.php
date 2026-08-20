@@ -211,10 +211,10 @@ class InterviewSessionController extends Controller
 
         if ($session->conversation_id) {
             return $agent->continue($session->conversation_id, as: $user)
-                ->prompt($prompt, model: 'gpt-4o');
+                ->prompt($prompt, model: config('ai.model'));
         }
 
-        $response = $agent->forUser($user)->prompt($prompt, model: 'gpt-4o');
+        $response = $agent->forUser($user)->prompt($prompt, model: config('ai.model'));
 
         $session->update([
             'conversation_id' => $response->conversationId,
@@ -223,3 +223,4 @@ class InterviewSessionController extends Controller
         return $response;
     }
 }
+
