@@ -14,6 +14,7 @@ return [
     */
 
     'default' => 'openai',
+    'model' => env('AI_MODEL', 'gpt-4o-mini'),
     'default_for_images' => 'gemini',
     'default_for_audio' => 'openai',
     'default_for_transcription' => 'openai',
@@ -147,3 +148,4 @@ return [
     ],
 
 ];
+
