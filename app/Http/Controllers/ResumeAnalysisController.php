@@ -24,7 +24,7 @@ class ResumeAnalysisController extends Controller
 
         try {
             $response = (new ResumeAnalysisAgent($context->resumeContext()))
-                ->prompt('Analyze this resume and provide general recommendations.', model: 'gpt-4o');
+                ->prompt('Analyze this resume and provide general recommendations.', model: config('ai.model'));
         } catch (\Throwable $e) {
             report($e);
 
@@ -41,3 +41,4 @@ class ResumeAnalysisController extends Controller
         ]);
     }
 }
+

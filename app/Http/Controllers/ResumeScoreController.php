@@ -34,7 +34,7 @@ class ResumeScoreController extends Controller
 
         try {
             $response = (new ResumeScoreAgent($context->resumeContext(), $context->jobContext()))
-                ->prompt('Score this resume against the job and provide recommendations.', model: 'gpt-4o');
+                ->prompt('Score this resume against the job and provide recommendations.', model: config('ai.model'));
         } catch (\Throwable $e) {
             report($e);
 
@@ -52,3 +52,4 @@ class ResumeScoreController extends Controller
         ]);
     }
 }
+

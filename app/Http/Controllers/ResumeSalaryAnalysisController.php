@@ -24,7 +24,7 @@ class ResumeSalaryAnalysisController extends Controller
 
         try {
             $response = (new ResumeSalaryAnalysisAgent($context->resumeContext()))
-                ->prompt('Analyze this resume and estimate the salary it can command.', model: 'gpt-4o');
+                ->prompt('Analyze this resume and estimate the salary it can command.', model: config('ai.model'));
         } catch (\Throwable $e) {
             report($e);
 
@@ -42,3 +42,4 @@ class ResumeSalaryAnalysisController extends Controller
         ]);
     }
 }
+
