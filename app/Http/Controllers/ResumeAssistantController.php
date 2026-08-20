@@ -44,13 +44,14 @@ class ResumeAssistantController extends Controller
 
         if ($resume->ai_conversation_id) {
             return $agent->continue($resume->ai_conversation_id, as: $user)
-                ->prompt($prompt, model: 'gpt-4o');
+                ->prompt($prompt, model: config('ai.model'));
         }
 
-        $response = $agent->forUser($user)->prompt($prompt, model: 'gpt-4o');
+        $response = $agent->forUser($user)->prompt($prompt, model: config('ai.model'));
 
         $resume->update(['ai_conversation_id' => $response->conversationId]);
 
         return $response;
     }
 }
+
