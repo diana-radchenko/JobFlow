@@ -58,6 +58,13 @@ export type InterviewSession = {
     status: string;
     created_at: string | null;
     updated_at: string | null;
+    application_id: number | null;
+    employer_id: number | null;
+    scheduled_at: string | null;
+    timezone: string | null;
+    duration_minutes: number | null;
+    employer_note: string | null;
+    work_job: WorkJob;
     // relations
     user: User;
     // counts
@@ -138,23 +145,44 @@ export type LeadershipActivity = {
 };
 
 export type Publication = {
-    id: number; user_id: number; title: string; publisher: string | null;
-    publication_date: string | null; url: string | null; description: string | null;
-    created_at: string | null; updated_at: string | null; user: User;
-    included?: boolean; order?: number | null;
+    id: number;
+    user_id: number;
+    title: string;
+    publisher: string | null;
+    publication_date: string | null;
+    url: string | null;
+    description: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+    user: User;
+    included?: boolean;
+    order?: number | null;
 };
 
 export type AwardHonor = {
-    id: number; user_id: number; title: string; issuer: string | null;
-    awarded_date: string | null; description: string | null;
-    created_at: string | null; updated_at: string | null; user: User;
-    included?: boolean; order?: number | null;
+    id: number;
+    user_id: number;
+    title: string;
+    issuer: string | null;
+    awarded_date: string | null;
+    description: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+    user: User;
+    included?: boolean;
+    order?: number | null;
 };
 
 export type Language = {
-    id: number; user_id: number; name: string; proficiency: string;
-    created_at: string | null; updated_at: string | null; user: User;
-    included?: boolean; order?: number | null;
+    id: number;
+    user_id: number;
+    name: string;
+    proficiency: string;
+    created_at: string | null;
+    updated_at: string | null;
+    user: User;
+    included?: boolean;
+    order?: number | null;
 };
 
 export type Resume = {
@@ -296,6 +324,7 @@ export type UserWorkJobApplication = {
     user: User;
     work_job: WorkJob;
     resume: Resume;
+    interview_session: InterviewSession | null;
     // counts
     // exists
     user_exists: boolean;
@@ -335,11 +364,22 @@ export type WorkJob = {
     title: string;
     salary_start: number | null;
     salary_end: number | null;
+    salary_currency: string | null;
+    salary_period: string | null;
     company: string;
     description: string;
     contacts: string;
     location: string;
     technologies: Array<unknown>;
+    industry: string | null;
+    position_level: string | null;
+    employment_type: string | null;
+    workplace_type: string | null;
+    responsibilities: string | null;
+    requirements: string | null;
+    benefits: string | null;
+    status: string;
+    published_at: string | null;
     created_at: string | null;
     updated_at: string | null;
     // relations
@@ -362,4 +402,3 @@ export type SkillsLevel =
     (typeof SkillsLevelEnum)[keyof typeof SkillsLevelEnum];
 export type ApplicationStatus =
     (typeof ApplicationStatusEnum)[keyof typeof ApplicationStatusEnum];
-

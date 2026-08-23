@@ -4,6 +4,9 @@ use App\Enums\UserRole;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationController;
 use App\Http\Controllers\Employer\JobController as EmployerJobController;
+use App\Http\Controllers\Employer\InterviewScheduleController;
+use App\Http\Controllers\JobChatController;
+use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\InterviewPreparationController;
 use App\Http\Controllers\InterviewSessionController;
 use App\Http\Controllers\JobSelectionController;
@@ -15,7 +18,6 @@ use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\ResumeEditorController;
 use App\Http\Controllers\ResumeSalaryAnalysisController;
 use App\Http\Controllers\ResumeScoreController;
-use App\Models\WorkJob;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -43,6 +45,7 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Employer->value])
         // scopeBindings keeps {application} constrained to the parent {job}.
         Route::get('jobs/{job}/applications/{application}', [EmployerApplicationController::class, 'show'])->name('applications.show');
         Route::patch('jobs/{job}/applications/{application}', [EmployerApplicationController::class, 'update'])->name('applications.update');
+        Route::post('jobs/{job}/applications/{application}/interview', [InterviewScheduleController::class, 'store'])->name('interviews.store');
     });
 
 Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->group(function () {
@@ -135,16 +138,7 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
     Route::post('resume-editor/{resume}/items/{type}/reorder', [ResumeEditorController::class, 'reorderItems'])->name('resume-editor.items.reorder');
 
     Route::get('interview-preparation', InterviewPreparationController::class)->name('interview-preparation');
-    Route::get('salary', function () {
-        return Inertia::render('Salary', [
-            'resumes' => auth()->user()->resumes()->orderByDesc('updated_at')->get(['id', 'title']),
-            'jobs' => WorkJob::query()
-                ->whereNotNull('salary_start')
-                ->whereNotNull('salary_end')
-                ->orderByDesc('updated_at')
-                ->get(['id', 'title', 'company', 'salary_start', 'salary_end']),
-        ]);
-    })->name('salary');
+    Route::get('salary', SalaryController::class)->name('salary');
     Route::get('development', function () {
         return Inertia::render('Development');
     })->name('development');
@@ -154,6 +148,11 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
     Route::post('interview-sessions/{session}/audio', [InterviewSessionController::class, 'audio'])->name('interview-session.audio');
     Route::post('interview-sessions/{session}/transcribe', [InterviewSessionController::class, 'transcribe'])->name('interview-session.transcribe');
     Route::post('interview-sessions/{session}/complete', [InterviewSessionController::class, 'complete'])->name('interview-session.complete');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('job-chat', [JobChatController::class, 'index'])->name('job-chat.index');
+    Route::post('job-chat/applications/{application}', [JobChatController::class, 'store'])->name('job-chat.messages.store');
 });
 
 require __DIR__.'/settings.php';

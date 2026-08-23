@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['user_id', 'work_job_id', 'resume_id', 'status', 'viewed_at'])]
 class UserWorkJobApplication extends Model
@@ -31,5 +32,15 @@ class UserWorkJobApplication extends Model
     public function resume(): BelongsTo
     {
         return $this->belongsTo(Resume::class);
+    }
+
+    public function interviewSession(): HasOne
+    {
+        return $this->hasOne(InterviewSession::class, 'application_id');
+    }
+
+    public function conversation(): HasOne
+    {
+        return $this->hasOne(JobConversation::class, 'application_id');
     }
 }

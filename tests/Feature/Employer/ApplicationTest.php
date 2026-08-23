@@ -41,18 +41,15 @@ test('re-opening an application keeps the original viewed timestamp', function (
     expect($this->application->refresh()->viewed_at->timestamp)->toBe($firstViewedAt->timestamp);
 });
 
-test('an employer can reject or schedule an interview', function (ApplicationStatus $status) {
+test('an employer can reject an application', function () {
     $this->actingAs($this->employer)
         ->patch(route('employer.applications.update', [$this->job, $this->application]), [
-            'status' => $status->value,
+            'status' => ApplicationStatus::Rejected->value,
         ])
         ->assertSessionHasNoErrors();
 
-    expect($this->application->refresh()->status)->toBe($status);
-})->with([
-    'rejected' => ApplicationStatus::Rejected,
-    'interview scheduled' => ApplicationStatus::InterviewScheduled,
-]);
+    expect($this->application->refresh()->status)->toBe(ApplicationStatus::Rejected);
+});
 
 test('an employer cannot set any other status', function (?string $status) {
     $this->actingAs($this->employer)
@@ -65,6 +62,7 @@ test('an employer cannot set any other status', function (?string $status) {
 })->with([
     'hired' => ApplicationStatus::Hired->value,
     'offer' => ApplicationStatus::Offer->value,
+    'status-only interview' => ApplicationStatus::InterviewScheduled->value,
     'nonsense' => 'shortlisted',
     'missing' => null,
 ]);

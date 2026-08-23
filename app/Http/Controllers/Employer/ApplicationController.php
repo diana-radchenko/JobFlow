@@ -41,6 +41,8 @@ class ApplicationController extends Controller
                 'resume.awardHonors',
                 'resume.languages',
                 'resume.additionalInformation',
+                'interviewSession',
+                'conversation.messages',
             ]),
         ]);
     }
@@ -50,10 +52,7 @@ class ApplicationController extends Controller
         $this->authorize('update', $job);
 
         $validated = $request->validate([
-            'status' => ['required', Rule::enum(ApplicationStatus::class)->only([
-                ApplicationStatus::Rejected,
-                ApplicationStatus::InterviewScheduled,
-            ])],
+            'status' => ['required', Rule::enum(ApplicationStatus::class)->only([ApplicationStatus::Rejected])],
         ]);
 
         $application->update($validated);

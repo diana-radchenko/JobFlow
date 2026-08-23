@@ -7,9 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import type { WorkJob } from '@/types/laravel-models';
 import { jobSelection as jobSelectionRoute } from '@/routes';
 import { show as jobSelectionShow } from '@/routes/job-selection';
-import type { WorkJob } from '@/types/laravel-models';
 
 const props = defineProps<{
     jobs: WorkJob[];
@@ -17,6 +17,16 @@ const props = defineProps<{
         incomeLevel?: string;
         region?: string;
         ownSalary?: string;
+        keyword?: string;
+        industry?: string;
+        position_level?: string;
+        company?: string;
+        employment_type?: string;
+    };
+    filterOptions: {
+        industries: string[];
+        positionLevels: string[];
+        employmentTypes: string[];
     };
 }>();
 
@@ -25,6 +35,11 @@ const props = defineProps<{
 const incomeLevel = ref(props.filters?.incomeLevel || 'does-not-matter');
 const region = ref(props.filters?.region || 'does-not-matter');
 const ownSalary = ref(props.filters?.ownSalary || '');
+const keyword = ref(props.filters?.keyword || '');
+const industry = ref(props.filters?.industry || '');
+const positionLevel = ref(props.filters?.position_level || '');
+const company = ref(props.filters?.company || '');
+const employmentType = ref(props.filters?.employment_type || '');
 
 interface IncomeLevelOption {
     id: string;
@@ -76,7 +91,16 @@ watch(ownSalary, (newVal) => {
 });
 
 watchDebounced(
-    [incomeLevel, region, ownSalary],
+    [
+        incomeLevel,
+        region,
+        ownSalary,
+        keyword,
+        industry,
+        positionLevel,
+        company,
+        employmentType,
+    ],
     ([newIncomeLevel, newRegion, newOwnSalary]) => {
         router.get(
             jobSelectionRoute.url(),
@@ -84,6 +108,11 @@ watchDebounced(
                 incomeLevel: newIncomeLevel,
                 region: newRegion,
                 ownSalary: newOwnSalary,
+                keyword: keyword.value,
+                industry: industry.value,
+                position_level: positionLevel.value,
+                company: company.value,
+                employment_type: employmentType.value,
             },
             {
                 preserveState: true,
@@ -116,6 +145,49 @@ defineOptions({
     >
         <!-- Sidebar Filters -->
         <div class="flex w-72 flex-shrink-0 flex-col gap-6">
+            <div class="space-y-3 rounded-xl bg-blueish p-6">
+                <h3 class="font-bold">Vacancy filters</h3>
+                <Input
+                    v-model="keyword"
+                    placeholder="Job title or keyword"
+                /><Input v-model="company" placeholder="Company" />
+                <select
+                    v-model="industry"
+                    class="w-full rounded-md border bg-white p-2 dark:bg-stone-900"
+                >
+                    <option value="">All industries</option>
+                    <option
+                        v-for="item in filterOptions.industries"
+                        :key="item"
+                    >
+                        {{ item }}
+                    </option>
+                </select>
+                <select
+                    v-model="positionLevel"
+                    class="w-full rounded-md border bg-white p-2 dark:bg-stone-900"
+                >
+                    <option value="">All levels</option>
+                    <option
+                        v-for="item in filterOptions.positionLevels"
+                        :key="item"
+                    >
+                        {{ item }}
+                    </option>
+                </select>
+                <select
+                    v-model="employmentType"
+                    class="w-full rounded-md border bg-white p-2 dark:bg-stone-900"
+                >
+                    <option value="">All employment types</option>
+                    <option
+                        v-for="item in filterOptions.employmentTypes"
+                        :key="item"
+                    >
+                        {{ item }}
+                    </option>
+                </select>
+            </div>
             <!-- Income Level Filter -->
             <div class="rounded-xl bg-blueish p-6">
                 <h3 class="mb-5 font-bold text-stone-900 dark:text-white">

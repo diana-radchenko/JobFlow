@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  *  Table to store jobs. Jobs name were used already by Laravel jobs table, so why we used work_jobs table name.
  */
-#[Fillable(['title', 'salary_start', 'salary_end', 'company', 'description', 'contacts', 'location', 'technologies'])]
+#[Fillable(['title', 'salary_start', 'salary_end', 'salary_currency', 'salary_period', 'company', 'description', 'responsibilities', 'requirements', 'benefits', 'contacts', 'location', 'industry', 'position_level', 'employment_type', 'workplace_type', 'technologies', 'status', 'published_at'])]
 class WorkJob extends Model
 {
     /** @use HasFactory<WorkJobFactory> */
@@ -25,6 +26,7 @@ class WorkJob extends Model
             'salary_start' => 'decimal:2',
             'salary_end' => 'decimal:2',
             'technologies' => 'array',
+            'published_at' => 'datetime',
         ];
     }
 
@@ -39,6 +41,21 @@ class WorkJob extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(UserWorkJobApplication::class);
+    }
+
+    public function interviewSessions(): HasMany
+    {
+        return $this->hasMany(InterviewSession::class);
+    }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(JobConversation::class);
+    }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->whereNotNull('user_id')->where('status', 'published');
     }
 
     public function applicants(): BelongsToMany

@@ -123,6 +123,16 @@ class User extends Authenticatable
         return $this->hasMany(WorkJob::class);
     }
 
+    public function employerJobConversations(): HasMany
+    {
+        return $this->hasMany(JobConversation::class, 'employer_user_id');
+    }
+
+    public function candidateJobConversations(): HasMany
+    {
+        return $this->hasMany(JobConversation::class, 'candidate_user_id');
+    }
+
     public function appliedJobs(): BelongsToMany
     {
         return $this->belongsToMany(WorkJob::class, 'user_work_job_applications', 'user_id', 'work_job_id')

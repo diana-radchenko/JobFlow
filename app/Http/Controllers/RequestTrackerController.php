@@ -11,7 +11,7 @@ class RequestTrackerController extends Controller
 {
     public function show(): Response
     {
-        $applications = UserWorkJobApplication::with(['workJob'])
+        $applications = UserWorkJobApplication::with(['workJob', 'interviewSession'])
             ->where('user_id', auth()->id())
             ->get();
 

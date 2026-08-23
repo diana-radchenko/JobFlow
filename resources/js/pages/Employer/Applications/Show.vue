@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getApplicationStatusColor } from '@/helpers/job-applications';
 import { stringForHuman } from '@/helpers/strings';
+import type { UserWorkJobApplication, WorkJob } from '@/types/laravel-models';
+import { store as scheduleInterviewRoute } from '@/actions/App/Http/Controllers/Employer/InterviewScheduleController';
+import { store as sendJobMessageRoute } from '@/actions/App/Http/Controllers/JobChatController';
 import applications from '@/routes/employer/applications';
 import jobs from '@/routes/employer/jobs';
-import type { UserWorkJobApplication, WorkJob } from '@/types/laravel-models';
 
 const props = defineProps<{
     job: WorkJob;
@@ -29,6 +31,64 @@ defineOptions({
 });
 
 const form = useForm({ status: props.application.status });
+const interviewParts = (value?: string | null, timezone = 'UTC') => {
+    if (!value) {
+return { date: '', time: '' };
+}
+
+    const parts = Object.fromEntries(
+        new Intl.DateTimeFormat('en-CA', {
+            timeZone: timezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23',
+        })
+            .formatToParts(new Date(value))
+            .map((part) => [part.type, part.value]),
+    );
+
+    return {
+        date: `${parts.year}-${parts.month}-${parts.day}`,
+        time: `${parts.hour}:${parts.minute}`,
+    };
+};
+const savedTimezone =
+    props.application.interview_session?.timezone ?? 'America/New_York';
+const savedInterview = interviewParts(
+    props.application.interview_session?.scheduled_at,
+    savedTimezone,
+);
+const interviewForm = useForm({
+    date: savedInterview.date,
+    time: savedInterview.time,
+    timezone: savedTimezone,
+    duration_minutes:
+        props.application.interview_session?.duration_minutes ?? 30,
+    employer_note: props.application.interview_session?.employer_note ?? '',
+});
+const timezones = [
+    'America/New_York',
+    'America/Chicago',
+    'America/Denver',
+    'America/Los_Angeles',
+    'Europe/London',
+    'Europe/Brussels',
+    'Europe/Moscow',
+    'Asia/Dubai',
+    'Asia/Singapore',
+    'Asia/Tokyo',
+];
+const scheduleInterview = () =>
+    interviewForm.post(
+        scheduleInterviewRoute([props.job.id, props.application.id]).url,
+        { preserveScroll: true },
+    );
+const messageForm = useForm({ body: '' });
+const sendMessage = () =>
+    messageForm.post(sendJobMessageRoute(props.application.id).url);
 
 const setStatus = (status: 'rejected' | 'interview_scheduled') => {
     form.status = status;
@@ -45,6 +105,12 @@ const formatDate = (date: string | null) =>
               day: 'numeric',
           })
         : '';
+const formatInterview = (date: string, timezone: string) =>
+    new Intl.DateTimeFormat(undefined, {
+        timeZone: timezone,
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(new Date(date));
 </script>
 
 <template>
@@ -305,18 +371,88 @@ const formatDate = (date: string | null) =>
             No resume was attached to this application.
         </p>
 
+        <Card
+            ><CardContent class="space-y-4 pt-6"
+                ><h2 class="text-lg font-semibold">Schedule an interview</h2>
+                <form
+                    class="grid gap-3 sm:grid-cols-2"
+                    @submit.prevent="scheduleInterview"
+                >
+                    <input
+                        v-model="interviewForm.date"
+                        required
+                        type="date"
+                        class="rounded-md border bg-background p-2"
+                    />
+                    <input
+                        v-model="interviewForm.time"
+                        required
+                        type="time"
+                        class="rounded-md border bg-background p-2"
+                    />
+                    <select
+                        v-model="interviewForm.timezone"
+                        class="rounded-md border bg-background p-2"
+                    >
+                        <option v-for="zone in timezones" :key="zone">
+                            {{ zone }}
+                        </option>
+                    </select>
+                    <select
+                        v-model="interviewForm.duration_minutes"
+                        class="rounded-md border bg-background p-2"
+                    >
+                        <option :value="30">30 minutes</option>
+                        <option :value="45">45 minutes</option>
+                        <option :value="60">60 minutes</option>
+                        <option :value="90">90 minutes</option>
+                    </select>
+                    <textarea
+                        v-model="interviewForm.employer_note"
+                        placeholder="Optional instructions"
+                        class="rounded-md border bg-background p-2 sm:col-span-2"
+                    />
+                    <Button type="submit" :disabled="interviewForm.processing"
+                        ><CalendarCheck class="mr-2 h-4 w-4" />{{
+                            props.application.interview_session
+                                ? 'Reschedule interview'
+                                : 'Schedule an interview'
+                        }}</Button
+                    >
+                </form>
+                <p
+                    v-if="props.application.interview_session?.scheduled_at"
+                    class="text-sm text-emerald-700"
+                >
+                    Interview scheduled:
+                    {{
+                        formatInterview(
+                            props.application.interview_session.scheduled_at,
+                            props.application.interview_session.timezone ??
+                                'UTC',
+                        )
+                    }}
+                    · {{ props.application.interview_session.timezone }}
+                </p>
+            </CardContent></Card
+        >
+
+        <Card
+            ><CardContent class="space-y-3 pt-6"
+                ><h2 class="font-semibold">Message candidate</h2>
+                <form class="flex gap-2" @submit.prevent="sendMessage">
+                    <input
+                        v-model="messageForm.body"
+                        required
+                        maxlength="5000"
+                        class="flex-1 rounded-md border bg-background p-2"
+                        placeholder="Write a message about this application"
+                    /><Button type="submit">Send</Button>
+                </form></CardContent
+            ></Card
+        >
+
         <div class="flex flex-wrap gap-3">
-            <Button
-                type="button"
-                :disabled="
-                    form.processing ||
-                    props.application.status === 'interview_scheduled'
-                "
-                @click="setStatus('interview_scheduled')"
-            >
-                <CalendarCheck class="mr-2 h-4 w-4" />
-                Schedule an Interview
-            </Button>
             <Button
                 type="button"
                 variant="destructive"
@@ -331,4 +467,3 @@ const formatDate = (date: string | null) =>
         </div>
     </div>
 </template>
-

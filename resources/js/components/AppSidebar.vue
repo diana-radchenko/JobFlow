@@ -11,6 +11,7 @@ import {
     Settings,
     Globe,
     LogOut,
+    MessageSquare,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -26,6 +27,8 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import type { NavItem } from '@/types';
+import { index as jobChatIndex } from '@/actions/App/Http/Controllers/JobChatController';
 import {
     dashboard,
     development,
@@ -37,7 +40,6 @@ import {
 } from '@/routes';
 import employerJobs from '@/routes/employer/jobs';
 import resumes from '@/routes/resumes';
-import type { NavItem } from '@/types';
 
 const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 
@@ -45,6 +47,7 @@ const dashboardUrl = dashboard();
 const requestTrackerUrl = requestTrackerRoute();
 const resumesUrl = resumes.index();
 const settingsUrl = '/settings';
+const jobChatUrl = jobChatIndex();
 
 const page = usePage();
 
@@ -54,6 +57,12 @@ const employerNavItems = computed<NavItem[]>(() => [
         href: employerJobs.index(),
         icon: BriefcaseBusiness,
         isActive: isCurrentOrParentUrl(employerJobs.index()),
+    },
+    {
+        title: 'Chat',
+        href: jobChatUrl,
+        icon: MessageSquare,
+        isActive: isCurrentOrParentUrl(jobChatUrl),
     },
     {
         title: 'Settings',
@@ -87,6 +96,12 @@ const candidateNavItems = computed<NavItem[]>(() => [
         href: requestTrackerUrl,
         icon: ClipboardList,
         isActive: isCurrentUrl(requestTrackerUrl),
+    },
+    {
+        title: 'Chat',
+        href: jobChatUrl,
+        icon: MessageSquare,
+        isActive: isCurrentOrParentUrl(jobChatUrl),
     },
     {
         title: 'Interview',

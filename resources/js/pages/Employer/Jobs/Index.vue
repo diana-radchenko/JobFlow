@@ -15,8 +15,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import employerJobs from '@/routes/employer/jobs';
 import type { WorkJob } from '@/types/laravel-models';
+import employerJobs from '@/routes/employer/jobs';
 
 defineOptions({
     layout: {
@@ -90,10 +90,13 @@ const formatDate = (date: string | null) =>
                     <div
                         class="flex flex-wrap gap-4 text-xs text-foreground/60"
                     >
-                        <span class="flex items-center gap-1">
+                        <Link
+                            :href="employerJobs.show(job.id)"
+                            class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-base font-bold text-primary-foreground shadow"
+                        >
                             <Users class="h-3.5 w-3.5" />
-                            {{ job.applications_count }} applications
-                        </span>
+                            Applicants {{ job.applications_count }}
+                        </Link>
                         <span>Updated {{ formatDate(job.updated_at) }}</span>
                     </div>
                     <div class="flex flex-wrap gap-2">
