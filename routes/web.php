@@ -105,6 +105,21 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
     Route::put('resume-editor/{resume}/leadership-activity/{leadershipActivity}', [ResumeEditorController::class, 'updateLeadershipActivity'])->name('resume-editor.leadership-activity.update');
     Route::delete('resume-editor/{resume}/leadership-activity/{leadershipActivity}', [ResumeEditorController::class, 'destroyLeadershipActivity'])->name('resume-editor.leadership-activity.destroy');
 
+    // Publications
+    Route::post('resume-editor/{resume}/publication', [ResumeEditorController::class, 'storePublication'])->name('resume-editor.publication.store');
+    Route::put('resume-editor/{resume}/publication/{publication}', [ResumeEditorController::class, 'updatePublication'])->name('resume-editor.publication.update');
+    Route::delete('resume-editor/{resume}/publication/{publication}', [ResumeEditorController::class, 'destroyPublication'])->name('resume-editor.publication.destroy');
+
+    // Awards & Honors
+    Route::post('resume-editor/{resume}/award-honor', [ResumeEditorController::class, 'storeAwardHonor'])->name('resume-editor.award-honor.store');
+    Route::put('resume-editor/{resume}/award-honor/{awardHonor}', [ResumeEditorController::class, 'updateAwardHonor'])->name('resume-editor.award-honor.update');
+    Route::delete('resume-editor/{resume}/award-honor/{awardHonor}', [ResumeEditorController::class, 'destroyAwardHonor'])->name('resume-editor.award-honor.destroy');
+
+    // Languages
+    Route::post('resume-editor/{resume}/language', [ResumeEditorController::class, 'storeLanguage'])->name('resume-editor.language.store');
+    Route::put('resume-editor/{resume}/language/{language}', [ResumeEditorController::class, 'updateLanguage'])->name('resume-editor.language.update');
+    Route::delete('resume-editor/{resume}/language/{language}', [ResumeEditorController::class, 'destroyLanguage'])->name('resume-editor.language.destroy');
+
     // Additional Info (per resume; new resumes start with a copy of the most recent one)
     Route::post('resume-editor/{resume}/additional-info', [ResumeEditorController::class, 'updateAdditionalInfo'])->name('resume-editor.additional-info.update');
 
@@ -138,3 +153,4 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
 });
 
 require __DIR__.'/settings.php';
+

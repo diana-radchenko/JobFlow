@@ -10,6 +10,9 @@ import {
     Zap,
     FileText,
     Sparkles,
+    BookMarked,
+    Languages,
+    Trophy,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 
@@ -67,10 +70,28 @@ const sections = computed(() => [
         description: 'Roles & activities',
     },
     {
+        id: 'publications',
+        label: 'Publications',
+        icon: BookMarked,
+        description: 'Your published work',
+    },
+    {
+        id: 'awardsHonors',
+        label: 'Awards & Honors',
+        icon: Trophy,
+        description: 'Recognition & distinctions',
+    },
+    {
+        id: 'languages',
+        label: 'Languages',
+        icon: Languages,
+        description: 'Languages & proficiency',
+    },
+    {
         id: 'additionalInfo',
         label: 'Additional Info',
         icon: Zap,
-        description: 'Languages & certifications',
+        description: 'Certifications & interests',
     },
     {
         id: 'summary',
@@ -120,3 +141,4 @@ const sections = computed(() => [
         </div>
     </div>
 </template>
+

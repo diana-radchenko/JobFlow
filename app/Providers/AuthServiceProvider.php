@@ -5,6 +5,9 @@ namespace App\Providers;
 use App\Models\AdditionalInformation;
 use App\Models\Education;
 use App\Models\LeadershipActivity;
+use App\Models\AwardHonor;
+use App\Models\Language;
+use App\Models\Publication;
 use App\Models\Project;
 use App\Models\Resume;
 use App\Models\Skill;
@@ -29,6 +32,9 @@ class AuthServiceProvider extends ServiceProvider
         Project::class => OwnedResourcePolicy::class,
         VolunteerExperience::class => OwnedResourcePolicy::class,
         LeadershipActivity::class => OwnedResourcePolicy::class,
+        Publication::class => OwnedResourcePolicy::class,
+        AwardHonor::class => OwnedResourcePolicy::class,
+        Language::class => OwnedResourcePolicy::class,
         AdditionalInformation::class => OwnedResourcePolicy::class,
         WorkJob::class => OwnedResourcePolicy::class,
         Resume::class => ResumePolicy::class,
@@ -42,3 +48,4 @@ class AuthServiceProvider extends ServiceProvider
         //
     }
 }
+

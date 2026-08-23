@@ -5,12 +5,18 @@ namespace App\Http\Controllers;
 use App\Enums\SkillsLevel;
 use App\Http\Requests\StoreEducationRequest;
 use App\Http\Requests\StoreLeadershipActivityRequest;
+use App\Http\Requests\StoreAwardHonorRequest;
+use App\Http\Requests\StoreLanguageRequest;
+use App\Http\Requests\StorePublicationRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\StoreVolunteerExperienceRequest;
 use App\Http\Requests\StoreWorkExperienceRequest;
 use App\Http\Requests\UpdatePersonalInfoRequest;
 use App\Models\Education;
 use App\Models\LeadershipActivity;
+use App\Models\AwardHonor;
+use App\Models\Language;
+use App\Models\Publication;
 use App\Models\Project;
 use App\Models\Resume;
 use App\Models\Skill;
@@ -34,6 +40,9 @@ class ResumeEditorController extends Controller
         'work-experience' => WorkExperience::class,
         'volunteer-experience' => VolunteerExperience::class,
         'leadership-activity' => LeadershipActivity::class,
+        'publication' => Publication::class,
+        'award-honor' => AwardHonor::class,
+        'language' => Language::class,
     ];
 
     public function show(Resume $resume): Response
@@ -249,6 +258,81 @@ class ResumeEditorController extends Controller
         return back()->with('success', 'Leadership activity deleted successfully.');
     }
 
+    public function storePublication(StorePublicationRequest $request, Resume $resume): RedirectResponse
+    {
+        $this->authorize('update', $resume);
+        $item = auth()->user()->publications()->create($request->validated());
+        $resume->publications()->attach($item->id, ['order' => $resume->publications()->count()]);
+
+        return back()->with('success', 'Publication added successfully.');
+    }
+
+    public function updatePublication(StorePublicationRequest $request, Resume $resume, Publication $publication): RedirectResponse
+    {
+        $this->authorize('update', $publication);
+        $publication->update($request->validated());
+
+        return back()->with('success', 'Publication updated successfully.');
+    }
+
+    public function destroyPublication(Resume $resume, Publication $publication): RedirectResponse
+    {
+        $this->authorize('delete', $publication);
+        $publication->delete();
+
+        return back()->with('success', 'Publication deleted successfully.');
+    }
+
+    public function storeAwardHonor(StoreAwardHonorRequest $request, Resume $resume): RedirectResponse
+    {
+        $this->authorize('update', $resume);
+        $item = auth()->user()->awardHonors()->create($request->validated());
+        $resume->awardHonors()->attach($item->id, ['order' => $resume->awardHonors()->count()]);
+
+        return back()->with('success', 'Award or honor added successfully.');
+    }
+
+    public function updateAwardHonor(StoreAwardHonorRequest $request, Resume $resume, AwardHonor $awardHonor): RedirectResponse
+    {
+        $this->authorize('update', $awardHonor);
+        $awardHonor->update($request->validated());
+
+        return back()->with('success', 'Award or honor updated successfully.');
+    }
+
+    public function destroyAwardHonor(Resume $resume, AwardHonor $awardHonor): RedirectResponse
+    {
+        $this->authorize('delete', $awardHonor);
+        $awardHonor->delete();
+
+        return back()->with('success', 'Award or honor deleted successfully.');
+    }
+
+    public function storeLanguage(StoreLanguageRequest $request, Resume $resume): RedirectResponse
+    {
+        $this->authorize('update', $resume);
+        $item = auth()->user()->languages()->create($request->validated());
+        $resume->languages()->attach($item->id, ['order' => $resume->languages()->count()]);
+
+        return back()->with('success', 'Language added successfully.');
+    }
+
+    public function updateLanguage(StoreLanguageRequest $request, Resume $resume, Language $language): RedirectResponse
+    {
+        $this->authorize('update', $language);
+        $language->update($request->validated());
+
+        return back()->with('success', 'Language updated successfully.');
+    }
+
+    public function destroyLanguage(Resume $resume, Language $language): RedirectResponse
+    {
+        $this->authorize('delete', $language);
+        $language->delete();
+
+        return back()->with('success', 'Language deleted successfully.');
+    }
+
     public function updateAdditionalInfo(Request $request, Resume $resume): RedirectResponse
     {
         $this->authorize('update', $resume);
@@ -321,6 +405,9 @@ class ResumeEditorController extends Controller
             'work-experience' => $resume->workExperiences(),
             'volunteer-experience' => $resume->volunteerExperiences(),
             'leadership-activity' => $resume->leadershipActivities(),
+            'publication' => $resume->publications(),
+            'award-honor' => $resume->awardHonors(),
+            'language' => $resume->languages(),
             default => abort(404),
         };
     }
@@ -364,6 +451,15 @@ class ResumeEditorController extends Controller
                 $user->leadershipActivities()->orderBy('start_date', 'desc')->get(),
                 $resume->leadershipActivities,
             ),
+            'publications' => $this->itemsWithInclusion(
+                $user->publications()->orderByDesc('publication_date')->get(),
+                $resume->publications,
+            ),
+            'awardHonors' => $this->itemsWithInclusion(
+                $user->awardHonors()->orderByDesc('awarded_date')->get(),
+                $resume->awardHonors,
+            ),
+            'languages' => $this->itemsWithInclusion($user->languages()->orderBy('name')->get(), $resume->languages),
             'additionalInfo' => $resume->additionalInformation?->only(['languages', 'certifications', 'interests', 'notes']),
             'aiMessages' => $this->aiMessages($resume),
             'showSummary' => $showSummary,
@@ -404,3 +500,4 @@ class ResumeEditorController extends Controller
         })->values()->all();
     }
 }
+

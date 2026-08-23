@@ -224,23 +224,68 @@ const formatDate = (date: string | null) =>
                     </div>
                 </div>
 
+                <div v-if="props.application.resume.publications.length">
+                    <h3 class="mb-2 font-medium text-foreground/80">
+                        Publications
+                    </h3>
+                    <div class="space-y-2">
+                        <div
+                            v-for="publication in props.application.resume
+                                .publications"
+                            :key="publication.id"
+                        >
+                            <p class="font-medium">{{ publication.title }}</p>
+                            <p
+                                v-if="publication.publisher"
+                                class="text-xs text-foreground/60"
+                            >
+                                {{ publication.publisher }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="props.application.resume.award_honors.length">
+                    <h3 class="mb-2 font-medium text-foreground/80">
+                        Awards &amp; Honors
+                    </h3>
+                    <div class="space-y-2">
+                        <div
+                            v-for="award in props.application.resume
+                                .award_honors"
+                            :key="award.id"
+                        >
+                            <p class="font-medium">{{ award.title }}</p>
+                            <p
+                                v-if="award.issuer"
+                                class="text-xs text-foreground/60"
+                            >
+                                {{ award.issuer }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="props.application.resume.languages.length">
+                    <h3 class="mb-2 font-medium text-foreground/80">
+                        Languages
+                    </h3>
+                    <p>
+                        {{
+                            props.application.resume.languages
+                                .map(
+                                    (language) =>
+                                        `${language.name} — ${language.proficiency}`,
+                                )
+                                .join(', ')
+                        }}
+                    </p>
+                </div>
+
                 <div v-if="props.application.resume.additional_information">
                     <h3 class="mb-2 font-medium text-foreground/80">
                         Additional Information
                     </h3>
-                    <p
-                        v-if="
-                            props.application.resume.additional_information
-                                .languages?.length
-                        "
-                    >
-                        Languages:
-                        {{
-                            props.application.resume.additional_information.languages.join(
-                                ', ',
-                            )
-                        }}
-                    </p>
                     <p
                         v-if="
                             props.application.resume.additional_information
@@ -286,3 +331,4 @@ const formatDate = (date: string | null) =>
         </div>
     </div>
 </template>
+

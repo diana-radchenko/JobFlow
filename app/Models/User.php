@@ -80,6 +80,21 @@ class User extends Authenticatable
         return $this->hasMany(LeadershipActivity::class);
     }
 
+    public function publications(): HasMany
+    {
+        return $this->hasMany(Publication::class);
+    }
+
+    public function awardHonors(): HasMany
+    {
+        return $this->hasMany(AwardHonor::class);
+    }
+
+    public function languages(): HasMany
+    {
+        return $this->hasMany(Language::class);
+    }
+
     public function additionalInformation(): HasOne
     {
         return $this->hasOne(AdditionalInformation::class);
@@ -110,3 +125,4 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 }
+

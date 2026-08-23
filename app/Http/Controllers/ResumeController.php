@@ -15,7 +15,7 @@ class ResumeController extends Controller
     public function index(): Response
     {
         $resumes = auth()->user()->resumes()
-            ->withCount(['skills', 'projects', 'educations', 'workExperiences', 'volunteerExperiences', 'leadershipActivities'])
+            ->withCount(['skills', 'projects', 'educations', 'workExperiences', 'volunteerExperiences', 'leadershipActivities', 'publications', 'awardHonors', 'languages'])
             ->orderByDesc('updated_at')
             ->get();
 
@@ -39,6 +39,9 @@ class ResumeController extends Controller
         $resume->workExperiences()->sync($this->orderedIds($user->workExperiences));
         $resume->volunteerExperiences()->sync($this->orderedIds($user->volunteerExperiences));
         $resume->leadershipActivities()->sync($this->orderedIds($user->leadershipActivities));
+        $resume->publications()->sync($this->orderedIds($user->publications));
+        $resume->awardHonors()->sync($this->orderedIds($user->awardHonors));
+        $resume->languages()->sync($this->orderedIds($user->languages));
 
         $this->copyLatestAdditionalInfo($user->id, $resume);
 
@@ -81,6 +84,9 @@ class ResumeController extends Controller
         $copy->workExperiences()->sync($this->pivotOrderIds($resume->workExperiences));
         $copy->volunteerExperiences()->sync($this->pivotOrderIds($resume->volunteerExperiences));
         $copy->leadershipActivities()->sync($this->pivotOrderIds($resume->leadershipActivities));
+        $copy->publications()->sync($this->pivotOrderIds($resume->publications));
+        $copy->awardHonors()->sync($this->pivotOrderIds($resume->awardHonors));
+        $copy->languages()->sync($this->pivotOrderIds($resume->languages));
 
         if ($resume->additionalInformation) {
             $copy->additionalInformation()->create([
@@ -127,3 +133,4 @@ class ResumeController extends Controller
         ]);
     }
 }
+
