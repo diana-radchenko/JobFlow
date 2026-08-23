@@ -110,6 +110,9 @@
     # Copy the application code, assets and dependencies from the build stage
     COPY --from=builder /var/www /var/www
     COPY --from=builder /var/www/public /var/www/public
+
+    # Preserve this image's compiled assets outside the persistent build volume.
+    RUN cp -a /var/www/public/build /var/www/public-build-image
     
     # Set working directory
     WORKDIR /var/www
@@ -167,3 +170,4 @@
 
     # Switch to the non-privileged user to run the application
     USER www-data
+
