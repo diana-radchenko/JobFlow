@@ -15,6 +15,7 @@ use App\Http\Controllers\ResumeEditorController;
 use App\Http\Controllers\ResumeSalaryAnalysisController;
 use App\Http\Controllers\ResumeScoreController;
 use App\Models\WorkJob;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -22,6 +23,22 @@ use Laravel\Fortify\Features;
 Route::inertia('/', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
+
+Route::get('/jobflow', function (Request $request) {
+    if (! $request->user()) {
+        return redirect()->guest(route('register', ['type' => UserRole::Candidate->value]));
+    }
+
+    return redirect()->to($request->user()->role()?->home() ?? route('home'));
+})->name('jobflow');
+
+Route::get('/hrflow', function (Request $request) {
+    if (! $request->user()) {
+        return redirect()->guest(route('register', ['type' => UserRole::Employer->value]));
+    }
+
+    return redirect()->to($request->user()->role()?->home() ?? route('home'));
+})->name('hrflow');
 
 Route::middleware(['auth', 'verified', 'role:'.UserRole::Employer->value])
     ->prefix('employer')
