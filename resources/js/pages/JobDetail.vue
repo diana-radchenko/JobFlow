@@ -17,6 +17,7 @@ import { getApplicationStatusColor } from '@/helpers/job-applications';
 import { stringForHuman } from '@/helpers/strings';
 import type { WorkJob } from '@/types/laravel-models';
 import type { UserWorkJobApplication } from '@/types/laravel-models';
+import { store as sendJobMessageRoute } from '@/actions/App/Http/Controllers/JobChatController';
 import { jobSelection as jobSelectionRoute } from '@/routes';
 import { apply as jobSelectionApply } from '@/routes/job-selection';
 
@@ -57,10 +58,10 @@ const handleApply = () => {
 const messageForm = useForm({ body: '' });
 const sendMessage = () => {
     if (!props.userApplication) {
-return;
-}
+        return;
+    }
 
-    messageForm.post(`/job-chat/applications/${props.userApplication.id}`, {
+    messageForm.post(sendJobMessageRoute(props.userApplication.id).url, {
         onSuccess: () => messageForm.reset(),
     });
 };

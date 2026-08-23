@@ -35,7 +35,6 @@ class JobController extends Controller
 
         return Inertia::render('Employer/Jobs/Show', [
             'job' => $job,
-            'jobOptions' => $this->jobOptions(),
             'applications' => $job->applications()
                 ->with('user:id,name,email')
                 ->orderByDesc('created_at')
@@ -49,6 +48,7 @@ class JobController extends Controller
 
         return Inertia::render('Employer/Jobs/Form', [
             'job' => $job,
+            'jobOptions' => $this->jobOptions(),
         ]);
     }
 

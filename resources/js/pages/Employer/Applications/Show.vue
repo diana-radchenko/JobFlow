@@ -6,6 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { getApplicationStatusColor } from '@/helpers/job-applications';
 import { stringForHuman } from '@/helpers/strings';
 import type { UserWorkJobApplication, WorkJob } from '@/types/laravel-models';
+import { store as scheduleInterviewRoute } from '@/actions/App/Http/Controllers/Employer/InterviewScheduleController';
+import { store as sendJobMessageRoute } from '@/actions/App/Http/Controllers/JobChatController';
 import applications from '@/routes/employer/applications';
 import jobs from '@/routes/employer/jobs';
 
@@ -29,19 +31,40 @@ defineOptions({
 });
 
 const form = useForm({ status: props.application.status });
+const interviewParts = (value?: string | null, timezone = 'UTC') => {
+    if (!value) {
+return { date: '', time: '' };
+}
+
+    const parts = Object.fromEntries(
+        new Intl.DateTimeFormat('en-CA', {
+            timeZone: timezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23',
+        })
+            .formatToParts(new Date(value))
+            .map((part) => [part.type, part.value]),
+    );
+
+    return {
+        date: `${parts.year}-${parts.month}-${parts.day}`,
+        time: `${parts.hour}:${parts.minute}`,
+    };
+};
+const savedTimezone =
+    props.application.interview_session?.timezone ?? 'America/New_York';
+const savedInterview = interviewParts(
+    props.application.interview_session?.scheduled_at,
+    savedTimezone,
+);
 const interviewForm = useForm({
-    date: props.application.interview_session?.scheduled_at?.slice(0, 10) ?? '',
-    time: props.application.interview_session?.scheduled_at
-        ? new Date(
-              props.application.interview_session.scheduled_at,
-          ).toLocaleTimeString('en-GB', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false,
-          })
-        : '',
-    timezone:
-        props.application.interview_session?.timezone ?? 'America/New_York',
+    date: savedInterview.date,
+    time: savedInterview.time,
+    timezone: savedTimezone,
     duration_minutes:
         props.application.interview_session?.duration_minutes ?? 30,
     employer_note: props.application.interview_session?.employer_note ?? '',
@@ -60,12 +83,12 @@ const timezones = [
 ];
 const scheduleInterview = () =>
     interviewForm.post(
-        `/employer/jobs/${props.job.id}/applications/${props.application.id}/interview`,
+        scheduleInterviewRoute([props.job.id, props.application.id]).url,
         { preserveScroll: true },
     );
 const messageForm = useForm({ body: '' });
 const sendMessage = () =>
-    messageForm.post(`/job-chat/applications/${props.application.id}`);
+    messageForm.post(sendJobMessageRoute(props.application.id).url);
 
 const setStatus = (status: 'rejected' | 'interview_scheduled') => {
     form.status = status;
@@ -82,6 +105,12 @@ const formatDate = (date: string | null) =>
               day: 'numeric',
           })
         : '';
+const formatInterview = (date: string, timezone: string) =>
+    new Intl.DateTimeFormat(undefined, {
+        timeZone: timezone,
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(new Date(date));
 </script>
 
 <template>
@@ -397,9 +426,11 @@ const formatDate = (date: string | null) =>
                 >
                     Interview scheduled:
                     {{
-                        new Date(
+                        formatInterview(
                             props.application.interview_session.scheduled_at,
-                        ).toLocaleString()
+                            props.application.interview_session.timezone ??
+                                'UTC',
+                        )
                     }}
                     · {{ props.application.interview_session.timezone }}
                 </p>

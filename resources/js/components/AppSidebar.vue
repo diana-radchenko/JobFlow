@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import type { NavItem } from '@/types';
+import { index as jobChatIndex } from '@/actions/App/Http/Controllers/JobChatController';
 import {
     dashboard,
     development,
@@ -46,6 +47,7 @@ const dashboardUrl = dashboard();
 const requestTrackerUrl = requestTrackerRoute();
 const resumesUrl = resumes.index();
 const settingsUrl = '/settings';
+const jobChatUrl = jobChatIndex();
 
 const page = usePage();
 
@@ -58,9 +60,9 @@ const employerNavItems = computed<NavItem[]>(() => [
     },
     {
         title: 'Chat',
-        href: '/job-chat',
+        href: jobChatUrl,
         icon: MessageSquare,
-        isActive: isCurrentOrParentUrl('/job-chat'),
+        isActive: isCurrentOrParentUrl(jobChatUrl),
     },
     {
         title: 'Settings',
@@ -97,9 +99,9 @@ const candidateNavItems = computed<NavItem[]>(() => [
     },
     {
         title: 'Chat',
-        href: '/job-chat',
+        href: jobChatUrl,
         icon: MessageSquare,
-        isActive: isCurrentOrParentUrl('/job-chat'),
+        isActive: isCurrentOrParentUrl(jobChatUrl),
     },
     {
         title: 'Interview',

@@ -73,7 +73,20 @@ test('salary comparison normalizes contextual and synonymous title words', funct
     }
     $result = app(SalaryMarketComparisonService::class)->compare('Coding Instructor', 'Education & Training', 'Junior');
     expect(app(JobTitleNormalizer::class)->similarity('Summer Camp Coding Instructor', 'Programming Instructor'))->toBeGreaterThan(0)
-        ->and($result['sufficient'])->toBeTrue()->and($result['count'])->toBe(3);
+        ->and($result['sufficient'])->toBeTrue()->and($result['count'])->toBe(3)
+        ->and($result['currency'])->toBe('USD')->and($result['period'])->toBe('year');
+});
+
+test('salary comparison never combines different currencies or salary periods', function () {
+    $employer = User::factory()->employer()->create();
+    foreach ([40000, 50000] as $salary) {
+        WorkJob::factory()->for($employer, 'employer')->create(['title' => 'Coding Instructor', 'industry' => 'Education & Training', 'position_level' => 'Junior', 'status' => 'published', 'salary_start' => $salary, 'salary_end' => $salary + 10000, 'salary_currency' => 'USD', 'salary_period' => 'year']);
+    }
+    WorkJob::factory()->for($employer, 'employer')->create(['title' => 'Programming Instructor', 'industry' => 'Education & Training', 'position_level' => 'Junior', 'status' => 'published', 'salary_start' => 25, 'salary_end' => 35, 'salary_currency' => 'EUR', 'salary_period' => 'hour']);
+
+    $result = app(SalaryMarketComparisonService::class)->compare('Coding Instructor', 'Education & Training', 'Junior');
+
+    expect($result['count'])->toBe(2)->and($result['currency'])->toBe('USD')->and($result['period'])->toBe('year')->and($result['minimum'])->toBe(40000.0);
 });
 
 test('dashboard recommendations contain only real published employer jobs', function () {

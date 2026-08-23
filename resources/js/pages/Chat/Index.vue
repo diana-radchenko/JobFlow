@@ -3,6 +3,10 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+    index as jobChatIndex,
+    store as sendJobMessageRoute,
+} from '@/actions/App/Http/Controllers/JobChatController';
 
 type Message = {
     id: number;
@@ -46,7 +50,7 @@ const send = () => {
         return;
     }
 
-    form.post(`/job-chat/applications/${selected.value.application_id}`, {
+    form.post(sendJobMessageRoute(selected.value.application_id).url, {
         preserveScroll: true,
         onSuccess: () => form.reset(),
     });
@@ -67,7 +71,11 @@ const send = () => {
                 <Link
                     v-for="conversation in filtered"
                     :key="conversation.id"
-                    :href="`/job-chat?conversation=${conversation.id}`"
+                    :href="
+                        jobChatIndex({
+                            query: { conversation: conversation.id },
+                        }).url
+                    "
                     class="block rounded-xl border p-3 hover:bg-accent"
                 >
                     <div class="flex justify-between font-semibold">

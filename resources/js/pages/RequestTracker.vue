@@ -57,6 +57,13 @@ const props = defineProps<{
     applications: UserWorkJobApplication[] | null;
 }>();
 
+const formatInterview = (date: string, timezone: string | null) =>
+    new Intl.DateTimeFormat(undefined, {
+        timeZone: timezone ?? 'UTC',
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(new Date(date));
+
 const removingApplicationId = ref<number | null>(null);
 const deleteDialogOpen = ref(false);
 const applicationPendingDelete = ref<TrackerRow | null>(null);
@@ -286,9 +293,10 @@ const viewedStats = computed(() => {
                                 >
                                     Interview:
                                     {{
-                                        new Date(
+                                        formatInterview(
                                             app.interview.scheduled_at,
-                                        ).toLocaleString()
+                                            app.interview.timezone,
+                                        )
                                     }}
                                     · {{ app.interview.timezone }} ·
                                     {{ app.interview.status }}
