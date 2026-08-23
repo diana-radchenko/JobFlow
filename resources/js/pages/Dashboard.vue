@@ -365,10 +365,19 @@ const selectMonth = (date: Date) => {
     viewMode.value = 'month';
 };
 
-const localDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const localDateKey = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 const sessionDateKey = (session: InterviewSession) => {
-    const parts = new Intl.DateTimeFormat('en-US', { timeZone: session.timezone ?? 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(session.scheduled_at!));
-    const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: session.timezone ?? 'UTC',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).formatToParts(new Date(session.scheduled_at!));
+    const value = Object.fromEntries(
+        parts.map((part) => [part.type, part.value]),
+    );
+
     return `${value.year}-${value.month}-${value.day}`;
 };
 
@@ -402,7 +411,11 @@ const timelineEvents = computed(() => {
         sessionsByDay.value.get(localDateKey(selectedDate.value)) || [];
 
     return sessions.map((session) => {
-        const time = new Intl.DateTimeFormat(undefined, { timeZone: session.timezone ?? 'UTC', hour: '2-digit', minute: '2-digit' }).format(new Date(session.scheduled_at!));
+        const time = new Intl.DateTimeFormat(undefined, {
+            timeZone: session.timezone ?? 'UTC',
+            hour: '2-digit',
+            minute: '2-digit',
+        }).format(new Date(session.scheduled_at!));
 
         return {
             time,
@@ -413,12 +426,20 @@ const timelineEvents = computed(() => {
     });
 });
 
-const interviewTooltip = (date: Date) => (sessionsByDay.value.get(localDateKey(date)) ?? []).map((session) => {
-    const time = new Intl.DateTimeFormat(undefined, { timeZone: session.timezone ?? 'UTC', hour: '2-digit', minute: '2-digit' }).format(new Date(session.scheduled_at!));
-    return `${time} (${session.timezone ?? 'UTC'})\n${session.work_job?.company ?? 'Employer'}\n${session.work_job?.title ?? 'Interview'}`;
-}).join('\n\n');
+const interviewTooltip = (date: Date) =>
+    (sessionsByDay.value.get(localDateKey(date)) ?? [])
+        .map((session) => {
+            const time = new Intl.DateTimeFormat(undefined, {
+                timeZone: session.timezone ?? 'UTC',
+                hour: '2-digit',
+                minute: '2-digit',
+            }).format(new Date(session.scheduled_at!));
 
-const aiJobsMock = computed(() =>
+            return `${time} (${session.timezone ?? 'UTC'})\n${session.work_job?.company ?? 'Employer'}\n${session.work_job?.title ?? 'Interview'}`;
+        })
+        .join('\n\n');
+
+const recommendedJobs = computed(() =>
     props.recommendedJobs.map(({ job, score, reasons }) => ({
         id: job.id,
         url: jobSelectionShow(job.id).url,
@@ -434,30 +455,30 @@ const aiJobsMock = computed(() =>
     })),
 );
 
-type AiJobMock = (typeof aiJobsMock.value)[number];
+type RecommendedJob = (typeof recommendedJobs.value)[number];
 
 const jobScores = reactive<Record<number, ResumeScoreResult>>({});
 const scoringJobId = ref<number | null>(null);
 const scoreErrors = reactive<Record<number, string>>({});
 
 const resumePickerOpen = ref(false);
-const resumePickerJob = ref<AiJobMock | null>(null);
+const resumePickerJob = ref<RecommendedJob | null>(null);
 
 const recommendationsOpen = ref(false);
-const recommendationsJob = ref<AiJobMock | null>(null);
+const recommendationsJob = ref<RecommendedJob | null>(null);
 const activeRecommendations = computed<ResumeScoreResult | null>(() =>
     recommendationsJob.value
         ? (jobScores[recommendationsJob.value.id] ?? null)
         : null,
 );
 
-const scoreLabel = (job: AiJobMock) => {
+const scoreLabel = (job: RecommendedJob) => {
     const result = jobScores[job.id];
 
     return result ? `${result.score}/100` : 'Not scored yet';
 };
 
-const scoreButtonLabel = (job: AiJobMock) => {
+const scoreButtonLabel = (job: RecommendedJob) => {
     if (scoringJobId.value === job.id) {
         return 'SCORING…';
     }
@@ -465,7 +486,7 @@ const scoreButtonLabel = (job: AiJobMock) => {
     return jobScores[job.id] ? 'RESULT' : 'SCORE RESUME';
 };
 
-const scoreResumeForJob = async (job: AiJobMock, resumeId: number) => {
+const scoreResumeForJob = async (job: RecommendedJob, resumeId: number) => {
     scoringJobId.value = job.id;
     delete scoreErrors[job.id];
 
@@ -502,7 +523,7 @@ const scoreResumeForJob = async (job: AiJobMock, resumeId: number) => {
     }
 };
 
-const startScoring = (job: AiJobMock) => {
+const startScoring = (job: RecommendedJob) => {
     if (props.resumes.length === 0) {
         router.visit('/resumes');
 
@@ -519,7 +540,7 @@ const startScoring = (job: AiJobMock) => {
     resumePickerOpen.value = true;
 };
 
-const onScoreResume = (job: AiJobMock) => {
+const onScoreResume = (job: RecommendedJob) => {
     if (scoringJobId.value !== null) {
         return;
     }
@@ -534,7 +555,7 @@ const onScoreResume = (job: AiJobMock) => {
     startScoring(job);
 };
 
-const onRescoreResume = (job: AiJobMock) => {
+const onRescoreResume = (job: RecommendedJob) => {
     if (scoringJobId.value !== null) {
         return;
     }
@@ -1063,7 +1084,7 @@ const articlesMock = [
                         </div>
                         <div class="space-y-4">
                             <p
-                                v-if="aiJobsMock.length === 0"
+                                v-if="recommendedJobs.length === 0"
                                 class="rounded-2xl border border-dashed p-5 text-sm text-slate-500"
                             >
                                 No published employer vacancies are available
@@ -1071,7 +1092,7 @@ const articlesMock = [
                                 employers publish matching jobs.
                             </p>
                             <Card
-                                v-for="job in aiJobsMock"
+                                v-for="job in recommendedJobs"
                                 :key="job.id"
                                 class="rounded-[24px] border border-slate-200/60 bg-slate-50 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900"
                             >

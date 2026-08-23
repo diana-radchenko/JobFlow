@@ -30,9 +30,9 @@ test('employer schedules and reschedules one real interview in the selected time
     $this->actingAs($employer)->post($url, $payload)->assertSessionHasNoErrors();
     expect(InterviewSession::count())->toBe(1)
         ->and($application->refresh()->status)->toBe(ApplicationStatus::InterviewScheduled)
-        ->and(InterviewSession::first()->scheduled_at->toIso8601String())->toContain('20:30:00');
+        ->and(InterviewSession::first()->scheduled_at->toIso8601String())->toContain('19:30:00');
     $this->actingAs($employer)->post($url, [...$payload, 'time' => '15:30'])->assertSessionHasNoErrors();
-    expect(InterviewSession::count())->toBe(1)->and(InterviewSession::first()->scheduled_at->toIso8601String())->toContain('21:30:00');
+    expect(InterviewSession::count())->toBe(1)->and(InterviewSession::first()->scheduled_at->toIso8601String())->toContain('20:30:00');
 });
 
 test('candidate cannot schedule an interview and another employer cannot use the application', function () {

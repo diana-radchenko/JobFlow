@@ -20,7 +20,7 @@ test('authenticated users can visit the job selection page', function () {
 test('a candidate can apply to a job with one of their resumes', function () {
     $user = User::factory()->create();
     $resume = Resume::create(['user_id' => $user->id, 'title' => 'My Resume']);
-    $job = WorkJob::factory()->create();
+    $job = WorkJob::factory()->for(User::factory()->employer()->create(), 'employer')->create();
 
     $this->actingAs($user)
         ->post(route('job-selection.apply', $job), ['resume_id' => $resume->id])
@@ -32,7 +32,7 @@ test('a candidate can apply to a job with one of their resumes', function () {
 
 test('a candidate cannot apply without selecting a resume', function () {
     $user = User::factory()->create();
-    $job = WorkJob::factory()->create();
+    $job = WorkJob::factory()->for(User::factory()->employer()->create(), 'employer')->create();
 
     $this->actingAs($user)
         ->post(route('job-selection.apply', $job), [])
@@ -42,7 +42,7 @@ test('a candidate cannot apply without selecting a resume', function () {
 test('a candidate cannot apply with another user\'s resume', function () {
     $user = User::factory()->create();
     $otherResume = Resume::create(['user_id' => User::factory()->create()->id, 'title' => 'Not Mine']);
-    $job = WorkJob::factory()->create();
+    $job = WorkJob::factory()->for(User::factory()->employer()->create(), 'employer')->create();
 
     $this->actingAs($user)
         ->post(route('job-selection.apply', $job), ['resume_id' => $otherResume->id])
