@@ -6,6 +6,9 @@ import AlertError from '@/components/AlertError.vue';
 import AdditionalInfoForm from '@/components/ResumeEditor/AdditionalInfoForm.vue';
 import EducationForm from '@/components/ResumeEditor/EducationForm.vue';
 import LeadershipForm from '@/components/ResumeEditor/LeadershipForm.vue';
+import AwardsHonorsForm from '@/components/ResumeEditor/AwardsHonorsForm.vue';
+import LanguagesForm from '@/components/ResumeEditor/LanguagesForm.vue';
+import PublicationsForm from '@/components/ResumeEditor/PublicationsForm.vue';
 import PersonalInfoForm from '@/components/ResumeEditor/PersonalInfoForm.vue';
 import ProjectsForm from '@/components/ResumeEditor/ProjectsForm.vue';
 import ResumeAiAnalysis from '@/components/ResumeEditor/ResumeAiAnalysis.vue';
@@ -45,6 +48,9 @@ const sectionComponents: Record<string, any> = {
     projects: ProjectsForm,
     volunteer: VolunteerForm,
     leadership: LeadershipForm,
+    publications: PublicationsForm,
+    awardsHonors: AwardsHonorsForm,
+    languages: LanguagesForm,
     additionalInfo: AdditionalInfoForm,
     summary: ResumeSummary,
     aiAnalysis: ResumeAiAnalysis,
@@ -107,6 +113,9 @@ const currentComponent = computed(() => {
                     :projects="props.projects"
                     :volunteer-experiences="props.volunteerExperiences"
                     :leadership-activities="props.leadershipActivities"
+                    :publications="props.publications"
+                    :award-honors="props.awardHonors"
+                    :languages="props.languages"
                     :additional-info="props.additionalInfo"
                     :ai-messages="props.aiMessages"
                     @next-section="currentSection = $event"
@@ -115,3 +124,4 @@ const currentComponent = computed(() => {
         </div>
     </div>
 </template>
+
