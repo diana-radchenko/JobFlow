@@ -137,6 +137,26 @@ export type LeadershipActivity = {
     order?: number | null;
 };
 
+export type Publication = {
+    id: number; user_id: number; title: string; publisher: string | null;
+    publication_date: string | null; url: string | null; description: string | null;
+    created_at: string | null; updated_at: string | null; user: User;
+    included?: boolean; order?: number | null;
+};
+
+export type AwardHonor = {
+    id: number; user_id: number; title: string; issuer: string | null;
+    awarded_date: string | null; description: string | null;
+    created_at: string | null; updated_at: string | null; user: User;
+    included?: boolean; order?: number | null;
+};
+
+export type Language = {
+    id: number; user_id: number; name: string; proficiency: string;
+    created_at: string | null; updated_at: string | null; user: User;
+    included?: boolean; order?: number | null;
+};
+
 export type Resume = {
     // columns
     id: number;
@@ -152,6 +172,9 @@ export type Resume = {
     work_experiences: WorkExperience[];
     volunteer_experiences: VolunteerExperience[];
     leadership_activities: LeadershipActivity[];
+    publications: Publication[];
+    award_honors: AwardHonor[];
+    languages: Language[];
     additional_information: AdditionalInformation;
     // counts
     skills_count: number;
@@ -160,6 +183,9 @@ export type Resume = {
     work_experiences_count: number;
     volunteer_experiences_count: number;
     leadership_activities_count: number;
+    publications_count: number;
+    award_honors_count: number;
+    languages_count: number;
     // exists
     user_exists: boolean;
     additional_information_exists: boolean;
@@ -202,6 +228,9 @@ export type User = {
     work_experiences: WorkExperience[];
     skills: Skill[];
     projects: Project[];
+    publications: Publication[];
+    award_honors: AwardHonor[];
+    languages: Language[];
     additional_information: AdditionalInformation;
     applications: UserWorkJobApplication[];
     applied_jobs: WorkJob[];
@@ -212,6 +241,9 @@ export type User = {
     work_experiences_count: number;
     skills_count: number;
     projects_count: number;
+    publications_count: number;
+    award_honors_count: number;
+    languages_count: number;
     applications_count: number;
     applied_jobs_count: number;
     notifications_count: number;
@@ -330,3 +362,4 @@ export type SkillsLevel =
     (typeof SkillsLevelEnum)[keyof typeof SkillsLevelEnum];
 export type ApplicationStatus =
     (typeof ApplicationStatusEnum)[keyof typeof ApplicationStatusEnum];
+
