@@ -5,6 +5,8 @@ const password = 'FlowTest!2026';
 const runId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const candidateEmail = `candidate-${runId}@example.test`;
 const employerEmail = `employer-${runId}@example.test`;
+const candidateSwitchEmail = `candidate-switch-${runId}@example.test`;
+const employerSwitchEmail = `employer-switch-${runId}@example.test`;
 
 async function register(
     page: Page,
@@ -91,7 +93,8 @@ test.describe.serial('JobFlow and HRFlow module routing', () => {
         const context = await browser.newContext();
         const page = await context.newPage();
 
-        await login(page, 'candidate', candidateEmail);
+        await register(page, 'candidate', candidateSwitchEmail);
+        await expect(page).toHaveURL(/\/resumes(?:\?.*)?$/);
         await page.goto('/hrflow');
 
         await expect(page).toHaveURL(/\/hrflow$/);
@@ -123,7 +126,8 @@ test.describe.serial('JobFlow and HRFlow module routing', () => {
         const context = await browser.newContext();
         const page = await context.newPage();
 
-        await login(page, 'employer', employerEmail);
+        await register(page, 'employer', employerSwitchEmail);
+        await expect(page).toHaveURL(/\/employer\/jobs(?:\?.*)?$/);
         await page.goto('/jobflow');
 
         await expect(page).toHaveURL(/\/jobflow$/);
