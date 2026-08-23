@@ -23,6 +23,7 @@ defineProps<{
     status?: string;
     canResetPassword: boolean;
     canRegister: boolean;
+    accountType?: 'candidate' | 'employer';
 }>();
 </script>
 
@@ -105,7 +106,13 @@ defineProps<{
             v-if="canRegister"
         >
             Don't have an account?
-            <TextLink :href="register()" :tabindex="5">Sign up</TextLink>
+            <TextLink
+                :href="
+                    accountType ? `/register?type=${accountType}` : register()
+                "
+                :tabindex="5"
+                >Sign up</TextLink
+            >
         </div>
     </Form>
 </template>

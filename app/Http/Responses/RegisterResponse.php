@@ -19,6 +19,8 @@ class RegisterResponse implements RegisterResponseContract
      */
     public function toResponse($request)
     {
+        $request->session()->forget('module_entry');
+
         return $request->wantsJson()
             ? new JsonResponse('', 201)
             : redirect()->intended($request->user()?->role()?->home() ?? Fortify::redirects('register'));

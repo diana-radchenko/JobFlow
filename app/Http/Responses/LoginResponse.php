@@ -19,6 +19,16 @@ class LoginResponse implements LoginResponseContract
      */
     public function toResponse($request)
     {
+        $module = $request->session()->pull('module_entry');
+        $expectedRole = $module === 'hrflow' ? 'employer' : ($module === 'jobflow' ? 'candidate' : null);
+
+        if ($expectedRole && $request->user()?->role()?->value !== $expectedRole) {
+            return redirect()->route($module)->with(
+                'module_error',
+                "This account belongs to the {$request->user()?->role()?->value} workspace. Sign in with a {$expectedRole} account or create one.",
+            );
+        }
+
         return $request->wantsJson()
             ? response()->json(['two_factor' => false])
             : redirect()->intended($request->user()?->role()?->home() ?? Fortify::redirects('login'));
