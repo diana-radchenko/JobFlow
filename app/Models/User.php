@@ -50,6 +50,11 @@ class User extends Authenticatable
         return $this->hasOne(UserProfile::class);
     }
 
+    public function employerProfile(): HasOne
+    {
+        return $this->hasOne(EmployerProfile::class);
+    }
+
     public function educations(): HasMany
     {
         return $this->hasMany(Education::class);

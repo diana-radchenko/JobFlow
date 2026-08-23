@@ -38,7 +38,7 @@ test('new users can register', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('resumes.index', absolute: false));
+    $response->assertRedirect(route('jobflow', absolute: false));
 
     $this->assertDatabaseHas('users', [
         'email' => 'test@example.com',
@@ -46,6 +46,8 @@ test('new users can register', function () {
     ]);
 
     expect(User::firstWhere('email', 'test@example.com')->hasRole(UserRole::Candidate->value))->toBeTrue();
+    expect(User::firstWhere('email', 'test@example.com')->resumes()->exists())->toBeFalse();
+    expect(User::firstWhere('email', 'test@example.com')->employerProfile()->exists())->toBeFalse();
 });
 
 test('employers register with the employer role and land on their job list', function () {
@@ -57,9 +59,22 @@ test('employers register with the employer role and land on their job list', fun
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('employer.jobs.index', absolute: false));
+    $response->assertRedirect(route('hrflow', absolute: false));
 
     expect(User::firstWhere('email', 'employer@example.com')->hasRole(UserRole::Employer->value))->toBeTrue();
+    expect(User::firstWhere('email', 'employer@example.com')->resumes()->exists())->toBeFalse();
+    expect(User::firstWhere('email', 'employer@example.com')->employerProfile()->exists())->toBeTrue();
+});
+
+test('an account type query cannot change an authenticated users stored role', function () {
+    $candidate = User::factory()->create();
+
+    $this->actingAs($candidate)
+        ->get(route('register', ['type' => UserRole::Employer->value]))
+        ->assertRedirect(route('hrflow', ['intent' => 'register']));
+
+    expect($candidate->fresh()->hasRole(UserRole::Candidate->value))->toBeTrue()
+        ->and($candidate->fresh()->hasRole(UserRole::Employer->value))->toBeFalse();
 });
 
 test('registration requires a known account type', function (?string $accountType) {

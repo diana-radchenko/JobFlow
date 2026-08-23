@@ -77,7 +77,8 @@ class FortifyServiceProvider extends ServiceProvider
 
         // ?type=employer comes from the landing page's HRFlow call to action.
         Fortify::registerView(fn (Request $request) => Inertia::render('auth/Register', [
-            'accountType' => UserRole::tryFrom((string) $request->query('type'))?->value ?? UserRole::Candidate->value,
+            'accountType' => UserRole::tryFrom((string) $request->old('account_type', $request->query('type')))?->value
+                ?? UserRole::Candidate->value,
         ]));
 
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/TwoFactorChallenge'));

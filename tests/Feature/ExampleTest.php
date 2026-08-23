@@ -1,7 +1,7 @@
 <?php
 
-test('returns a successful response', function () {
+test('starts guests in candidate registration', function () {
     $response = $this->get(route('home'));
 
-    $response->assertOk();
+    $response->assertRedirect(route('register', ['type' => 'candidate']));
 });

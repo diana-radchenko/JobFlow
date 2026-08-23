@@ -35,6 +35,10 @@ class CreateNewUser implements CreatesNewUsers
 
         $user->assignRole($input['account_type']);
 
+        if ($input['account_type'] === UserRole::Employer->value) {
+            $user->employerProfile()->create();
+        }
+
         return $user;
     }
 }

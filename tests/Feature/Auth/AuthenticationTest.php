@@ -19,7 +19,35 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('resumes.index', absolute: false));
+    $response->assertRedirect(route('jobflow', absolute: false));
+});
+
+test('employers authenticate into HRFlow', function () {
+    $employer = User::factory()->employer()->create();
+
+    $this->post(route('login.store'), [
+        'email' => $employer->email,
+        'password' => 'password',
+    ])->assertRedirect(route('hrflow', absolute: false));
+
+    $this->assertAuthenticatedAs($employer);
+});
+
+test('authenticated candidate requesting employer login sees the safe HRFlow entry', function () {
+    $candidate = User::factory()->create();
+
+    $this->actingAs($candidate)
+        ->get(route('login', ['type' => 'employer']))
+        ->assertRedirect(route('hrflow', ['intent' => 'login']));
+
+    $this->actingAs($candidate)
+        ->get(route('hrflow', ['intent' => 'login']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('auth/ModuleEntry')
+            ->where('currentRole', 'candidate')
+            ->where('targetRole', 'employer')
+            ->where('showRegistration', false));
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {

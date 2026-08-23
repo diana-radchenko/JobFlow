@@ -7,8 +7,10 @@ defineProps<{
     moduleName: 'JobFlow' | 'HRFlow';
     targetRole: 'candidate' | 'employer';
     currentRole: 'candidate' | 'employer';
+    returnUrl: string;
     loginUrl: string;
     registerUrl: string;
+    showRegistration: boolean;
     status?: string;
 }>();
 
@@ -44,20 +46,34 @@ defineOptions({
             </div>
             <h1 class="text-2xl font-semibold">Continue to {{ moduleName }}</h1>
             <p class="mt-3 text-sm leading-6 text-muted-foreground">
-                You are currently signed in with a {{ currentRole }} account. To
-                keep both workspaces separate, continue with a
+                You are currently signed in with
+                {{ currentRole === 'employer' ? 'an' : 'a' }}
+                {{ currentRole }} account. To keep both workspaces separate,
+                continue with {{ targetRole === 'employer' ? 'an' : 'a' }}
                 {{ targetRole }} account. Your current account and its data will
                 not be changed.
             </p>
         </div>
 
+        <Button as-child variant="outline" class="w-full">
+            <a :href="returnUrl">
+                Return to
+                {{ currentRole === 'candidate' ? 'JobFlow' : 'HRFlow' }}
+            </a>
+        </Button>
+
         <Form :action="loginUrl" method="post" v-slot="{ processing }">
             <Button type="submit" class="w-full" :disabled="processing">
-                Sign in to {{ moduleName }}
+                Sign Out and Continue to {{ moduleName }}
             </Button>
         </Form>
 
-        <Form :action="registerUrl" method="post" v-slot="{ processing }">
+        <Form
+            v-if="showRegistration"
+            :action="registerUrl"
+            method="post"
+            v-slot="{ processing }"
+        >
             <Button
                 type="submit"
                 variant="outline"

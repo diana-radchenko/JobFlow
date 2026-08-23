@@ -11,6 +11,17 @@ use Inertia\Response;
 
 class ModuleEntryController extends Controller
 {
+    public function home(Request $request): RedirectResponse
+    {
+        $role = $request->user()?->role();
+
+        if (! $role) {
+            return redirect()->route('register', ['type' => UserRole::Candidate->value]);
+        }
+
+        return redirect()->route($role === UserRole::Employer ? 'hrflow' : 'jobflow');
+    }
+
     public function jobflow(Request $request): RedirectResponse|Response
     {
         return $this->enter($request, 'jobflow', UserRole::Candidate);
@@ -56,6 +67,8 @@ class ModuleEntryController extends Controller
             'loginUrl' => route('module-entry.switch', [$module, 'login']),
             'registerUrl' => route('module-entry.switch', [$module, 'register']),
             'currentRole' => $userRole->value,
+            'returnUrl' => route($userRole === UserRole::Employer ? 'hrflow' : 'jobflow'),
+            'showRegistration' => $request->query('intent') !== 'login',
             'status' => $request->session()->get('module_error'),
         ]);
     }

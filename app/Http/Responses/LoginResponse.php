@@ -4,7 +4,6 @@ namespace App\Http\Responses;
 
 use Illuminate\Http\Request;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
-use Laravel\Fortify\Fortify;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -31,6 +30,6 @@ class LoginResponse implements LoginResponseContract
 
         return $request->wantsJson()
             ? response()->json(['two_factor' => false])
-            : redirect()->intended($request->user()?->role()?->home() ?? Fortify::redirects('login'));
+            : redirect()->route($request->user()?->role()?->value === 'employer' ? 'hrflow' : 'jobflow');
     }
 }
