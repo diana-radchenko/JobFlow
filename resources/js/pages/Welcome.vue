@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { register } from '@/routes';
 
 withDefaults(
     defineProps<{
@@ -231,12 +230,14 @@ const mobileMenuOpen = ref(false);
                                 </h2>
                                 <div class="h-px w-full bg-white/20"></div>
                             </div>
-                            <Link
-                                :href="register()"
+                            <a
+                                href="/jobflow"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 class="inline-flex h-10 items-center justify-center rounded-full bg-white px-6 text-xs font-bold tracking-wide text-black uppercase transition-transform hover:scale-103 active:scale-95 [@media(max-width:1179px)]:h-10 [@media(max-width:1179px)]:px-6 [@media(max-width:1179px)]:text-xs"
                             >
                                 Find your perfect job
-                            </Link>
+                            </a>
                         </div>
 
                         <!-- HRFlow -->
@@ -251,14 +252,14 @@ const mobileMenuOpen = ref(false);
                                 </h2>
                                 <div class="h-px w-full bg-white/20"></div>
                             </div>
-                            <Link
-                                :href="
-                                    register({ query: { type: 'employer' } })
-                                "
+                            <a
+                                href="/hrflow"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 class="inline-flex h-10 items-center justify-center rounded-full bg-white px-6 text-xs font-bold tracking-wide text-black uppercase transition-transform hover:scale-103 active:scale-95 [@media(max-width:1179px)]:h-10 [@media(max-width:1179px)]:px-6 [@media(max-width:1179px)]:text-xs"
                             >
                                 Manage your best team
-                            </Link>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -301,3 +302,4 @@ const mobileMenuOpen = ref(false);
         </footer> -->
     </div>
 </template>
+
