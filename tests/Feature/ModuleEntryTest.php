@@ -15,7 +15,6 @@ test('anonymous visitors enter HRFlow through employer registration', function (
 
 test('candidate is sent to the candidate area from either module entry', function (string $routeName) {
     $candidate = User::factory()->create();
-    $candidate->assignRole(UserRole::Candidate->value);
 
     $this->actingAs($candidate)
         ->get(route($routeName))
@@ -23,11 +22,9 @@ test('candidate is sent to the candidate area from either module entry', functio
 })->with(['jobflow', 'hrflow']);
 
 test('employer is sent to the employer area from either module entry', function (string $routeName) {
-    $employer = User::factory()->create();
-    $employer->assignRole(UserRole::Employer->value);
+    $employer = User::factory()->employer()->create();
 
     $this->actingAs($employer)
         ->get(route($routeName))
         ->assertRedirect(route('employer.jobs.index'));
 })->with(['jobflow', 'hrflow']);
-
