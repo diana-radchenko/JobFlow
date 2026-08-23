@@ -68,4 +68,23 @@ class Resume extends Model
             ->withTimestamps()
             ->orderByPivot('order');
     }
+
+    public function publications(): BelongsToMany
+    {
+        return $this->belongsToMany(Publication::class, 'resume_publication')
+            ->withPivot('order')->withTimestamps()->orderByPivot('order');
+    }
+
+    public function awardHonors(): BelongsToMany
+    {
+        return $this->belongsToMany(AwardHonor::class, 'resume_award_honor')
+            ->withPivot('order')->withTimestamps()->orderByPivot('order');
+    }
+
+    public function languages(): BelongsToMany
+    {
+        return $this->belongsToMany(Language::class, 'resume_language')
+            ->withPivot('order')->withTimestamps()->orderByPivot('order');
+    }
 }
+
