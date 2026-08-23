@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import DOMPurify from 'dompurify';
 import { BadgeCheck, MapPin, Heart, ChevronLeft } from 'lucide-vue-next';
 import { marked } from 'marked';
@@ -15,10 +15,10 @@ import {
 } from '@/components/ui/select';
 import { getApplicationStatusColor } from '@/helpers/job-applications';
 import { stringForHuman } from '@/helpers/strings';
-import { jobSelection as jobSelectionRoute } from '@/routes';
-import { apply as jobSelectionApply } from '@/routes/job-selection';
 import type { WorkJob } from '@/types/laravel-models';
 import type { UserWorkJobApplication } from '@/types/laravel-models';
+import { jobSelection as jobSelectionRoute } from '@/routes';
+import { apply as jobSelectionApply } from '@/routes/job-selection';
 
 const props = defineProps<{
     job: WorkJob;
@@ -53,6 +53,16 @@ const handleApply = () => {
             },
         },
     );
+};
+const messageForm = useForm({ body: '' });
+const sendMessage = () => {
+    if (!props.userApplication) {
+return;
+}
+
+    messageForm.post(`/job-chat/applications/${props.userApplication.id}`, {
+        onSuccess: () => messageForm.reset(),
+    });
 };
 
 defineOptions({
@@ -94,8 +104,10 @@ defineOptions({
                 <div class="mb-6 flex items-start justify-between">
                     <div class="flex-1">
                         <div class="mb-2 text-sm text-stone-500">
-                            There are currently 5 people considering this
-                            position
+                            {{ job.applications_count }} applicant{{
+                                job.applications_count === 1 ? '' : 's'
+                            }}
+                            for this position
                         </div>
 
                         <h1
@@ -243,6 +255,22 @@ defineOptions({
                         </div>
                     </template>
                 </div>
+                <form
+                    v-if="userApplication"
+                    class="mt-5 flex gap-2 rounded-xl border p-4"
+                    @submit.prevent="sendMessage"
+                >
+                    <input
+                        v-model="messageForm.body"
+                        required
+                        maxlength="5000"
+                        class="flex-1 rounded-md border bg-background p-2"
+                        placeholder="Message the employer about this application"
+                    />
+                    <Button type="submit" :disabled="messageForm.processing"
+                        >Send message</Button
+                    >
+                </form>
             </div>
         </div>
     </div>

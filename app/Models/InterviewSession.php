@@ -19,7 +19,18 @@ class InterviewSession extends Model
         'complexity',
         'mode',
         'status',
+        'application_id',
+        'employer_id',
+        'scheduled_at',
+        'timezone',
+        'duration_minutes',
+        'employer_note',
     ];
+
+    protected function casts(): array
+    {
+        return ['scheduled_at' => 'datetime'];
+    }
 
     public function user(): BelongsTo
     {
@@ -34,5 +45,15 @@ class InterviewSession extends Model
     public function workJob(): BelongsTo
     {
         return $this->belongsTo(WorkJob::class);
+    }
+
+    public function application(): BelongsTo
+    {
+        return $this->belongsTo(UserWorkJobApplication::class, 'application_id');
+    }
+
+    public function employer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'employer_id');
     }
 }

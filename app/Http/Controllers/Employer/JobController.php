@@ -25,6 +25,7 @@ class JobController extends Controller
     {
         return Inertia::render('Employer/Jobs/Form', [
             'job' => null,
+            'jobOptions' => $this->jobOptions(),
         ]);
     }
 
@@ -34,6 +35,7 @@ class JobController extends Controller
 
         return Inertia::render('Employer/Jobs/Show', [
             'job' => $job,
+            'jobOptions' => $this->jobOptions(),
             'applications' => $job->applications()
                 ->with('user:id,name,email')
                 ->orderByDesc('created_at')
@@ -52,7 +54,10 @@ class JobController extends Controller
 
     public function store(StoreWorkJobRequest $request): RedirectResponse
     {
-        $job = auth()->user()->workJobs()->create($request->validated());
+        $data = $request->validated();
+        $data['status'] ??= 'published';
+        if ($data['status'] === 'published') $data['published_at'] = now();
+        $job = auth()->user()->workJobs()->create($data);
 
         return redirect()->route('employer.jobs.show', $job)->with('success', 'Job posted successfully.');
     }
@@ -61,7 +66,9 @@ class JobController extends Controller
     {
         $this->authorize('update', $job);
 
-        $job->update($request->validated());
+        $data = $request->validated();
+        if (($data['status'] ?? $job->status) === 'published' && $job->published_at === null) $data['published_at'] = now();
+        $job->update($data);
 
         return redirect()->route('employer.jobs.show', $job)->with('success', 'Job updated successfully.');
     }
@@ -73,5 +80,12 @@ class JobController extends Controller
         $job->delete();
 
         return redirect()->route('employer.jobs.index')->with('success', 'Job deleted successfully.');
+    }
+
+    /** @return array<string, mixed> */
+    private function jobOptions(): array
+    {
+        return ['industries' => config('jobs.industries'), 'positionLevels' => config('jobs.position_levels'),
+            'employmentTypes' => config('jobs.employment_types'), 'workplaceTypes' => config('jobs.workplace_types')];
     }
 }

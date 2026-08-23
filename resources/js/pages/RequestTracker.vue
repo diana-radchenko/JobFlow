@@ -11,7 +11,6 @@ import {
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import type { Component } from 'vue';
-import { destroy as destroyApplication } from '@/actions/App/Http/Controllers/RequestTrackerController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,11 +24,16 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { stringForHuman } from '@/helpers/strings';
 import { getApplicationStatusColor } from '@/helpers/job-applications';
+import { stringForHuman } from '@/helpers/strings';
+import type {
+    UserWorkJobApplication,
+    ApplicationStatus,
+    InterviewSession,
+} from '@/types/laravel-models';
+import { destroy as destroyApplication } from '@/actions/App/Http/Controllers/RequestTrackerController';
 import { requestTracker, interviewPreparation } from '@/routes';
 import { show as jobSelectionShow } from '@/routes/job-selection';
-import type { UserWorkJobApplication, ApplicationStatus } from '@/types/laravel-models';
 
 const visitJob = (app: any) => {
     if (app.jobId) {
@@ -46,6 +50,7 @@ type TrackerRow = {
     status: string;
     rawStatus: ApplicationStatus;
     icon: Component;
+    interview: InterviewSession | null;
 };
 
 const props = defineProps<{
@@ -119,6 +124,7 @@ const allApplications = computed(() =>
         status: stringForHuman(app.status),
         rawStatus: app.status,
         icon: Code,
+        interview: app.interview_session ?? null,
     })),
 );
 
@@ -273,6 +279,19 @@ const viewedStats = computed(() => {
                                     class="mt-0.5 text-sm text-slate-500 dark:text-slate-400"
                                 >
                                     {{ app.dateType }}: {{ app.dateValue }}
+                                </div>
+                                <div
+                                    v-if="app.interview?.scheduled_at"
+                                    class="mt-2 rounded-lg bg-emerald-50 p-2 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
+                                >
+                                    Interview:
+                                    {{
+                                        new Date(
+                                            app.interview.scheduled_at,
+                                        ).toLocaleString()
+                                    }}
+                                    · {{ app.interview.timezone }} ·
+                                    {{ app.interview.status }}
                                 </div>
                             </div>
                         </div>

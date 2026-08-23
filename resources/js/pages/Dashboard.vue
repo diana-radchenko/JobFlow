@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import {
     Bot,
     SlidersHorizontal,
     ArrowDownUp,
-    Maximize2,
     Sparkles,
     Heart,
     ChevronLeft,
     ChevronRight,
 } from 'lucide-vue-next';
 import { computed, reactive, ref } from 'vue';
-import { show as interviewSessionShow } from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,13 +34,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import { stringForHuman } from '@/helpers/strings';
-import { dashboard } from '@/routes';
-import { show as jobSelectionShow } from '@/routes/job-selection';
-import { store as scoreResumeRequest } from '@/routes/resume-score';
 import type {
     InterviewSession,
     UserWorkJobApplication,
+    WorkJob,
 } from '@/types/laravel-models';
+import { show as interviewSessionShow } from '@/actions/App/Http/Controllers/InterviewSessionController';
+import { dashboard } from '@/routes';
+import { show as jobSelectionShow } from '@/routes/job-selection';
+import { store as scoreResumeRequest } from '@/routes/resume-score';
 
 interface DashboardResume {
     id: number;
@@ -62,6 +62,8 @@ const props = defineProps<{
     interviewSessions: InterviewSession[] | null;
     profileFirstName: string;
     resumes: DashboardResume[];
+    selectedResumeId: number | null;
+    recommendedJobs: Array<{ job: WorkJob; score: number; reasons: string[] }>;
 }>();
 
 const visitJob = (app: any) => {
@@ -229,7 +231,7 @@ const weekDays = computed(() =>
             day: DAY_LABELS[date.getDay()],
             dateLabel: String(date.getDate()),
             active: isSameDay(date, selectedDate.value),
-            hasEvent: !!sessionsByDay.value.get(date.toDateString())?.length,
+            hasEvent: !!sessionsByDay.value.get(localDateKey(date))?.length,
         };
     }),
 );
@@ -267,7 +269,7 @@ const monthDays = computed(() => {
             dateLabel: String(day.getDate()),
             inCurrentMonth: day.getMonth() === start.getMonth(),
             active: isSameDay(day, selectedDate.value),
-            hasEvent: !!sessionsByDay.value.get(day.toDateString())?.length,
+            hasEvent: !!sessionsByDay.value.get(localDateKey(day))?.length,
         });
     }
 
@@ -363,15 +365,22 @@ const selectMonth = (date: Date) => {
     viewMode.value = 'month';
 };
 
+const localDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const sessionDateKey = (session: InterviewSession) => {
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: session.timezone ?? 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(session.scheduled_at!));
+    const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return `${value.year}-${value.month}-${value.day}`;
+};
+
 const sessionsByDay = computed(() => {
     const map = new Map<string, InterviewSession[]>();
 
     for (const session of props.interviewSessions || []) {
-        if (!session.created_at) {
+        if (!session.scheduled_at) {
             continue;
         }
 
-        const key = new Date(session.created_at).toDateString();
+        const key = sessionDateKey(session);
         const bucket = map.get(key) ?? [];
         bucket.push(session);
         map.set(key, bucket);
@@ -380,8 +389,8 @@ const sessionsByDay = computed(() => {
     for (const bucket of map.values()) {
         bucket.sort(
             (a, b) =>
-                new Date(a.created_at!).getTime() -
-                new Date(b.created_at!).getTime(),
+                new Date(a.scheduled_at!).getTime() -
+                new Date(b.scheduled_at!).getTime(),
         );
     }
 
@@ -390,53 +399,42 @@ const sessionsByDay = computed(() => {
 
 const timelineEvents = computed(() => {
     const sessions =
-        sessionsByDay.value.get(selectedDate.value.toDateString()) || [];
+        sessionsByDay.value.get(localDateKey(selectedDate.value)) || [];
 
     return sessions.map((session) => {
-        const date = new Date(session.created_at!);
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const time = new Intl.DateTimeFormat(undefined, { timeZone: session.timezone ?? 'UTC', hour: '2-digit', minute: '2-digit' }).format(new Date(session.scheduled_at!));
 
         return {
-            time: `${hours}:${minutes}`,
-            title: `${stringForHuman(session.type)} Interview`,
-            duration: `${stringForHuman(session.complexity)} · ${stringForHuman(session.status)}`,
+            time,
+            title: `${session.work_job?.company ?? 'Employer'} · ${session.work_job?.title ?? 'Interview'}`,
+            duration: `${session.timezone ?? 'UTC'} · ${session.duration_minutes ?? 30} minutes`,
             session,
         };
     });
 });
 
-const aiJobsMock = [
-    {
-        id: 1,
-        url: 'https://www.innovatetechinc.com/careers.php',
-        company: 'InnovateTech',
-        logoText: 'IT',
-        title: 'InnovateTech is looking for a Software Engineer to join our team!',
-        salary: '$95,000',
-        tags: ['Python', 'React'],
-    },
-    {
-        id: 2,
-        url: 'https://www.data-wise-inc.com/career-opportunities',
-        company: 'DataWise',
-        logoText: 'DW',
-        title: 'DataWise is hiring a Data Scientist to drive data-driven decision-making.',
-        salary: '$105,000',
-        tags: ['Machine learning'],
-    },
-    /*     {
-        id: 3,
-        url: "#",
-        company: 'SecureNet',
-        logoText: 'SN',
-        title: 'SecureNet is looking for a Cybersecurity Specialist!',
-        salary: '$98,000',
-        tags: ['SOC', 'IDS/IPS'],
-    }, */
-];
+const interviewTooltip = (date: Date) => (sessionsByDay.value.get(localDateKey(date)) ?? []).map((session) => {
+    const time = new Intl.DateTimeFormat(undefined, { timeZone: session.timezone ?? 'UTC', hour: '2-digit', minute: '2-digit' }).format(new Date(session.scheduled_at!));
+    return `${time} (${session.timezone ?? 'UTC'})\n${session.work_job?.company ?? 'Employer'}\n${session.work_job?.title ?? 'Interview'}`;
+}).join('\n\n');
 
-type AiJobMock = (typeof aiJobsMock)[number];
+const aiJobsMock = computed(() =>
+    props.recommendedJobs.map(({ job, score, reasons }) => ({
+        id: job.id,
+        url: jobSelectionShow(job.id).url,
+        company: job.company,
+        logoText: job.company.slice(0, 2).toUpperCase(),
+        title: job.title,
+        salary: job.salary_start
+            ? `$${Number(job.salary_start).toLocaleString()}`
+            : 'Salary not specified',
+        tags: (job.technologies ?? []).map(String).slice(0, 3),
+        recommendationScore: score,
+        reasons,
+    })),
+);
+
+type AiJobMock = (typeof aiJobsMock.value)[number];
 
 const jobScores = reactive<Record<number, ResumeScoreResult>>({});
 const scoringJobId = ref<number | null>(null);
@@ -560,24 +558,28 @@ const articlesMock = [
         image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=400&h=150&auto=format&fit=crop',
         title: 'Working Part-Time in Retirement: Is It Right for You?',
         url: 'https://www.tiaa.org/public/transitioners/working-part-time-in-retirement--is-it-right-for-you',
+        source: 'TIAA',
     },
     {
         id: 2,
         image: 'https://proximus.talent-pool.com/cdn/image/5337d40d-aa5a-4cca-96eb-2ee1485ee6aa?withoutEnlargement=true&width=1440&format=webp',
         title: 'Why freelance at Proximus?',
         url: 'https://proximus.talent-pool.com/category/274/data-analysts-security?utm_medium=paidsearch&utm_source=googlesearch_rsr&utm_campaign=proximus_belgium_softwareengineering_talent_pool&utm_content=english-uk_text&gad_source=1&gad_campaignid=23822730197&gbraid=0AAAAA-QuVl7UcuDyNP2qXDQP1ukHqa0Dd&gclid=Cj0KCQjw3K7RBhDJARIsAKRtP5S60GfJvKYGUPXRZqXmqMS23enhCyn1edDxp1YTfGH5XLpkwMbT0koaAm8lEALw_wcB',
+        source: 'Proximus',
     },
     {
         id: 3,
         image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=400&h=150&auto=format&fit=crop',
         title: 'How to Become a Financial Planner After 50: A Late-Career Pivot',
         url: 'https://www.aarp.org/work/careers/financial-planner-career-change/?utm_source',
+        source: 'AARP',
     },
     {
         id: 4,
         image: 'https://www.kingseducation.com/assets/uploads/Stout_800.jpg',
         title: 'Why (and how) to get an internship after graduation',
         url: 'https://www.kingseducation.com/kings-life/internship-after-graduation?utm_source',
+        source: 'Kings Education',
     },
 ];
 </script>
@@ -624,6 +626,7 @@ const articlesMock = [
                                 v-for="mode in calendarViewModes"
                                 :key="mode"
                                 type="button"
+                                :title="interviewTooltip(day.date)"
                                 size="sm"
                                 :variant="
                                     viewMode === mode ? 'default' : 'ghost'
@@ -723,6 +726,7 @@ const articlesMock = [
                                     v-for="day in monthDays"
                                     :key="day.date.toISOString()"
                                     type="button"
+                                    :title="interviewTooltip(day.date)"
                                     class="flex cursor-pointer flex-col items-center gap-1 rounded-lg py-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
                                     :class="{
                                         'opacity-40': !day.inCurrentMonth,
@@ -1058,6 +1062,14 @@ const articlesMock = [
                             <Sparkles class="h-5 w-5 text-primary" />
                         </div>
                         <div class="space-y-4">
+                            <p
+                                v-if="aiJobsMock.length === 0"
+                                class="rounded-2xl border border-dashed p-5 text-sm text-slate-500"
+                            >
+                                No published employer vacancies are available
+                                yet. Recommendations will appear here when
+                                employers publish matching jobs.
+                            </p>
                             <Card
                                 v-for="job in aiJobsMock"
                                 :key="job.id"
@@ -1073,7 +1085,6 @@ const articlesMock = [
                                         <div class="flex-1">
                                             <a
                                                 :href="job.url"
-                                                target="_blank"
                                                 class="block text-[15px] leading-snug font-bold text-slate-900 transition-colors hover:text-primary dark:text-slate-100"
                                             >
                                                 {{ job.title }}
@@ -1176,11 +1187,20 @@ const articlesMock = [
                                     :src="article.image"
                                     alt="Article cover"
                                     class="h-38 w-full rounded-t-[16px] object-cover"
+                                    @error="
+                                        (
+                                            $event.currentTarget as HTMLImageElement
+                                        ).src = '/flow_bg_transparent.png'
+                                    "
                                 />
                                 <p
                                     class="px-4 pb-4 text-[15px] leading-snug font-bold text-slate-900 dark:text-slate-100"
                                 >
                                     {{ article.title }}
+                                    <span
+                                        class="mt-1 block text-xs font-medium text-slate-500"
+                                        >{{ article.source }}</span
+                                    >
                                 </p>
                             </a>
                         </div>

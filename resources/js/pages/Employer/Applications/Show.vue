@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getApplicationStatusColor } from '@/helpers/job-applications';
 import { stringForHuman } from '@/helpers/strings';
+import type { UserWorkJobApplication, WorkJob } from '@/types/laravel-models';
 import applications from '@/routes/employer/applications';
 import jobs from '@/routes/employer/jobs';
-import type { UserWorkJobApplication, WorkJob } from '@/types/laravel-models';
 
 const props = defineProps<{
     job: WorkJob;
@@ -29,6 +29,43 @@ defineOptions({
 });
 
 const form = useForm({ status: props.application.status });
+const interviewForm = useForm({
+    date: props.application.interview_session?.scheduled_at?.slice(0, 10) ?? '',
+    time: props.application.interview_session?.scheduled_at
+        ? new Date(
+              props.application.interview_session.scheduled_at,
+          ).toLocaleTimeString('en-GB', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+          })
+        : '',
+    timezone:
+        props.application.interview_session?.timezone ?? 'America/New_York',
+    duration_minutes:
+        props.application.interview_session?.duration_minutes ?? 30,
+    employer_note: props.application.interview_session?.employer_note ?? '',
+});
+const timezones = [
+    'America/New_York',
+    'America/Chicago',
+    'America/Denver',
+    'America/Los_Angeles',
+    'Europe/London',
+    'Europe/Brussels',
+    'Europe/Moscow',
+    'Asia/Dubai',
+    'Asia/Singapore',
+    'Asia/Tokyo',
+];
+const scheduleInterview = () =>
+    interviewForm.post(
+        `/employer/jobs/${props.job.id}/applications/${props.application.id}/interview`,
+        { preserveScroll: true },
+    );
+const messageForm = useForm({ body: '' });
+const sendMessage = () =>
+    messageForm.post(`/job-chat/applications/${props.application.id}`);
 
 const setStatus = (status: 'rejected' | 'interview_scheduled') => {
     form.status = status;
@@ -305,18 +342,86 @@ const formatDate = (date: string | null) =>
             No resume was attached to this application.
         </p>
 
+        <Card
+            ><CardContent class="space-y-4 pt-6"
+                ><h2 class="text-lg font-semibold">Schedule an interview</h2>
+                <form
+                    class="grid gap-3 sm:grid-cols-2"
+                    @submit.prevent="scheduleInterview"
+                >
+                    <input
+                        v-model="interviewForm.date"
+                        required
+                        type="date"
+                        class="rounded-md border bg-background p-2"
+                    />
+                    <input
+                        v-model="interviewForm.time"
+                        required
+                        type="time"
+                        class="rounded-md border bg-background p-2"
+                    />
+                    <select
+                        v-model="interviewForm.timezone"
+                        class="rounded-md border bg-background p-2"
+                    >
+                        <option v-for="zone in timezones" :key="zone">
+                            {{ zone }}
+                        </option>
+                    </select>
+                    <select
+                        v-model="interviewForm.duration_minutes"
+                        class="rounded-md border bg-background p-2"
+                    >
+                        <option :value="30">30 minutes</option>
+                        <option :value="45">45 minutes</option>
+                        <option :value="60">60 minutes</option>
+                        <option :value="90">90 minutes</option>
+                    </select>
+                    <textarea
+                        v-model="interviewForm.employer_note"
+                        placeholder="Optional instructions"
+                        class="rounded-md border bg-background p-2 sm:col-span-2"
+                    />
+                    <Button type="submit" :disabled="interviewForm.processing"
+                        ><CalendarCheck class="mr-2 h-4 w-4" />{{
+                            props.application.interview_session
+                                ? 'Reschedule interview'
+                                : 'Schedule an interview'
+                        }}</Button
+                    >
+                </form>
+                <p
+                    v-if="props.application.interview_session?.scheduled_at"
+                    class="text-sm text-emerald-700"
+                >
+                    Interview scheduled:
+                    {{
+                        new Date(
+                            props.application.interview_session.scheduled_at,
+                        ).toLocaleString()
+                    }}
+                    · {{ props.application.interview_session.timezone }}
+                </p>
+            </CardContent></Card
+        >
+
+        <Card
+            ><CardContent class="space-y-3 pt-6"
+                ><h2 class="font-semibold">Message candidate</h2>
+                <form class="flex gap-2" @submit.prevent="sendMessage">
+                    <input
+                        v-model="messageForm.body"
+                        required
+                        maxlength="5000"
+                        class="flex-1 rounded-md border bg-background p-2"
+                        placeholder="Write a message about this application"
+                    /><Button type="submit">Send</Button>
+                </form></CardContent
+            ></Card
+        >
+
         <div class="flex flex-wrap gap-3">
-            <Button
-                type="button"
-                :disabled="
-                    form.processing ||
-                    props.application.status === 'interview_scheduled'
-                "
-                @click="setStatus('interview_scheduled')"
-            >
-                <CalendarCheck class="mr-2 h-4 w-4" />
-                Schedule an Interview
-            </Button>
             <Button
                 type="button"
                 variant="destructive"
@@ -331,4 +436,3 @@ const formatDate = (date: string | null) =>
         </div>
     </div>
 </template>
-

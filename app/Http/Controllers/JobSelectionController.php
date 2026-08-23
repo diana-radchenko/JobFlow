@@ -15,7 +15,12 @@ class JobSelectionController extends Controller
 {
     public function jobSelection(JobSelectionRequest $request): Response
     {
-        $query = WorkJob::query();
+        $query = WorkJob::published();
+        $query->when($request->keyword, fn ($q, $value) => $q->where(fn ($q) => $q->where('title', 'like', "%{$value}%")->orWhere('description', 'like', "%{$value}%")));
+        $query->when($request->industry, fn ($q, $value) => $q->where('industry', $value));
+        $query->when($request->position_level, fn ($q, $value) => $q->where('position_level', $value));
+        $query->when($request->company, fn ($q, $value) => $q->where('company', 'like', "%{$value}%"));
+        $query->when($request->employment_type, fn ($q, $value) => $q->where('employment_type', $value));
 
         if ($request->filled('region') && $request->region !== 'does-not-matter') {
             $query->where('location', 'like', '%'.$request->region.'%');
@@ -34,12 +39,15 @@ class JobSelectionController extends Controller
 
         return Inertia::render('JobSelection', [
             'jobs' => $jobs,
-            'filters' => $request->only(['incomeLevel', 'region', 'ownSalary']),
+            'filters' => $request->only(['incomeLevel', 'region', 'ownSalary', 'keyword', 'industry', 'position_level', 'company', 'employment_type']),
+            'filterOptions' => ['industries' => config('jobs.industries'), 'positionLevels' => config('jobs.position_levels'), 'employmentTypes' => config('jobs.employment_types')],
         ]);
     }
 
     public function show(WorkJob $job): Response
     {
+        abort_unless($job->user_id !== null && $job->status === 'published', 404);
+        $job->loadCount('applications');
         $userApplication = auth()->user()
             ->applications()
             ->where('work_job_id', $job->id)
@@ -54,6 +62,7 @@ class JobSelectionController extends Controller
 
     public function apply(Request $request, WorkJob $job): RedirectResponse
     {
+        abort_unless($job->user_id !== null && $job->status === 'published', 404);
         $validated = $request->validate([
             'resume_id' => ['required', Rule::exists('resumes', 'id')->where('user_id', auth()->id())],
         ]);

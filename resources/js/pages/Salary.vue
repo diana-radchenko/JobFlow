@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import {
     Sparkles,
     UploadCloud,
@@ -53,14 +53,23 @@ interface JobOption {
     company: string;
     salary_start: number;
     salary_end: number;
+    industry: string | null;
+    position_level: string | null;
 }
 
 interface Props {
     resumes: { id: number; title: string }[];
     jobs: JobOption[];
+    industries: string[];
+    positionLevels: string[];
+    comparison: { sufficient: boolean; message?: string; count: number; minimum?: number; maximum?: number; median?: number } | null;
 }
 
 const props = defineProps<Props>();
+const marketTitle = ref('');
+const marketIndustry = ref('');
+const marketPositionLevel = ref('');
+const compareMarket = () => router.get('/salary', { title: marketTitle.value, industry: marketIndustry.value, position_level: marketPositionLevel.value }, { preserveState: true, preserveScroll: true });
 
 // Dropdown/Factor Selection values
 const selectedEducation = ref("Bachelor's");
@@ -313,6 +322,8 @@ const comparisonRoles = computed(() =>
 
 <template>
     <Head title="Salary Explorer" />
+
+    <div class="mx-auto max-w-6xl px-5 pt-6"><Card><CardContent class="space-y-3 pt-6"><h2 class="text-lg font-bold">Real vacancy salary comparison</h2><form class="grid gap-3 md:grid-cols-4" @submit.prevent="compareMarket"><input v-model="marketTitle" required class="rounded-md border bg-background p-2" placeholder="Role title"/><select v-model="marketIndustry" class="rounded-md border bg-background p-2"><option value="">All industries</option><option v-for="item in industries" :key="item">{{ item }}</option></select><select v-model="marketPositionLevel" class="rounded-md border bg-background p-2"><option value="">All levels</option><option v-for="item in positionLevels" :key="item">{{ item }}</option></select><Button type="submit">Compare</Button></form><p v-if="comparison && !comparison.sufficient" class="text-sm text-muted-foreground">{{ comparison.message }}</p><p v-else-if="comparison" class="font-semibold">{{ comparison.count }} comparable vacancies · {{ formatSalary(comparison.minimum ?? 0) }} – {{ formatSalary(comparison.maximum ?? 0) }} · median {{ formatSalary(comparison.median ?? 0) }}</p></CardContent></Card></div>
 
     <div class="container mx-auto max-w-[1400px] px-5 py-8 font-sans">
         <div class="grid grid-cols-1 gap-8 lg:grid-cols-[400px_1fr]">

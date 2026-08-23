@@ -11,6 +11,7 @@ import {
     Settings,
     Globe,
     LogOut,
+    MessageSquare,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -26,6 +27,7 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import type { NavItem } from '@/types';
 import {
     dashboard,
     development,
@@ -37,7 +39,6 @@ import {
 } from '@/routes';
 import employerJobs from '@/routes/employer/jobs';
 import resumes from '@/routes/resumes';
-import type { NavItem } from '@/types';
 
 const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 
@@ -54,6 +55,12 @@ const employerNavItems = computed<NavItem[]>(() => [
         href: employerJobs.index(),
         icon: BriefcaseBusiness,
         isActive: isCurrentOrParentUrl(employerJobs.index()),
+    },
+    {
+        title: 'Chat',
+        href: '/job-chat',
+        icon: MessageSquare,
+        isActive: isCurrentOrParentUrl('/job-chat'),
     },
     {
         title: 'Settings',
@@ -87,6 +94,12 @@ const candidateNavItems = computed<NavItem[]>(() => [
         href: requestTrackerUrl,
         icon: ClipboardList,
         isActive: isCurrentUrl(requestTrackerUrl),
+    },
+    {
+        title: 'Chat',
+        href: '/job-chat',
+        icon: MessageSquare,
+        isActive: isCurrentOrParentUrl('/job-chat'),
     },
     {
         title: 'Interview',

@@ -7,11 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import jobs from '@/routes/employer/jobs';
 import type { WorkJob } from '@/types/laravel-models';
+import jobs from '@/routes/employer/jobs';
 
 const props = defineProps<{
     job: WorkJob | null;
+    jobOptions: {
+        industries: string[];
+        positionLevels: string[];
+        employmentTypes: string[];
+        workplaceTypes: string[];
+    };
 }>();
 
 defineOptions({
@@ -34,6 +40,16 @@ const form = useForm({
     salary_start: props.job?.salary_start?.toString() ?? '',
     salary_end: props.job?.salary_end?.toString() ?? '',
     technologies: ((props.job?.technologies ?? []) as string[]).join(', '),
+    industry: props.job?.industry ?? '',
+    position_level: props.job?.position_level ?? '',
+    employment_type: props.job?.employment_type ?? '',
+    workplace_type: props.job?.workplace_type ?? '',
+    responsibilities: props.job?.responsibilities ?? '',
+    requirements: props.job?.requirements ?? '',
+    benefits: props.job?.benefits ?? '',
+    salary_currency: props.job?.salary_currency ?? 'USD',
+    salary_period: props.job?.salary_period ?? 'year',
+    status: props.job?.status ?? 'published',
 });
 
 const submit = () => {
@@ -88,6 +104,73 @@ const submit = () => {
                             placeholder="e.g., Senior Backend Engineer"
                         />
                         <InputError :message="form.errors.title" />
+                    </div>
+
+                    <div class="grid gap-5 sm:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="industry">Industry</Label
+                            ><select
+                                id="industry"
+                                v-model="form.industry"
+                                class="rounded-md border bg-background p-2"
+                            >
+                                <option value="">Choose industry</option>
+                                <option
+                                    v-for="item in jobOptions.industries"
+                                    :key="item"
+                                >
+                                    {{ item }}
+                                </option></select
+                            ><InputError :message="form.errors.industry" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="position_level">Position level</Label
+                            ><select
+                                id="position_level"
+                                v-model="form.position_level"
+                                class="rounded-md border bg-background p-2"
+                            >
+                                <option value="">Choose level</option>
+                                <option
+                                    v-for="item in jobOptions.positionLevels"
+                                    :key="item"
+                                >
+                                    {{ item }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="employment_type">Employment type</Label
+                            ><select
+                                id="employment_type"
+                                v-model="form.employment_type"
+                                class="rounded-md border bg-background p-2"
+                            >
+                                <option value="">Choose type</option>
+                                <option
+                                    v-for="item in jobOptions.employmentTypes"
+                                    :key="item"
+                                >
+                                    {{ item }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="workplace_type">Workplace</Label
+                            ><select
+                                id="workplace_type"
+                                v-model="form.workplace_type"
+                                class="rounded-md border bg-background p-2"
+                            >
+                                <option value="">Choose workplace</option>
+                                <option
+                                    v-for="item in jobOptions.workplaceTypes"
+                                    :key="item"
+                                >
+                                    {{ item }}
+                                </option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="grid gap-5 sm:grid-cols-2">
@@ -171,6 +254,24 @@ const submit = () => {
                             placeholder="Describe the role, responsibilities, and requirements. Supports Markdown: ## headings, **bold**, _italic_, - lists."
                         />
                         <InputError :message="form.errors.description" />
+                    </div>
+                    <div
+                        v-for="field in [
+                            'responsibilities',
+                            'requirements',
+                            'benefits',
+                        ] as const"
+                        :key="field"
+                        class="grid gap-2"
+                    >
+                        <Label :for="field">{{
+                            field.charAt(0).toUpperCase() + field.slice(1)
+                        }}</Label>
+                        <MarkdownEditor
+                            :id="field"
+                            v-model="form[field]"
+                            :rows="5"
+                        />
                     </div>
 
                     <div class="flex gap-3">

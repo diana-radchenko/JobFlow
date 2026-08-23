@@ -13,9 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getApplicationStatusColor } from '@/helpers/job-applications';
 import { stringForHuman } from '@/helpers/strings';
+import type { UserWorkJobApplication, WorkJob } from '@/types/laravel-models';
 import employerApplications from '@/routes/employer/applications';
 import jobs from '@/routes/employer/jobs';
-import type { UserWorkJobApplication, WorkJob } from '@/types/laravel-models';
 
 const props = defineProps<{
     job: WorkJob;
@@ -49,7 +49,7 @@ const formatDate = (date: string | null) =>
 <template>
     <Head :title="props.job.title" />
 
-    <div class="mx-auto max-w-4xl space-y-6 py-6 px-2">
+    <div class="mx-auto max-w-4xl space-y-6 px-2 py-6">
         <Link
             :href="jobs.index()"
             class="inline-flex items-center gap-1 text-sm text-foreground/60 transition-colors hover:text-foreground"
@@ -69,6 +69,21 @@ const formatDate = (date: string | null) =>
                     </span>
                 </p>
                 <div class="flex flex-wrap gap-1.5 pt-1">
+                    <Badge v-if="props.job.status">{{
+                        props.job.status
+                    }}</Badge>
+                    <Badge v-if="props.job.industry" variant="outline">{{
+                        props.job.industry
+                    }}</Badge>
+                    <Badge v-if="props.job.position_level" variant="outline">{{
+                        props.job.position_level
+                    }}</Badge>
+                    <Badge v-if="props.job.employment_type" variant="outline">{{
+                        props.job.employment_type
+                    }}</Badge>
+                    <Badge v-if="props.job.workplace_type" variant="outline">{{
+                        props.job.workplace_type
+                    }}</Badge>
                     <Badge
                         v-for="technology in props.job.technologies"
                         :key="String(technology)"
@@ -85,6 +100,35 @@ const formatDate = (date: string | null) =>
                 </Link>
             </Button>
         </div>
+
+        <Card
+            ><CardContent class="space-y-4 pt-6">
+                <div>
+                    <h2 class="font-semibold">Description</h2>
+                    <p class="text-sm whitespace-pre-wrap text-foreground/70">
+                        {{ props.job.description }}
+                    </p>
+                </div>
+                <div v-if="props.job.responsibilities">
+                    <h2 class="font-semibold">Responsibilities</h2>
+                    <p class="text-sm whitespace-pre-wrap text-foreground/70">
+                        {{ props.job.responsibilities }}
+                    </p>
+                </div>
+                <div v-if="props.job.requirements">
+                    <h2 class="font-semibold">Requirements</h2>
+                    <p class="text-sm whitespace-pre-wrap text-foreground/70">
+                        {{ props.job.requirements }}
+                    </p>
+                </div>
+                <div v-if="props.job.benefits">
+                    <h2 class="font-semibold">Benefits</h2>
+                    <p class="text-sm whitespace-pre-wrap text-foreground/70">
+                        {{ props.job.benefits }}
+                    </p>
+                </div>
+            </CardContent></Card
+        >
 
         <div>
             <h2 class="mb-3 flex items-center gap-2 text-lg font-semibold">
