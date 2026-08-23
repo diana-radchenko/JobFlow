@@ -37,6 +37,9 @@ class ApplicationController extends Controller
                 'resume.workExperiences',
                 'resume.volunteerExperiences',
                 'resume.leadershipActivities',
+                'resume.publications',
+                'resume.awardHonors',
+                'resume.languages',
                 'resume.additionalInformation',
             ]),
         ]);
@@ -58,3 +61,4 @@ class ApplicationController extends Controller
         return back()->with('success', 'Application updated successfully.');
     }
 }
+
