@@ -29,29 +29,6 @@ const props = defineProps<Props>();
 
 defineEmits<Emits>();
 
-const LANGUAGE_OPTIONS = [
-    'English',
-    'Spanish',
-    'French',
-    'German',
-    'Mandarin Chinese',
-    'Arabic',
-    'Portuguese',
-    'Russian',
-    'Japanese',
-    'Korean',
-    'Italian',
-    'Hindi',
-    'Turkish',
-    'Dutch',
-    'Polish',
-    'Vietnamese',
-    'Urdu',
-    'Persian',
-    'Swedish',
-    'Greek',
-];
-
 const INTEREST_OPTIONS = [
     'Machine Learning',
     'Open Source',
@@ -109,25 +86,11 @@ const submit = () => {
             <CardHeader>
                 <CardTitle>Additional Information</CardTitle>
                 <CardDescription>
-                    Add languages, certifications, interests, and other details
+                    Add certifications, interests, and other details
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <form @submit.prevent="submit" class="space-y-4">
-                    <div>
-                        <label
-                            for="languages"
-                            class="mb-1 block text-sm font-medium text-foreground"
-                        >
-                            Languages
-                        </label>
-                        <TagSelect
-                            v-model="form.languages"
-                            :options="LANGUAGE_OPTIONS"
-                            placeholder="Search and add a language..."
-                        />
-                    </div>
-
                     <div>
                         <label
                             for="certifications"
@@ -182,7 +145,7 @@ const submit = () => {
                         <Button
                             type="button"
                             variant="outline"
-                            @click="$emit('nextSection', 'leadership')"
+                            @click="$emit('nextSection', 'languages')"
                         >
                             <ChevronLeft class="mr-2 h-4 w-4" />
                             Back
@@ -200,3 +163,4 @@ const submit = () => {
         </Card>
     </div>
 </template>
+
