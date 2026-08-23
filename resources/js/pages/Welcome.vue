@@ -302,4 +302,3 @@ const mobileMenuOpen = ref(false);
         </footer> -->
     </div>
 </template>
-
