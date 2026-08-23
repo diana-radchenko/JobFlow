@@ -13,6 +13,13 @@ if [ ! -f /var/www/database/database.sqlite ]; then
     chmod 664 /var/www/database/database.sqlite
 fi
 
+# Refresh only migration source files inside the persistent SQLite volume.
+# Never replace or remove the production database file.
+if [ -d /var/www/database-migrations-image ]; then
+    mkdir -p /var/www/database/migrations
+    cp -R /var/www/database-migrations-image/. /var/www/database/migrations/
+fi
+
 # Refresh the shared public/build volume from the currently deployed image.
 if [ -d /var/www/public-build-image ]; then
     mkdir -p /var/www/public/build

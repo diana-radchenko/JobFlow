@@ -113,6 +113,12 @@
 
     # Preserve this image's compiled assets outside the persistent build volume.
     RUN cp -a /var/www/public/build /var/www/public-build-image
+
+    # The SQLite volume mounts /var/www/database and would otherwise hide new
+    # migration files shipped in the image. Keep an immutable image copy that
+    # the entrypoint can safely sync into the existing volume without touching
+    # database.sqlite.
+    RUN cp -a /var/www/database/migrations /var/www/database-migrations-image
     
     # Set working directory
     WORKDIR /var/www
