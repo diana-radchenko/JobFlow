@@ -25,7 +25,7 @@ async function login(
 ) {
     await page.goto(`/login?type=${type}`);
     await page.getByLabel('Email address').fill(email);
-    await page.getByLabel('Password').fill(password);
+    await page.getByLabel('Password', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Log in' }).click();
 }
 
