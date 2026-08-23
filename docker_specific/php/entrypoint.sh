@@ -13,6 +13,12 @@ if [ ! -f /var/www/database/database.sqlite ]; then
     chmod 664 /var/www/database/database.sqlite
 fi
 
+# Refresh the shared public/build volume from the currently deployed image.
+if [ -d /var/www/public-build-image ]; then
+    mkdir -p /var/www/public/build
+    cp -a /var/www/public-build-image/. /var/www/public/build/
+fi
+
 php artisan optimize:clear
 php artisan optimize
 
