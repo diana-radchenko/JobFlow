@@ -7,6 +7,7 @@ use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\InterviewPreparationController;
 use App\Http\Controllers\InterviewSessionController;
 use App\Http\Controllers\JobSelectionController;
+use App\Http\Controllers\ModuleEntryController;
 use App\Http\Controllers\RequestTrackerController;
 use App\Http\Controllers\ResumeAnalysisController;
 use App\Http\Controllers\ResumeAssistantController;
@@ -15,7 +16,6 @@ use App\Http\Controllers\ResumeEditorController;
 use App\Http\Controllers\ResumeSalaryAnalysisController;
 use App\Http\Controllers\ResumeScoreController;
 use App\Models\WorkJob;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -24,21 +24,11 @@ Route::inertia('/', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
-Route::get('/jobflow', function (Request $request) {
-    if (! $request->user()) {
-        return redirect()->guest(route('register', ['type' => UserRole::Candidate->value]));
-    }
-
-    return redirect()->to($request->user()->role()?->home() ?? route('home'));
-})->name('jobflow');
-
-Route::get('/hrflow', function (Request $request) {
-    if (! $request->user()) {
-        return redirect()->guest(route('register', ['type' => UserRole::Employer->value]));
-    }
-
-    return redirect()->to($request->user()->role()?->home() ?? route('home'));
-})->name('hrflow');
+Route::get('/jobflow', [ModuleEntryController::class, 'jobflow'])->name('jobflow');
+Route::get('/hrflow', [ModuleEntryController::class, 'hrflow'])->name('hrflow');
+Route::post('/module-entry/{module}/{action}', [ModuleEntryController::class, 'switch'])
+    ->middleware('auth')
+    ->name('module-entry.switch');
 
 Route::middleware(['auth', 'verified', 'role:'.UserRole::Employer->value])
     ->prefix('employer')
@@ -170,4 +160,3 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
 });
 
 require __DIR__.'/settings.php';
-
