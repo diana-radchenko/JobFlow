@@ -54,3 +54,59 @@ jobs:
 
       - name: Tests
         run: ./vendor/bin/pest
+
+  browser:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Prepare test application
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
+          php artisan key:generate
+          php artisan migrate --force
+          npm run build
+
+      - name: Start application
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 > storage/logs/e2e-server.log 2>&1 &
+          for attempt in {1..30}; do
+            curl --fail --silent http://127.0.0.1:8000/status && exit 0
+            sleep 1
+          done
+          cat storage/logs/e2e-server.log
+          exit 1
+
+      - name: Browser tests with real sessions
+        run: npm run test:e2e
+
+      - name: Upload diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-test-diagnostics
+          path: |
+            playwright-report
+            test-results
+            storage/logs/e2e-server.log

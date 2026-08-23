@@ -1,6 +1,9 @@
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules
+/.npm-cache
+/test-results
+/playwright-report
 /public/build
 /public/hot
 /public/storage

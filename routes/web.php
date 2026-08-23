@@ -18,11 +18,8 @@ use App\Http\Controllers\ResumeScoreController;
 use App\Models\WorkJob;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use Laravel\Fortify\Features;
 
-Route::inertia('/', 'Welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
+Route::get('/', [ModuleEntryController::class, 'home'])->name('home');
 
 Route::get('/jobflow', [ModuleEntryController::class, 'jobflow'])->name('jobflow');
 Route::get('/hrflow', [ModuleEntryController::class, 'hrflow'])->name('hrflow');

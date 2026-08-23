@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
 import { BriefcaseBusiness, UserRound } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -25,6 +25,14 @@ const { accountType = 'candidate' } = defineProps<{
 }>();
 
 const selectedProfileType = ref<'candidate' | 'employer'>(accountType);
+
+watch(selectedProfileType, (type) => {
+    window.history.replaceState(
+        window.history.state,
+        '',
+        `/register?type=${type}`,
+    );
+});
 </script>
 
 <template>
@@ -47,7 +55,7 @@ const selectedProfileType = ref<'candidate' | 'employer'>(accountType);
                         type="button"
                         role="radio"
                         :aria-checked="selectedProfileType === 'candidate'"
-                        :tabindex="1"
+                        tabindex="0"
                         autofocus
                         data-test="register-profile-type-candidate"
                         class="flex items-start gap-3 rounded-lg border border-input bg-background p-4 text-left transition-colors hover:bg-muted/40"
@@ -78,7 +86,7 @@ const selectedProfileType = ref<'candidate' | 'employer'>(accountType);
                         type="button"
                         role="radio"
                         :aria-checked="selectedProfileType === 'employer'"
-                        :tabindex="2"
+                        tabindex="0"
                         data-test="register-profile-type-employer"
                         class="flex items-start gap-3 rounded-lg border border-input bg-background p-4 text-left transition-colors hover:bg-muted/40"
                         :class="
