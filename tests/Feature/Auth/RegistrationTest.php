@@ -71,7 +71,7 @@ test('an account type query cannot change an authenticated users stored role', f
 
     $this->actingAs($candidate)
         ->get(route('register', ['type' => UserRole::Employer->value]))
-        ->assertRedirect(route('hrflow'));
+        ->assertRedirect(route('hrflow', ['intent' => 'register']));
 
     expect($candidate->fresh()->hasRole(UserRole::Candidate->value))->toBeTrue()
         ->and($candidate->fresh()->hasRole(UserRole::Employer->value))->toBeFalse();
