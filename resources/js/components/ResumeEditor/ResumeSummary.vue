@@ -10,6 +10,9 @@ import {
     Zap,
     Edit2,
     ChevronLeft,
+    BookMarked,
+    Languages,
+    Trophy,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -33,6 +36,9 @@ interface Props {
     projects: any[];
     volunteerExperiences: any[];
     leadershipActivities: any[];
+    publications: any[];
+    awardHonors: any[];
+    languages: any[];
     additionalInfo: any;
 }
 
@@ -57,6 +63,15 @@ const includedVolunteerExperiences = computed(() =>
 );
 const includedLeadershipActivities = computed(() =>
     props.leadershipActivities.filter((l) => l.included),
+);
+const includedPublications = computed(() =>
+    props.publications.filter((item) => item.included),
+);
+const includedAwardHonors = computed(() =>
+    props.awardHonors.filter((item) => item.included),
+);
+const includedLanguages = computed(() =>
+    props.languages.filter((item) => item.included),
 );
 
 const formatActivityLocationLine = (item: any): string =>
@@ -498,6 +513,127 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                     </p>
                 </div>
 
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <BookMarked class="h-5 w-5 text-primary" />
+                        <h3 class="text-lg font-semibold">Publications</h3>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            class="ml-auto"
+                            @click="$emit('nextSection', 'publications')"
+                            ><Edit2 class="h-4 w-4"
+                        /></Button>
+                    </div>
+                    <div v-if="includedPublications.length" class="space-y-3">
+                        <div
+                            v-for="item in includedPublications"
+                            :key="item.id"
+                        >
+                            <p class="font-semibold">{{ item.title }}</p>
+                            <p
+                                v-if="item.publisher || item.publication_date"
+                                class="text-sm text-foreground/70"
+                            >
+                                {{
+                                    [
+                                        item.publisher,
+                                        item.publication_date
+                                            ? formatDate(item.publication_date)
+                                            : null,
+                                    ]
+                                        .filter(Boolean)
+                                        .join(' · ')
+                                }}
+                            </p>
+                            <p
+                                v-if="item.description"
+                                class="text-sm whitespace-pre-wrap text-foreground/70"
+                            >
+                                {{ item.description }}
+                            </p>
+                        </div>
+                    </div>
+                    <p v-else class="text-sm text-foreground/60 italic">
+                        No publications added
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <Trophy class="h-5 w-5 text-primary" />
+                        <h3 class="text-lg font-semibold">
+                            Awards &amp; Honors
+                        </h3>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            class="ml-auto"
+                            @click="$emit('nextSection', 'awardsHonors')"
+                            ><Edit2 class="h-4 w-4"
+                        /></Button>
+                    </div>
+                    <div v-if="includedAwardHonors.length" class="space-y-3">
+                        <div v-for="item in includedAwardHonors" :key="item.id">
+                            <p class="font-semibold">{{ item.title }}</p>
+                            <p
+                                v-if="item.issuer || item.awarded_date"
+                                class="text-sm text-foreground/70"
+                            >
+                                {{
+                                    [
+                                        item.issuer,
+                                        item.awarded_date
+                                            ? formatDate(item.awarded_date)
+                                            : null,
+                                    ]
+                                        .filter(Boolean)
+                                        .join(' · ')
+                                }}
+                            </p>
+                            <p
+                                v-if="item.description"
+                                class="text-sm whitespace-pre-wrap text-foreground/70"
+                            >
+                                {{ item.description }}
+                            </p>
+                        </div>
+                    </div>
+                    <p v-else class="text-sm text-foreground/60 italic">
+                        No awards or honors added
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <Languages class="h-5 w-5 text-primary" />
+                        <h3 class="text-lg font-semibold">Languages</h3>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            class="ml-auto"
+                            @click="$emit('nextSection', 'languages')"
+                            ><Edit2 class="h-4 w-4"
+                        /></Button>
+                    </div>
+                    <p
+                        v-if="includedLanguages.length"
+                        class="text-sm text-foreground/70"
+                    >
+                        {{
+                            includedLanguages
+                                .map(
+                                    (item) =>
+                                        `${item.name} — ${item.proficiency}`,
+                                )
+                                .join(', ')
+                        }}
+                    </p>
+                    <p v-else class="text-sm text-foreground/60 italic">
+                        No languages added
+                    </p>
+                </div>
+
                 <!-- Additional Info Section -->
                 <div v-if="additionalInfo" class="space-y-4">
                     <div class="flex items-center gap-2 border-b pb-2">
@@ -515,12 +651,6 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
                         </Button>
                     </div>
                     <div class="space-y-2 text-sm">
-                        <div v-if="additionalInfo.languages?.length">
-                            <strong>Languages:</strong>
-                            <p class="text-foreground/70">
-                                {{ additionalInfo.languages.join(', ') }}
-                            </p>
-                        </div>
                         <div v-if="additionalInfo.certifications">
                             <strong>Certifications:</strong>
                             <p class="whitespace-pre-wrap text-foreground/70">
@@ -561,3 +691,4 @@ const formatWorkLocationLine = (exp: WorkExperience): string => {
         </Card>
     </div>
 </template>
+
