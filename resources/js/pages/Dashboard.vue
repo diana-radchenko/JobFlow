@@ -211,13 +211,44 @@ const isSameDay = (a: Date, b: Date) =>
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
 
+const localDateKey = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const sessionDateKey = (session: InterviewSession) => {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: session.timezone ?? 'UTC',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).formatToParts(new Date(session.scheduled_at!));
+    const value = Object.fromEntries(
+        parts.map((part) => [part.type, part.value]),
+    );
+
+    return `${value.year}-${value.month}-${value.day}`;
+};
+const calendarDateForSession = (session: InterviewSession) => {
+    const [year, month, day] = sessionDateKey(session).split('-').map(Number);
+
+    return new Date(year, month - 1, day, 12);
+};
+
 const today = startOfDay(new Date());
-const selectedDate = ref(today);
+const firstScheduledInterview = [...(props.interviewSessions ?? [])]
+    .filter((session) => session.scheduled_at)
+    .sort(
+        (a, b) =>
+            new Date(a.scheduled_at!).getTime() -
+            new Date(b.scheduled_at!).getTime(),
+    )[0];
+const initialCalendarDate = firstScheduledInterview
+    ? calendarDateForSession(firstScheduledInterview)
+    : today;
+const selectedDate = ref(initialCalendarDate);
 
 type CalendarViewMode = 'week' | 'month' | 'year';
 const calendarViewModes: CalendarViewMode[] = ['week', 'month', 'year'];
 const viewMode = ref<CalendarViewMode>('week');
-const anchorDate = ref(today);
+const anchorDate = ref(initialCalendarDate);
 
 const weekStart = computed(() => startOfWeek(anchorDate.value));
 
@@ -363,22 +394,6 @@ const selectDay = (date: Date) => {
 const selectMonth = (date: Date) => {
     anchorDate.value = date;
     viewMode.value = 'month';
-};
-
-const localDateKey = (date: Date) =>
-    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-const sessionDateKey = (session: InterviewSession) => {
-    const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone: session.timezone ?? 'UTC',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-    }).formatToParts(new Date(session.scheduled_at!));
-    const value = Object.fromEntries(
-        parts.map((part) => [part.type, part.value]),
-    );
-
-    return `${value.year}-${value.month}-${value.day}`;
 };
 
 const sessionsByDay = computed(() => {
@@ -647,7 +662,6 @@ const articlesMock = [
                                 v-for="mode in calendarViewModes"
                                 :key="mode"
                                 type="button"
-                                :title="interviewTooltip(day.date)"
                                 size="sm"
                                 :variant="
                                     viewMode === mode ? 'default' : 'ghost'
@@ -695,6 +709,7 @@ const articlesMock = [
                                 v-for="day in weekDays"
                                 :key="day.date.toISOString()"
                                 type="button"
+                                :title="interviewTooltip(day.date)"
                                 class="flex cursor-pointer flex-col items-center gap-1 rounded-lg px-1 py-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
                                 @click="selectDay(day.date)"
                             >
@@ -1335,3 +1350,4 @@ const articlesMock = [
         </Dialog>
     </div>
 </template>
+
