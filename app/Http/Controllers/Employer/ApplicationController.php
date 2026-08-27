@@ -29,6 +29,7 @@ class ApplicationController extends Controller
 
         return Inertia::render('Employer/Applications/Show', [
             'job' => $job,
+            'timezoneIdentifiers' => timezone_identifiers_list(),
             'application' => $application->load([
                 'user:id,name,email',
                 'resume.skills',
@@ -41,7 +42,7 @@ class ApplicationController extends Controller
                 'resume.awardHonors',
                 'resume.languages',
                 'resume.additionalInformation',
-                'interviewSession',
+                'interviewSession.events',
                 'conversation.messages',
             ]),
         ]);
