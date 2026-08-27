@@ -21,7 +21,7 @@ class DashboardController extends Controller
             ->get();
 
         $interviewSessions = InterviewSession::with('workJob:id,title,company')->where('user_id', auth()->id())
-            ->where('status', 'scheduled')->whereNotNull('scheduled_at')->orderBy('scheduled_at', 'desc')
+            ->where('status', 'scheduled')->whereNotNull('scheduled_at')->orderBy('scheduled_at')
             ->get();
 
         $profileFirstName = str(auth()->user()->email)->before('@')->toString();
@@ -42,3 +42,4 @@ class DashboardController extends Controller
         ]);
     }
 }
+
