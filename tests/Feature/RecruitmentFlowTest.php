@@ -129,6 +129,21 @@ test('scheduled interview is shared with dashboard and request tracker', functio
     $this->actingAs($candidate)->get(route('request-tracker'))->assertInertia(fn ($page) => $page->where('applications.0.interview_session.timezone', 'America/Chicago'));
 });
 
+test('dashboard returns the nearest scheduled interview first and excludes cancelled interviews', function () {
+    extract(recruitmentFixture());
+    $base = ['user_id' => $candidate->id, 'employer_id' => $employer->id, 'resume_id' => $resume->id, 'work_job_id' => $job->id, 'application_id' => null, 'type' => 'job_interview', 'complexity' => 'standard', 'mode' => 'scheduled', 'timezone' => 'America/Chicago', 'duration_minutes' => 30];
+
+    InterviewSession::create([...$base, 'status' => 'scheduled', 'scheduled_at' => now()->addDays(5)]);
+    $nearest = InterviewSession::create([...$base, 'status' => 'scheduled', 'scheduled_at' => now()->addDay()]);
+    InterviewSession::create([...$base, 'status' => 'cancelled', 'scheduled_at' => now()->addHours(2), 'cancelled_at' => now()]);
+
+    $this->actingAs($candidate)->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page
+            ->has('interviewSessions', 2)
+            ->where('interviewSessions.0.id', $nearest->id)
+            ->where('interviewSessions.0.status', 'scheduled'));
+});
+
 test('candidate sees only their own scheduled interview information', function () {
     extract(recruitmentFixture());
     InterviewSession::create(['user_id' => $candidate->id, 'employer_id' => $employer->id, 'resume_id' => $resume->id, 'work_job_id' => $job->id, 'application_id' => $application->id, 'type' => 'job_interview', 'complexity' => 'standard', 'mode' => 'scheduled', 'status' => 'scheduled', 'scheduled_at' => now()->addDay(), 'timezone' => 'America/Chicago', 'duration_minutes' => 30]);
@@ -189,3 +204,4 @@ test('dashboard recommendations contain only real published employer jobs', func
     $this->actingAs($candidate)->get(route('dashboard', ['resume_id' => $resume->id]))
         ->assertInertia(fn ($page) => $page->has('recommendedJobs', 1)->where('recommendedJobs.0.job.id', $job->id));
 });
+
