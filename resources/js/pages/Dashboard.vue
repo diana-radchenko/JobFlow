@@ -233,12 +233,24 @@ const calendarDateForSession = (session: InterviewSession) => {
 };
 
 const today = startOfDay(new Date());
-const firstScheduledInterview = [...(props.interviewSessions ?? [])]
-    .filter((session) => session.scheduled_at)
-    .sort(
+const scheduledInterviews = [...(props.interviewSessions ?? [])].filter(
+    (session) => session.scheduled_at,
+);
+const firstScheduledInterview =
+    scheduledInterviews
+        .filter(
+            (session) =>
+                new Date(session.scheduled_at!).getTime() >= Date.now(),
+        )
+        .sort(
+            (a, b) =>
+                new Date(a.scheduled_at!).getTime() -
+                new Date(b.scheduled_at!).getTime(),
+        )[0] ??
+    scheduledInterviews.sort(
         (a, b) =>
-            new Date(a.scheduled_at!).getTime() -
-            new Date(b.scheduled_at!).getTime(),
+            new Date(b.scheduled_at!).getTime() -
+            new Date(a.scheduled_at!).getTime(),
     )[0];
 const initialCalendarDate = firstScheduledInterview
     ? calendarDateForSession(firstScheduledInterview)
