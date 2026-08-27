@@ -63,13 +63,34 @@ export type InterviewSession = {
     scheduled_at: string | null;
     timezone: string | null;
     duration_minutes: number | null;
+    interview_format: 'video' | 'phone' | 'in_person' | null;
+    meeting_link: string | null;
+    location: string | null;
     employer_note: string | null;
+    cancelled_at: string | null;
+    events: InterviewSessionEvent[];
     work_job: WorkJob;
     // relations
     user: User;
     // counts
     // exists
     user_exists: boolean;
+};
+
+export type InterviewSessionEvent = {
+    id: number;
+    interview_session_id: number;
+    changed_by: number | null;
+    action: 'scheduled' | 'rescheduled' | 'cancelled';
+    scheduled_at: string | null;
+    timezone: string | null;
+    duration_minutes: number | null;
+    interview_format: 'video' | 'phone' | 'in_person' | null;
+    meeting_link: string | null;
+    location: string | null;
+    employer_note: string | null;
+    created_at: string | null;
+    updated_at: string | null;
 };
 
 export type Project = {

@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Employer->value])
         Route::get('jobs/{job}/applications/{application}', [EmployerApplicationController::class, 'show'])->name('applications.show');
         Route::patch('jobs/{job}/applications/{application}', [EmployerApplicationController::class, 'update'])->name('applications.update');
         Route::post('jobs/{job}/applications/{application}/interview', [InterviewScheduleController::class, 'store'])->name('interviews.store');
+        Route::delete('jobs/{job}/applications/{application}/interview', [InterviewScheduleController::class, 'destroy'])->name('interviews.destroy');
     });
 
 Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->group(function () {
