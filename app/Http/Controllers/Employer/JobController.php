@@ -33,10 +33,15 @@ class JobController extends Controller
     {
         $this->authorize('view', $job);
 
+        $job->loadCount('applications');
+
         return Inertia::render('Employer/Jobs/Show', [
             'job' => $job,
             'applications' => $job->applications()
-                ->with('user:id,name,email')
+                ->with([
+                    'user:id,name,email',
+                    'resume:id,user_id,title',
+                ])
                 ->orderByDesc('created_at')
                 ->get(),
         ]);
@@ -89,3 +94,4 @@ class JobController extends Controller
             'employmentTypes' => config('jobs.employment_types'), 'workplaceTypes' => config('jobs.workplace_types')];
     }
 }
+

@@ -1,7 +1,10 @@
 <?php
 
 use App\Models\User;
+use App\Models\Resume;
+use App\Models\UserWorkJobApplication;
 use App\Models\WorkJob;
+use App\Enums\ApplicationStatus;
 
 beforeEach(function () {
     $this->employer = User::factory()->employer()->create();
@@ -107,6 +110,51 @@ test('an employer can update and delete their own job', function () {
     expect(WorkJob::query()->whereKey($job->id)->exists())->toBeFalse();
 });
 
+test('the published vacancy detail shows only real applicants for that vacancy', function () {
+    $job = WorkJob::factory()->for($this->employer, 'employer')->create(['status' => 'published']);
+    $otherJob = WorkJob::factory()->for($this->employer, 'employer')->create();
+    $candidate = User::factory()->create(['name' => 'Visible Candidate']);
+    $resume = Resume::create(['user_id' => $candidate->id, 'title' => 'Backend Engineer Resume']);
+    $application = UserWorkJobApplication::create([
+        'user_id' => $candidate->id,
+        'work_job_id' => $job->id,
+        'resume_id' => $resume->id,
+        'status' => ApplicationStatus::Applied,
+    ]);
+    UserWorkJobApplication::create([
+        'user_id' => User::factory()->create()->id,
+        'work_job_id' => $otherJob->id,
+        'status' => ApplicationStatus::Applied,
+    ]);
+
+    $this->actingAs($this->employer)
+        ->get(route('employer.jobs.show', $job))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Employer/Jobs/Show')
+            ->where('job.id', $job->id)
+            ->where('job.applications_count', 1)
+            ->has('applications', 1)
+            ->where('applications.0.id', $application->id)
+            ->where('applications.0.user.name', 'Visible Candidate')
+            ->where('applications.0.resume.title', 'Backend Engineer Resume'));
+});
+
+test('saving an edited vacancy returns to its published detail page', function () {
+    $job = WorkJob::factory()->for($this->employer, 'employer')->create(['status' => 'published']);
+
+    $this->actingAs($this->employer)->put(route('employer.jobs.update', $job), [
+        'title' => 'Updated Published Vacancy',
+        'company' => $job->company,
+        'location' => $job->location,
+        'contacts' => $job->contacts,
+        'description' => $job->description,
+        'status' => 'published',
+    ])->assertRedirect(route('employer.jobs.show', $job));
+
+    expect($job->refresh()->title)->toBe('Updated Published Vacancy');
+});
+
 test('an employer cannot touch another employers job', function () {
     $job = WorkJob::factory()->for(User::factory()->employer()->create(), 'employer')->create();
 
@@ -130,3 +178,4 @@ test('an employer cannot touch an unowned platform job', function () {
     $this->actingAs($this->employer)->get(route('employer.jobs.show', $job))->assertForbidden();
     $this->actingAs($this->employer)->delete(route('employer.jobs.destroy', $job))->assertForbidden();
 });
+
