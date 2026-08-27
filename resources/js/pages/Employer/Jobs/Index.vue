@@ -81,7 +81,14 @@ const formatDate = (date: string | null) =>
         <div class="grid gap-4 sm:grid-cols-2">
             <Card v-for="job in jobs" :key="job.id">
                 <CardHeader>
-                    <CardTitle>{{ job.title }}</CardTitle>
+                    <CardTitle>
+                        <Link
+                            :href="employerJobs.show(job.id)"
+                            class="transition-colors hover:text-primary"
+                        >
+                            {{ job.title }}
+                        </Link>
+                    </CardTitle>
                     <CardDescription>
                         {{ job.company }} &middot; {{ job.location }}
                     </CardDescription>
@@ -91,7 +98,7 @@ const formatDate = (date: string | null) =>
                         class="flex flex-wrap gap-4 text-xs text-foreground/60"
                     >
                         <Link
-                            :href="employerJobs.show(job.id)"
+                            :href="`${employerJobs.show(job.id).url}#applicants`"
                             class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-base font-bold text-primary-foreground shadow"
                         >
                             <Users class="h-3.5 w-3.5" />
@@ -102,7 +109,7 @@ const formatDate = (date: string | null) =>
                     <div class="flex flex-wrap gap-2">
                         <Button as-child size="sm">
                             <Link :href="employerJobs.show(job.id)">
-                                View Applications
+                                View Vacancy
                             </Link>
                         </Button>
                         <Button as-child size="sm" variant="outline">
@@ -124,3 +131,4 @@ const formatDate = (date: string | null) =>
         </div>
     </div>
 </template>
+
