@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" role="img" aria-labelledby="title desc">
+  <title id="title">Flexible work planning</title><desc id="desc">A desk, calendar and rising sun in calm blue tones.</desc>
+  <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#e0f2fe"/><stop offset="1" stop-color="#dbeafe"/></linearGradient></defs>
+  <rect width="800" height="360" rx="36" fill="url(#bg)"/><circle cx="660" cy="90" r="54" fill="#fbbf24" opacity=".9"/>
+  <path d="M75 278h650" stroke="#0f172a" stroke-width="14" stroke-linecap="round"/><rect x="160" y="125" width="250" height="140" rx="18" fill="#fff"/><rect x="190" y="95" width="190" height="150" rx="16" fill="#fff" stroke="#2563eb" stroke-width="10"/>
+  <path d="M190 140h190M235 80v35M335 80v35" stroke="#2563eb" stroke-width="12" stroke-linecap="round"/><path d="m225 183 24 24 60-62" fill="none" stroke="#16a34a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M485 275c20-66 72-112 136-112s116 46 136 112" fill="#93c5fd" opacity=".8"/><path d="M520 275c18-45 55-76 101-76s83 31 101 76" fill="#2563eb" opacity=".72"/>
+</svg>
+

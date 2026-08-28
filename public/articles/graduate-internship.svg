@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" role="img" aria-labelledby="title desc">
+  <title id="title">Graduate internship</title><desc id="desc">A graduation cap beside a professional briefcase.</desc>
+  <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#ffedd5"/><stop offset="1" stop-color="#fef3c7"/></linearGradient></defs><rect width="800" height="360" rx="36" fill="url(#bg)"/>
+  <path d="m110 128 190-78 190 78-190 78z" fill="#1e293b"/><path d="M174 160v74c68 44 184 44 252 0v-74" fill="#334155"/><path d="M490 128v108" stroke="#f59e0b" stroke-width="12"/><circle cx="490" cy="246" r="18" fill="#f59e0b"/>
+  <rect x="470" y="174" width="230" height="130" rx="20" fill="#fff" stroke="#d97706" stroke-width="12"/><path d="M540 174v-24c0-18 14-32 32-32h26c18 0 32 14 32 32v24" fill="none" stroke="#d97706" stroke-width="12"/><path d="M470 226h230" stroke="#f59e0b" stroke-width="10"/><rect x="565" y="214" width="40" height="26" rx="7" fill="#92400e"/>
+</svg>
+
