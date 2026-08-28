@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InterviewSession;
 use App\Models\UserWorkJobApplication;
 use App\Models\WorkJob;
+use App\Services\JobConversationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +17,12 @@ use Illuminate\Validation\Rule;
 
 class InterviewScheduleController extends Controller
 {
-    public function store(Request $request, WorkJob $job, UserWorkJobApplication $application): RedirectResponse
+    public function store(
+        Request $request,
+        WorkJob $job,
+        UserWorkJobApplication $application,
+        JobConversationService $conversations,
+    ): RedirectResponse
     {
         $this->authorize('update', $job);
         abort_unless($application->work_job_id === $job->id, 404);
@@ -44,7 +50,7 @@ class InterviewScheduleController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($application, $job, $localDateTime, $validated): void {
+        DB::transaction(function () use ($application, $job, $localDateTime, $validated, $conversations): void {
             $interview = InterviewSession::firstOrNew(['application_id' => $application->id]);
             $action = $interview->exists ? 'rescheduled' : 'scheduled';
 
@@ -77,17 +83,22 @@ class InterviewScheduleController extends Controller
             ]);
 
             $application->update(['status' => ApplicationStatus::InterviewScheduled]);
+            $conversations->recordInterviewEvent($application, $interview, $action, auth()->id());
         });
 
         return back()->with('success', 'Interview scheduled successfully.');
     }
 
-    public function destroy(WorkJob $job, UserWorkJobApplication $application): RedirectResponse
+    public function destroy(
+        WorkJob $job,
+        UserWorkJobApplication $application,
+        JobConversationService $conversations,
+    ): RedirectResponse
     {
         $this->authorize('update', $job);
         abort_unless($application->work_job_id === $job->id, 404);
 
-        DB::transaction(function () use ($application): void {
+        DB::transaction(function () use ($application, $conversations): void {
             $interview = $application->interviewSession()->where('status', 'scheduled')->firstOrFail();
             $interview->update(['status' => 'cancelled', 'cancelled_at' => now()]);
             $interview->events()->create([
@@ -99,8 +110,10 @@ class InterviewScheduleController extends Controller
                 ]),
             ]);
             $application->update(['status' => ApplicationStatus::Applied]);
+            $conversations->recordInterviewEvent($application, $interview, 'cancelled', auth()->id());
         });
 
         return back()->with('success', 'Interview cancelled. The interview history was retained.');
     }
 }
+

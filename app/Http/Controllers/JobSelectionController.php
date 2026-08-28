@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\JobSelectionRequest;
 use App\Models\UserWorkJobApplication;
+use App\Services\JobConversationService;
 use App\Models\WorkJob;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -60,14 +61,14 @@ class JobSelectionController extends Controller
         ]);
     }
 
-    public function apply(Request $request, WorkJob $job): RedirectResponse
+    public function apply(Request $request, WorkJob $job, JobConversationService $conversations): RedirectResponse
     {
         abort_unless($job->user_id !== null && $job->status === 'published', 404);
         $validated = $request->validate([
             'resume_id' => ['required', Rule::exists('resumes', 'id')->where('user_id', auth()->id())],
         ]);
 
-        UserWorkJobApplication::firstOrCreate(
+        $application = UserWorkJobApplication::firstOrCreate(
             [
                 'user_id' => auth()->id(),
                 'work_job_id' => $job->id,
@@ -75,6 +76,9 @@ class JobSelectionController extends Controller
             $validated,
         );
 
+        $conversations->forApplication($application);
+
         return redirect()->route('job-selection.show', $job)->with('success', 'Application submitted successfully!');
     }
 }
+
