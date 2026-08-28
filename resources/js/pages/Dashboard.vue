@@ -8,6 +8,12 @@ import {
     Heart,
     ChevronLeft,
     ChevronRight,
+    BriefcaseBusiness,
+    CalendarDays,
+    Clock3,
+    FileCheck2,
+    Target,
+    Video,
 } from 'lucide-vue-next';
 import { computed, reactive, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
@@ -57,13 +63,35 @@ interface ResumeScoreResult {
     removals: string[];
 }
 
+interface DashboardSummary {
+    applications: number;
+    interviews: number;
+    resumeCompleteness: number | null;
+    recommendedMatches: number;
+}
+
+interface DashboardArticle {
+    id: string;
+    image: string;
+    fallback_image: string;
+    category: string;
+    title: string;
+    description?: string;
+    reading_time: string;
+    url: string;
+    source: string;
+}
+
 const props = defineProps<{
     applications: UserWorkJobApplication[] | null;
     interviewSessions: InterviewSession[] | null;
+    nextInterview: InterviewSession | null;
+    dashboardSummary: DashboardSummary;
     profileFirstName: string;
     resumes: DashboardResume[];
     selectedResumeId: number | null;
     recommendedJobs: Array<{ job: WorkJob; score: number; reasons: string[] }>;
+    articles: DashboardArticle[];
 }>();
 
 const visitJob = (app: any) => {
@@ -80,6 +108,10 @@ const visitRequestTracker = () => {
     router.visit('/request-tracker');
 };
 
+const prepareForInterview = () => {
+    router.visit('/interview-preparation');
+};
+
 defineOptions({
     layout: {
         breadcrumbs: [
@@ -91,38 +123,65 @@ defineOptions({
     },
 });
 
-// Mock data
-/* const mockApplications = [
-    {
-        id: 'm1',
-        company: 'TechCorp',
-        title: 'Software Developer',
-        salary: '85,000',
-        status: 'Interview Scheduled',
-        statusClass: 'status-green',
-    },
-    {
-        id: 'm3',
-        company: 'DataSoft',
-        title: 'Data Analyst',
-        salary: '75,000',
-        status: 'Rejected',
-        statusClass: 'status-red',
-    },
-]; */
+const applicationStatus = (app: UserWorkJobApplication) => {
+    const raw = String(app.status).toLowerCase();
+
+    if (raw === 'applied' && app.viewed_at) {
+        return {
+            label: 'Viewed',
+            tone: 'bg-blue-100 text-blue-800',
+            icon: 'Seen',
+        };
+    }
+
+    const statuses: Record<
+        string,
+        { label: string; tone: string; icon: string }
+    > = {
+        applied: {
+            label: 'Applied',
+            tone: 'bg-slate-100 text-slate-800',
+            icon: 'Sent',
+        },
+        shortlisted: {
+            label: 'Shortlisted',
+            tone: 'bg-violet-100 text-violet-800',
+            icon: 'Selected',
+        },
+        interview_scheduled: {
+            label: 'Interview Scheduled',
+            tone: 'bg-amber-100 text-amber-900',
+            icon: 'Calendar',
+        },
+        rejected: {
+            label: 'Rejected',
+            tone: 'bg-rose-100 text-rose-800',
+            icon: 'Closed',
+        },
+        offer: {
+            label: 'Offer',
+            tone: 'bg-emerald-100 text-emerald-800',
+            icon: 'Offer',
+        },
+        hired: {
+            label: 'Offer',
+            tone: 'bg-emerald-100 text-emerald-800',
+            icon: 'Offer',
+        },
+    };
+
+    return (
+        statuses[raw] ?? {
+            label: stringForHuman(app.status),
+            tone: 'bg-slate-100 text-slate-800',
+            icon: 'Status',
+        }
+    );
+};
 
 const tableApplications = computed(() => {
     const realApps = (props.applications || []).map((app) => {
-        const statusText = stringForHuman(app.status);
-        let statusClass = 'status-grey';
-
-        if (statusText.toLowerCase().includes('interview')) {
-            statusClass = 'status-green';
-        }
-
-        if (statusText.toLowerCase().includes('reject')) {
-            statusClass = 'status-red';
-        }
+        const status = applicationStatus(app);
 
         return {
             id: app.id,
@@ -132,14 +191,12 @@ const tableApplications = computed(() => {
             salary: app.work_job?.salary_start
                 ? Number(app.work_job.salary_start).toLocaleString()
                 : '-',
-            status: statusText,
-            statusClass,
+            status: status.label,
+            statusTone: status.tone,
+            statusIcon: status.icon,
         };
     });
 
-    // Only take real + 2 mock as requested or all mock?
-    // "Notice that Application tracker should be like this @resources/js/pages/RequestTracker.vue:176-219 (real + 2 mock test applications)"
-    // The prompt means real + some mock test applications.
     return [...realApps];
 });
 
@@ -231,6 +288,30 @@ const calendarDateForSession = (session: InterviewSession) => {
 
     return new Date(year, month - 1, day, 12);
 };
+
+const interviewDate = (session: InterviewSession) =>
+    new Intl.DateTimeFormat(undefined, {
+        timeZone: session.timezone ?? 'UTC',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+    }).format(new Date(session.scheduled_at!));
+
+const interviewTime = (session: InterviewSession) =>
+    new Intl.DateTimeFormat(undefined, {
+        timeZone: session.timezone ?? 'UTC',
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZoneName: 'short',
+    }).format(new Date(session.scheduled_at!));
+
+const interviewFormat = (session: InterviewSession) =>
+    session.interview_format
+        ? `${stringForHuman(session.interview_format)} interview`
+        : 'Interview';
+
+const isPastInterview = (session: InterviewSession) =>
+    new Date(session.scheduled_at!).getTime() < Date.now();
 
 const today = startOfDay(new Date());
 const scheduledInterviews = [...(props.interviewSessions ?? [])].filter(
@@ -438,16 +519,11 @@ const timelineEvents = computed(() => {
         sessionsByDay.value.get(localDateKey(selectedDate.value)) || [];
 
     return sessions.map((session) => {
-        const time = new Intl.DateTimeFormat(undefined, {
-            timeZone: session.timezone ?? 'UTC',
-            hour: '2-digit',
-            minute: '2-digit',
-        }).format(new Date(session.scheduled_at!));
-
         return {
-            time,
+            time: interviewTime(session),
             title: `${session.work_job?.company ?? 'Employer'} · ${session.work_job?.title ?? 'Interview'}`,
-            duration: `${session.timezone ?? 'UTC'} · ${session.duration_minutes ?? 30} minutes`,
+            duration: `${session.duration_minutes ?? 30} minutes · ${interviewFormat(session)}`,
+            isPast: isPastInterview(session),
             session,
         };
     });
@@ -456,13 +532,7 @@ const timelineEvents = computed(() => {
 const interviewTooltip = (date: Date) =>
     (sessionsByDay.value.get(localDateKey(date)) ?? [])
         .map((session) => {
-            const time = new Intl.DateTimeFormat(undefined, {
-                timeZone: session.timezone ?? 'UTC',
-                hour: '2-digit',
-                minute: '2-digit',
-            }).format(new Date(session.scheduled_at!));
-
-            return `${time} (${session.timezone ?? 'UTC'})\n${session.work_job?.company ?? 'Employer'}\n${session.work_job?.title ?? 'Interview'}`;
+            return `Interview\n${interviewTime(session)}\n${session.work_job?.company ?? 'Employer'}\n${session.work_job?.title ?? 'Interview'}`;
         })
         .join('\n\n');
 
@@ -600,62 +670,166 @@ const selectResumeForScoring = (resumeId: number) => {
     }
 };
 
-const articlesMock = [
-    {
-        id: 1,
-        image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=400&h=150&auto=format&fit=crop',
-        title: 'Working Part-Time in Retirement: Is It Right for You?',
-        url: 'https://www.tiaa.org/public/transitioners/working-part-time-in-retirement--is-it-right-for-you',
-        source: 'TIAA',
-    },
-    {
-        id: 2,
-        image: 'https://proximus.talent-pool.com/cdn/image/5337d40d-aa5a-4cca-96eb-2ee1485ee6aa?withoutEnlargement=true&width=1440&format=webp',
-        title: 'Why freelance at Proximus?',
-        url: 'https://proximus.talent-pool.com/category/274/data-analysts-security?utm_medium=paidsearch&utm_source=googlesearch_rsr&utm_campaign=proximus_belgium_softwareengineering_talent_pool&utm_content=english-uk_text&gad_source=1&gad_campaignid=23822730197&gbraid=0AAAAA-QuVl7UcuDyNP2qXDQP1ukHqa0Dd&gclid=Cj0KCQjw3K7RBhDJARIsAKRtP5S60GfJvKYGUPXRZqXmqMS23enhCyn1edDxp1YTfGH5XLpkwMbT0koaAm8lEALw_wcB',
-        source: 'Proximus',
-    },
-    {
-        id: 3,
-        image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=400&h=150&auto=format&fit=crop',
-        title: 'How to Become a Financial Planner After 50: A Late-Career Pivot',
-        url: 'https://www.aarp.org/work/careers/financial-planner-career-change/?utm_source',
-        source: 'AARP',
-    },
-    {
-        id: 4,
-        image: 'https://www.kingseducation.com/assets/uploads/Stout_800.jpg',
-        title: 'Why (and how) to get an internship after graduation',
-        url: 'https://www.kingseducation.com/kings-life/internship-after-graduation?utm_source',
-        source: 'Kings Education',
-    },
-];
+const useArticleFallback = (event: Event, fallback: string) => {
+    const image = event.currentTarget as HTMLImageElement;
+
+    if (image.dataset.fallbackApplied) {
+        return;
+    }
+
+    image.dataset.fallbackApplied = 'true';
+    image.src = fallback;
+};
 </script>
 
 <template>
     <Head title="Dashboard" />
 
     <div class="container mx-auto max-w-[1400px] px-5 py-8 font-sans">
+        <div class="mb-6 flex items-center gap-3">
+            <div
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800"
+            >
+                <Bot class="h-6 w-6 text-slate-700 dark:text-slate-300" />
+            </div>
+            <h1
+                class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50"
+            >
+                Welcome back, {{ props.profileFirstName }}!
+            </h1>
+        </div>
+
+        <section
+            aria-label="Job search summary"
+            class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4"
+        >
+            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
+                <CardContent class="flex items-center gap-3 p-4">
+                    <BriefcaseBusiness class="h-5 w-5 text-blue-600" />
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">
+                            Applications
+                        </p>
+                        <p class="text-2xl font-extrabold">
+                            {{ dashboardSummary.applications }}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
+                <CardContent class="flex items-center gap-3 p-4">
+                    <CalendarDays class="h-5 w-5 text-amber-600" />
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">
+                            Interviews
+                        </p>
+                        <p class="text-2xl font-extrabold">
+                            {{ dashboardSummary.interviews }}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
+                <CardContent class="flex items-center gap-3 p-4">
+                    <FileCheck2 class="h-5 w-5 text-emerald-600" />
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">
+                            Resume completeness
+                        </p>
+                        <p class="text-2xl font-extrabold">
+                            {{
+                                dashboardSummary.resumeCompleteness === null
+                                    ? '—'
+                                    : `${dashboardSummary.resumeCompleteness}%`
+                            }}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
+                <CardContent class="flex items-center gap-3 p-4">
+                    <Target class="h-5 w-5 text-violet-600" />
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">
+                            Recommended matches
+                        </p>
+                        <p class="text-2xl font-extrabold">
+                            {{ dashboardSummary.recommendedMatches }}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+        </section>
+
+        <Card
+            v-if="nextInterview"
+            class="mb-6 overflow-hidden border-amber-200 bg-gradient-to-r from-amber-50 to-white shadow-sm dark:border-amber-900/60 dark:from-amber-950/30 dark:to-slate-950"
+        >
+            <CardContent
+                class="flex flex-col gap-5 p-5 xl:flex-row xl:items-center xl:justify-between"
+            >
+                <div class="flex min-w-0 gap-4">
+                    <div
+                        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white"
+                    >
+                        <CalendarDays class="h-6 w-6" />
+                    </div>
+                    <div class="min-w-0">
+                        <p
+                            class="text-sm font-bold text-amber-800 dark:text-amber-300"
+                        >
+                            Next Interview
+                        </p>
+                        <h2
+                            class="mt-1 truncate text-xl font-extrabold text-slate-950 dark:text-white"
+                        >
+                            {{ nextInterview.work_job?.title ?? 'Interview' }}
+                        </h2>
+                        <p
+                            class="font-medium text-slate-600 dark:text-slate-300"
+                        >
+                            {{ nextInterview.work_job?.company ?? 'Employer' }}
+                        </p>
+                    </div>
+                </div>
+                <div
+                    class="grid gap-2 text-sm text-slate-700 sm:grid-cols-3 dark:text-slate-200"
+                >
+                    <span class="flex items-center gap-2"
+                        ><CalendarDays class="h-4 w-4 text-amber-600" />{{
+                            interviewDate(nextInterview)
+                        }}</span
+                    >
+                    <span class="flex items-center gap-2"
+                        ><Clock3 class="h-4 w-4 text-amber-600" />{{
+                            interviewTime(nextInterview)
+                        }}</span
+                    >
+                    <span class="flex items-center gap-2"
+                        ><Video class="h-4 w-4 text-amber-600" />{{
+                            interviewFormat(nextInterview)
+                        }}</span
+                    >
+                </div>
+                <div class="flex shrink-0 flex-wrap gap-2">
+                    <Button
+                        variant="outline"
+                        @click="visitSession(nextInterview)"
+                        >View Details</Button
+                    >
+                    <Button @click="prepareForInterview"
+                        ><Sparkles class="mr-2 h-4 w-4" />Prepare with
+                        AI</Button
+                    >
+                </div>
+            </CardContent>
+        </Card>
+
         <div
-            class="grid grid-cols-1 gap-8 lg:grid-cols-[320px_1fr] xl:grid-cols-[380px_1fr]"
+            class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)]"
         >
             <!-- Left Column: Schedule -->
             <div class="space-y-6">
-                <div class="mb-8 flex items-center gap-3">
-                    <div
-                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800"
-                    >
-                        <Bot
-                            class="h-6 w-6 text-slate-700 dark:text-slate-300"
-                        />
-                    </div>
-                    <h1
-                        class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50"
-                    >
-                        Welcome back, {{ props.profileFirstName }}!
-                    </h1>
-                </div>
-
                 <h2
                     class="text-xl font-bold text-slate-900 dark:text-slate-100"
                 >
@@ -855,7 +1029,12 @@ const articlesMock = [
                                     class="relative z-10 flex w-20 shrink-0 justify-end"
                                 >
                                     <div
-                                        class="flex h-10 items-center justify-center rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground shadow-sm"
+                                        class="flex h-10 items-center justify-center rounded-full px-4 text-xs font-bold shadow-sm"
+                                        :class="
+                                            event.isPast
+                                                ? 'bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                                                : 'bg-primary text-primary-foreground'
+                                        "
                                     >
                                         {{ event.time }}
                                     </div>
@@ -865,17 +1044,25 @@ const articlesMock = [
                                 <div class="mt-6 flex-1">
                                     <button
                                         type="button"
-                                        class="relative w-full cursor-pointer rounded-[16px] bg-primary p-4 text-left text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
+                                        class="relative w-full cursor-pointer rounded-[16px] p-4 text-left shadow-sm transition-opacity hover:opacity-90"
+                                        :class="
+                                            event.isPast
+                                                ? 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                                                : 'bg-primary text-primary-foreground'
+                                        "
                                         @click="visitSession(event.session)"
                                     >
                                         <div class="text-[15px] font-bold">
                                             {{ event.title }}
                                         </div>
-                                        <div
-                                            class="mt-1 text-sm text-primary-foreground/80"
-                                        >
+                                        <div class="mt-1 text-sm opacity-80">
                                             {{ event.duration }}
                                         </div>
+                                        <span
+                                            v-if="event.isPast"
+                                            class="mt-2 inline-block text-xs font-bold tracking-wide uppercase"
+                                            >Past interview</span
+                                        >
                                         <div
                                             class="absolute top-4 right-4 h-2 w-2 rounded-full bg-white"
                                         ></div>
@@ -1079,15 +1266,21 @@ const articlesMock = [
                                             <div
                                                 class="inline-flex w-full min-w-[160px] items-center justify-end gap-3"
                                             >
-                                                <span
-                                                    class="text-slate-500 dark:text-slate-400"
-                                                    >{{ app.status }}</span
+                                                <Badge
+                                                    :aria-label="`Application status: ${app.status}`"
+                                                    class="gap-1.5 border-0 px-3 py-1 font-bold"
+                                                    :class="app.statusTone"
                                                 >
-                                                <!-- Custom colored box according to status -->
-                                                <div
-                                                    class="h-4 w-4 rounded-sm shadow-sm"
-                                                    :class="app.statusClass"
-                                                ></div>
+                                                    <span
+                                                        aria-hidden="true"
+                                                        class="text-[10px]"
+                                                        >●</span
+                                                    >
+                                                    {{ app.status }}
+                                                    <span class="sr-only">{{
+                                                        app.statusIcon
+                                                    }}</span>
+                                                </Badge>
                                             </div>
                                         </td>
                                     </tr>
@@ -1225,7 +1418,7 @@ const articlesMock = [
                         </div>
                         <div class="space-y-4">
                             <a
-                                v-for="article in articlesMock"
+                                v-for="article in articles"
                                 :key="article.id"
                                 :href="article.url"
                                 target="_blank"
@@ -1233,23 +1426,47 @@ const articlesMock = [
                             >
                                 <img
                                     :src="article.image"
-                                    alt="Article cover"
-                                    class="h-38 w-full rounded-t-[16px] object-cover"
+                                    :alt="`${article.title} cover`"
+                                    class="h-40 w-full rounded-t-[16px] object-cover"
+                                    loading="lazy"
                                     @error="
-                                        (
-                                            $event.currentTarget as HTMLImageElement
-                                        ).src = '/flow_bg_transparent.png'
+                                        useArticleFallback(
+                                            $event,
+                                            article.fallback_image,
+                                        )
                                     "
                                 />
-                                <p
-                                    class="px-4 pb-4 text-[15px] leading-snug font-bold text-slate-900 dark:text-slate-100"
-                                >
-                                    {{ article.title }}
-                                    <span
-                                        class="mt-1 block text-xs font-medium text-slate-500"
-                                        >{{ article.source }}</span
+                                <div class="px-4 pb-4">
+                                    <div
+                                        class="mb-2 flex items-center justify-between gap-3 text-xs font-bold"
                                     >
-                                </p>
+                                        <span class="text-primary">{{
+                                            article.category
+                                        }}</span>
+                                        <span class="text-slate-500">{{
+                                            article.reading_time
+                                        }}</span>
+                                    </div>
+                                    <p
+                                        class="text-[15px] leading-snug font-bold text-slate-900 dark:text-slate-100"
+                                    >
+                                        {{ article.title }}
+                                    </p>
+                                    <p
+                                        v-if="article.description"
+                                        class="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400"
+                                    >
+                                        {{ article.description }}
+                                    </p>
+                                    <div
+                                        class="mt-3 flex items-center justify-between text-xs font-semibold text-slate-500"
+                                    >
+                                        <span>{{ article.source }}</span>
+                                        <span class="text-primary"
+                                            >Open / Read →</span
+                                        >
+                                    </div>
+                                </div>
                             </a>
                         </div>
                     </div>
