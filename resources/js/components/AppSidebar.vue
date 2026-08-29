@@ -154,8 +154,12 @@ function handleNavigation() {
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader>
+    <Sidebar
+        collapsible="icon"
+        variant="inset"
+        class="border-r border-white/10 bg-[#071F49] text-slate-200 [--sidebar:#071F49] [--sidebar-accent:#0B2F66] [--sidebar-accent-foreground:#FFFFFF] [--sidebar-border:rgba(255,255,255,0.10)] [--sidebar-foreground:#DCE5F4] [--sidebar-primary:#3157D5] [--sidebar-primary-foreground:#FFFFFF]"
+    >
+        <SidebarHeader class="bg-[#071F49] text-white">
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton
@@ -171,11 +175,11 @@ function handleNavigation() {
             </SidebarMenu>
         </SidebarHeader>
 
-        <SidebarContent>
+        <SidebarContent class="bg-[#071F49]">
             <NavMain :items="mainNavItems" />
         </SidebarContent>
 
-        <SidebarFooter>
+        <SidebarFooter class="bg-[#071F49] text-slate-200">
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
