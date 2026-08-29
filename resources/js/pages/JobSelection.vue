@@ -155,10 +155,14 @@ defineOptions({
 <template>
     <Head title="Job Selection" />
 
-    <div class="flex h-full flex-1 gap-6 bg-white p-4 md:p-6 dark:bg-stone-900">
-        <aside class="w-72 flex-shrink-0 self-start rounded-xl bg-blueish p-6">
+    <div
+        class="flex min-h-full flex-1 gap-6 bg-slate-50/80 p-4 md:p-6 dark:bg-stone-950"
+    >
+        <aside
+            class="w-72 flex-shrink-0 self-start rounded-2xl border border-blue-100 bg-blue-50/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        >
             <div class="mb-5 flex items-center justify-between gap-3">
-                <h2 class="font-bold">Vacancy filters</h2>
+                <h2 class="text-lg font-bold">Vacancy filters</h2>
                 <button
                     type="button"
                     class="text-sm font-semibold text-primary underline-offset-4 hover:underline"
@@ -268,6 +272,14 @@ defineOptions({
         </aside>
 
         <main class="min-w-0 flex-1 space-y-5">
+            <header>
+                <h1 class="text-2xl font-bold text-slate-950 dark:text-white">
+                    Job Selection
+                </h1>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                    Explore active opportunities matched to your profile.
+                </p>
+            </header>
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex flex-wrap gap-2" aria-label="Vacancy views">
                     <Button
@@ -282,7 +294,7 @@ defineOptions({
                     </Button>
                 </div>
                 <div class="flex items-center gap-3">
-                    <strong class="text-sm"
+                    <strong class="text-base"
                         >{{ jobs.length }} jobs found</strong
                     >
                     <label for="job-sort" class="sr-only">Sort by</label>
@@ -342,7 +354,7 @@ defineOptions({
                 v-for="job in jobs"
                 :key="job.id"
                 :href="jobSelectionShow.url(job)"
-                class="group block rounded-2xl border border-stone-200 bg-white p-6 shadow-sm transition hover:border-primary/40 hover:shadow-md dark:border-stone-800 dark:bg-stone-900"
+                class="group block rounded-2xl border border-stone-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md dark:border-stone-800 dark:bg-stone-900"
             >
                 <div
                     class="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"
@@ -381,7 +393,7 @@ defineOptions({
                         </div>
 
                         <div
-                            class="grid gap-2 text-sm text-stone-600 sm:grid-cols-2 dark:text-stone-300"
+                            class="grid gap-2 text-base text-stone-600 sm:grid-cols-2 dark:text-stone-300"
                         >
                             <span class="flex items-center gap-2"
                                 ><Building2 class="h-4 w-4" />{{
