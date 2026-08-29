@@ -107,277 +107,309 @@ const formatDate = (date: string) =>
 <template>
     <Head title="My Resumes" />
 
-    <div class="mx-auto max-w-7xl space-y-6 p-6">
-        <div>
-            <h1 class="text-2xl font-semibold">My Resumes</h1>
-            <p class="text-sm text-foreground/60">
-                Keep separate resumes to highlight different skills and
-                experience for different job applications.
-            </p>
-        </div>
-        <Button
-            v-if="!showCreateForm"
-            type="button"
-            @click="showCreateForm = true"
-        >
-            <Plus class="mr-2 h-4 w-4" />
-            New Resume
-        </Button>
-
-        <Card v-if="showCreateForm">
-            <CardContent class="pt-6">
-                <form
-                    @submit.prevent="submitCreate"
-                    class="flex items-end gap-3"
-                >
-                    <div class="flex-1">
-                        <label
-                            for="new-resume-title"
-                            class="mb-1 block text-sm font-medium"
-                        >
-                            Resume title
-                        </label>
-                        <Input
-                            id="new-resume-title"
-                            v-model="createForm.title"
-                            placeholder="e.g., Frontend Developer - Acme Corp"
-                            required
-                        />
-                    </div>
-                    <Button type="submit" :disabled="createForm.processing">
-                        Create
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        @click="
-                            showCreateForm = false;
-                            createForm.reset();
-                        "
-                    >
-                        Cancel
-                    </Button>
-                </form>
-            </CardContent>
-        </Card>
-
-        <div
-            v-if="resumes.length === 0 && !showCreateForm"
-            class="py-12 text-center"
-        >
-            <FileText class="mx-auto mb-3 h-10 w-10 text-foreground/30" />
-            <p class="text-foreground/60">
-                Create your first resume to apply for jobs and receive tailored
-                recommendations.
-            </p>
-            <Button class="mt-4" @click="showCreateForm = true"
-                ><Plus class="mr-2 h-4 w-4" />Create Resume</Button
+    <div class="min-h-full bg-slate-50/70 p-6 dark:bg-slate-950">
+        <div class="mx-auto max-w-7xl space-y-6">
+            <div>
+                <h1 class="text-2xl font-semibold">My Resumes</h1>
+                <p class="text-sm text-foreground/60">
+                    Keep separate resumes to highlight different skills and
+                    experience for different job applications.
+                </p>
+            </div>
+            <Button
+                v-if="!showCreateForm"
+                type="button"
+                @click="showCreateForm = true"
             >
-        </div>
+                <Plus class="mr-2 h-4 w-4" />
+                New Resume
+            </Button>
 
-        <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-            <div class="grid content-start gap-4 sm:grid-cols-2">
-                <Card
-                    v-for="resume in resumes"
-                    :key="resume.id"
-                    class="cursor-pointer transition"
-                    :class="
-                        selectedResumeId === resume.id &&
-                        'border-primary ring-1 ring-primary/30'
-                    "
-                    @click="selectedResumeId = resume.id"
-                >
-                    <CardHeader>
-                        <form
-                            v-if="editingId === resume.id"
-                            @submit.prevent="submitRename(resume)"
-                            class="flex gap-2"
-                        >
+            <Card v-if="showCreateForm">
+                <CardContent class="pt-6">
+                    <form
+                        @submit.prevent="submitCreate"
+                        class="flex items-end gap-3"
+                    >
+                        <div class="flex-1">
+                            <label
+                                for="new-resume-title"
+                                class="mb-1 block text-sm font-medium"
+                            >
+                                Resume title
+                            </label>
                             <Input
-                                v-model="renameForm.title"
-                                autofocus
+                                id="new-resume-title"
+                                v-model="createForm.title"
+                                placeholder="e.g., Frontend Developer - Acme Corp"
                                 required
                             />
-                            <Button
-                                type="submit"
-                                size="sm"
-                                :disabled="renameForm.processing"
+                        </div>
+                        <Button type="submit" :disabled="createForm.processing">
+                            Create
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            @click="
+                                showCreateForm = false;
+                                createForm.reset();
+                            "
+                        >
+                            Cancel
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
+
+            <div
+                v-if="resumes.length === 0 && !showCreateForm"
+                class="py-12 text-center"
+            >
+                <FileText class="mx-auto mb-3 h-10 w-10 text-foreground/30" />
+                <p class="text-foreground/60">
+                    Create your first resume to apply for jobs and receive
+                    tailored recommendations.
+                </p>
+                <Button class="mt-4" @click="showCreateForm = true"
+                    ><Plus class="mr-2 h-4 w-4" />Create Resume</Button
+                >
+            </div>
+
+            <div
+                class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"
+            >
+                <div class="grid content-start gap-4 sm:grid-cols-2">
+                    <Card
+                        v-for="resume in resumes"
+                        :key="resume.id"
+                        class="cursor-pointer border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+                        :class="
+                            selectedResumeId === resume.id &&
+                            'border-primary bg-blue-50/60 ring-1 ring-primary/30'
+                        "
+                        @click="selectedResumeId = resume.id"
+                    >
+                        <CardHeader>
+                            <form
+                                v-if="editingId === resume.id"
+                                @submit.prevent="submitRename(resume)"
+                                class="flex gap-2"
                             >
-                                Save
-                            </Button>
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                @click="editingId = null"
+                                <Input
+                                    v-model="renameForm.title"
+                                    autofocus
+                                    required
+                                />
+                                <Button
+                                    type="submit"
+                                    size="sm"
+                                    :disabled="renameForm.processing"
+                                >
+                                    Save
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    @click="editingId = null"
+                                >
+                                    Cancel
+                                </Button>
+                            </form>
+                            <template v-else>
+                                <CardTitle
+                                    class="text-lg leading-snug font-bold"
+                                    >{{ resume.title }}</CardTitle
+                                >
+                                <CardDescription class="text-sm">
+                                    Updated {{ formatDate(resume.updated_at) }}
+                                </CardDescription>
+                            </template>
+                        </CardHeader>
+                        <CardContent class="space-y-4">
+                            <div class="rounded-xl bg-muted/60 p-4">
+                                <div
+                                    class="mb-3 flex items-center justify-between"
+                                >
+                                    <strong>Resume Completeness</strong
+                                    ><span
+                                        class="text-lg font-black text-primary"
+                                        >{{ resume.completeness }}%
+                                        Complete</span
+                                    >
+                                </div>
+                                <div class="grid gap-2 text-sm sm:grid-cols-2">
+                                    <span
+                                        v-for="item in resume.completeness_items.slice(
+                                            0,
+                                            6,
+                                        )"
+                                        :key="item.label"
+                                        class="flex items-center gap-2"
+                                        :class="
+                                            item.complete
+                                                ? 'text-emerald-700 dark:text-emerald-300'
+                                                : 'text-foreground/55'
+                                        "
+                                    >
+                                        <CheckCircle2
+                                            v-if="item.complete"
+                                            class="h-4 w-4"
+                                        /><Circle v-else class="h-4 w-4" />{{
+                                            item.label
+                                        }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div
+                                class="flex flex-wrap gap-4 text-sm text-foreground/60"
                             >
-                                Cancel
-                            </Button>
-                        </form>
-                        <template v-else>
-                            <CardTitle>{{ resume.title }}</CardTitle>
-                            <CardDescription>
-                                Updated {{ formatDate(resume.updated_at) }}
-                            </CardDescription>
-                        </template>
-                    </CardHeader>
-                    <CardContent class="space-y-4">
-                        <div class="rounded-xl bg-muted/60 p-4">
-                            <div class="mb-3 flex items-center justify-between">
-                                <strong>Resume Completeness</strong
-                                ><span class="text-lg font-black text-primary"
-                                    >{{ resume.completeness }}% Complete</span
+                                <span
+                                    >{{
+                                        resume.work_experiences_count
+                                    }}
+                                    experience</span
+                                >
+                                <span
+                                    >{{
+                                        resume.educations_count
+                                    }}
+                                    education</span
+                                >
+                                <span>{{ resume.skills_count }} skills</span>
+                                <span
+                                    >{{ resume.projects_count }} projects</span
                                 >
                             </div>
-                            <div class="grid gap-2 text-xs sm:grid-cols-2">
-                                <span
-                                    v-for="item in resume.completeness_items.slice(
-                                        0,
-                                        6,
-                                    )"
-                                    :key="item.label"
-                                    class="flex items-center gap-2"
-                                    :class="
-                                        item.complete
-                                            ? 'text-emerald-700 dark:text-emerald-300'
-                                            : 'text-foreground/55'
-                                    "
+                            <div class="flex flex-wrap gap-2">
+                                <Button as-child size="sm">
+                                    <a :href="resumeEditor.show.url(resume.id)">
+                                        Edit
+                                    </a>
+                                </Button>
+                                <Button as-child size="sm" variant="outline">
+                                    <a
+                                        :href="
+                                            resumeEditor.assistant.url(
+                                                resume.id,
+                                            )
+                                        "
+                                    >
+                                        <Sparkles class="mr-1 h-4 w-4" />
+                                        Build with AI
+                                    </a>
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    @click="startRename(resume)"
                                 >
-                                    <CheckCircle2
-                                        v-if="item.complete"
-                                        class="h-4 w-4"
-                                    /><Circle v-else class="h-4 w-4" />{{
-                                        item.label
+                                    <Pencil class="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    @click="duplicateResume(resume)"
+                                >
+                                    <Copy class="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    @click="deleteResume(resume)"
+                                >
+                                    <Trash2 class="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <Card
+                    v-if="selectedResume"
+                    class="h-fit border-blue-100 bg-blue-50/50 shadow-sm lg:sticky lg:top-6 dark:border-slate-800 dark:bg-slate-900"
+                >
+                    <CardHeader>
+                        <CardTitle class="text-xl font-bold"
+                            >Resume Insights</CardTitle
+                        >
+                        <CardDescription>
+                            Selected Resume: {{ selectedResume.title }}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent class="space-y-5">
+                        <div>
+                            <div
+                                class="flex items-center justify-between font-bold"
+                            >
+                                <span>Resume Completeness</span>
+                                <span class="text-xl text-primary"
+                                    >{{ selectedResume.completeness }}%</span
+                                >
+                            </div>
+                            <div
+                                class="mt-2 h-2 overflow-hidden rounded-full bg-muted"
+                            >
+                                <div
+                                    class="h-full rounded-full bg-primary"
+                                    :style="{
+                                        width: `${selectedResume.completeness}%`,
+                                    }"
+                                ></div>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div
+                                v-for="item in selectedResume.completeness_items"
+                                :key="item.label"
+                                class="flex items-center gap-2"
+                            >
+                                <CheckCircle2
+                                    v-if="item.complete"
+                                    class="h-4 w-4 text-emerald-600"
+                                />
+                                <Circle v-else class="h-4 w-4 text-amber-600" />
+                                <span
+                                    :class="!item.complete && 'font-semibold'"
+                                >
+                                    {{
+                                        item.complete
+                                            ? item.label
+                                            : `Add ${item.label.toLowerCase()}`
                                     }}
                                 </span>
                             </div>
                         </div>
-                        <div
-                            class="flex flex-wrap gap-4 text-xs text-foreground/60"
-                        >
-                            <span
-                                >{{
-                                    resume.work_experiences_count
-                                }}
-                                experience</span
-                            >
-                            <span>{{ resume.educations_count }} education</span>
-                            <span>{{ resume.skills_count }} skills</span>
-                            <span>{{ resume.projects_count }} projects</span>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            <Button as-child size="sm">
-                                <a :href="resumeEditor.show.url(resume.id)">
-                                    Edit
-                                </a>
-                            </Button>
-                            <Button as-child size="sm" variant="outline">
+                        <div class="grid gap-2">
+                            <Button as-child>
                                 <a
                                     :href="
-                                        resumeEditor.assistant.url(resume.id)
+                                        resumeEditor.assistant.url(
+                                            selectedResume.id,
+                                        )
                                     "
                                 >
-                                    <Sparkles class="mr-1 h-4 w-4" />
-                                    Build with AI
+                                    <Sparkles class="mr-2 h-4 w-4" />Improve
+                                    with AI
                                 </a>
                             </Button>
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                @click="startRename(resume)"
-                            >
-                                <Pencil class="h-4 w-4" />
-                            </Button>
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                @click="duplicateResume(resume)"
-                            >
-                                <Copy class="h-4 w-4" />
-                            </Button>
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                @click="deleteResume(resume)"
-                            >
-                                <Trash2 class="h-4 w-4" />
+                            <Button as-child variant="outline">
+                                <a
+                                    :href="
+                                        resumeEditor.show.url(selectedResume.id)
+                                    "
+                                >
+                                    <Eye class="mr-2 h-4 w-4" />View Resume
+                                </a>
                             </Button>
                         </div>
                     </CardContent>
                 </Card>
             </div>
-
-            <Card v-if="selectedResume" class="h-fit lg:sticky lg:top-6">
-                <CardHeader>
-                    <CardTitle>Resume Insights</CardTitle>
-                    <CardDescription>
-                        Selected Resume: {{ selectedResume.title }}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent class="space-y-5">
-                    <div>
-                        <div
-                            class="flex items-center justify-between font-bold"
-                        >
-                            <span>Resume Completeness</span>
-                            <span class="text-xl text-primary"
-                                >{{ selectedResume.completeness }}%</span
-                            >
-                        </div>
-                        <div
-                            class="mt-2 h-2 overflow-hidden rounded-full bg-muted"
-                        >
-                            <div
-                                class="h-full rounded-full bg-primary"
-                                :style="{
-                                    width: `${selectedResume.completeness}%`,
-                                }"
-                            ></div>
-                        </div>
-                    </div>
-                    <div class="space-y-2 text-sm">
-                        <div
-                            v-for="item in selectedResume.completeness_items"
-                            :key="item.label"
-                            class="flex items-center gap-2"
-                        >
-                            <CheckCircle2
-                                v-if="item.complete"
-                                class="h-4 w-4 text-emerald-600"
-                            />
-                            <Circle v-else class="h-4 w-4 text-amber-600" />
-                            <span :class="!item.complete && 'font-semibold'">
-                                {{
-                                    item.complete
-                                        ? item.label
-                                        : `Add ${item.label.toLowerCase()}`
-                                }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="grid gap-2">
-                        <Button as-child>
-                            <a
-                                :href="
-                                    resumeEditor.assistant.url(
-                                        selectedResume.id,
-                                    )
-                                "
-                            >
-                                <Sparkles class="mr-2 h-4 w-4" />Improve with AI
-                            </a>
-                        </Button>
-                        <Button as-child variant="outline">
-                            <a :href="resumeEditor.show.url(selectedResume.id)">
-                                <Eye class="mr-2 h-4 w-4" />View Resume
-                            </a>
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     </div>
 </template>

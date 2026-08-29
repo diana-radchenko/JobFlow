@@ -47,11 +47,12 @@ function handleNavigation() {
                     size="lg"
                     :is-active="isMenuItemActive(item)"
                     :tooltip="item.title"
+                    class="transition-colors duration-200 data-[active=true]:bg-primary data-[active=true]:font-semibold data-[active=true]:text-primary-foreground"
                 >
                     <Link :href="item.href" @click="handleNavigation">
                         <component :is="item.icon" />
                         <span
-                            class="truncate"
+                            class="truncate text-sm font-medium"
                             :class="state === 'collapsed' && 'hidden'"
                         >
                             {{ item.title }}
@@ -62,3 +63,4 @@ function handleNavigation() {
         </SidebarMenu>
     </SidebarGroup>
 </template>
+
