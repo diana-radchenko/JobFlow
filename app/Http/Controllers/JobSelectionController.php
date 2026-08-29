@@ -39,8 +39,10 @@ class JobSelectionController extends Controller
         $query->when($request->employment_type, fn ($q, $value) => $q->where('employment_type', $value));
         $query->when($request->location, fn ($q, $value) => $q->where('location', 'like', "%{$value}%"));
         $query->when($request->workplace_type, fn ($q, $value) => $q->where('workplace_type', $value));
-        $query->when($request->salary_min, fn ($q, $value) => $q->whereRaw("{$annualMaximum} >= ?", [$value]));
-        $query->when($request->salary_max, fn ($q, $value) => $q->whereRaw("{$annualMinimum} <= ?", [$value]));
+        // Query-string numbers are bound as text by SQLite. Cast the bound values
+        // so annualized salary comparisons behave consistently across databases.
+        $query->when($request->salary_min, fn ($q, $value) => $q->whereRaw("{$annualMaximum} >= CAST(? AS REAL)", [$value]));
+        $query->when($request->salary_max, fn ($q, $value) => $q->whereRaw("{$annualMinimum} <= CAST(? AS REAL)", [$value]));
         $query->when($request->date_posted, fn ($q, $days) => $q->where('published_at', '>=', now()->subDays((int) $days)));
 
         match ($request->sort) {
