@@ -158,7 +158,7 @@ defineOptions({
     <div class="flex h-full flex-1 gap-6 bg-white p-4 md:p-6 dark:bg-stone-900">
         <aside class="w-72 flex-shrink-0 self-start rounded-xl bg-blueish p-6">
             <div class="mb-5 flex items-center justify-between gap-3">
-                <h2 class="font-bold">Vacancy filters</h2>
+                <h2 class="text-lg font-bold">Vacancy filters</h2>
                 <button
                     type="button"
                     class="text-sm font-semibold text-primary underline-offset-4 hover:underline"
@@ -282,7 +282,7 @@ defineOptions({
                     </Button>
                 </div>
                 <div class="flex items-center gap-3">
-                    <strong class="text-sm"
+                    <strong class="text-base"
                         >{{ jobs.length }} jobs found</strong
                     >
                     <label for="job-sort" class="sr-only">Sort by</label>
@@ -381,7 +381,7 @@ defineOptions({
                         </div>
 
                         <div
-                            class="grid gap-2 text-sm text-stone-600 sm:grid-cols-2 dark:text-stone-300"
+                            class="grid gap-2 text-base text-stone-600 sm:grid-cols-2 dark:text-stone-300"
                         >
                             <span class="flex items-center gap-2"
                                 ><Building2 class="h-4 w-4" />{{

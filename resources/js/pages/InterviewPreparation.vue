@@ -430,7 +430,7 @@ defineOptions({
                                     AI Interview
                                 </h4>
                                 <p
-                                    class="mx-auto max-w-sm text-xs leading-relaxed text-slate-600 dark:text-slate-400"
+                                    class="mx-auto max-w-sm text-sm leading-relaxed text-slate-600 dark:text-slate-300"
                                 >
                                     <strong class="block">{{
                                         selectedApplication?.work_job?.title ||
@@ -570,7 +570,7 @@ defineOptions({
                                         &bull;
                                         {{ stringForHuman(session.type) }}
                                     </div>
-                                    <div class="text-xs text-slate-500">
+                                    <div class="text-sm text-slate-500">
                                         {{
                                             new Date(
                                                 session.created_at,
@@ -585,7 +585,7 @@ defineOptions({
                                         :href="
                                             interviewSessionShow.url(session.id)
                                         "
-                                        class="mt-1 text-xs text-primary hover:underline"
+                                        class="mt-1 text-sm font-medium text-primary hover:underline"
                                     >
                                         Review
                                     </Link>

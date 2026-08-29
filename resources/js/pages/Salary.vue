@@ -292,7 +292,7 @@ defineOptions({
                     <p class="font-semibold text-amber-950 dark:text-amber-100">
                         {{ comparison.message }}
                     </p>
-                    <div class="text-2xl font-black">
+                    <div class="text-3xl font-black">
                         {{ formatSalary(comparison.minimum) }}–{{
                             formatSalary(comparison.maximum)
                         }}
@@ -317,10 +317,10 @@ defineOptions({
                         <p class="text-sm font-bold text-slate-500">
                             {{ metric.label }}
                         </p>
-                        <p class="mt-2 text-2xl font-black">
+                        <p class="mt-2 text-3xl font-black">
                             {{ formatSalary(metric.value) }}
                         </p>
-                        <p class="mt-1 text-xs text-slate-500">
+                        <p class="mt-1 text-sm text-slate-500">
                             {{ frequencyLabel }}
                         </p>
                     </CardContent>
@@ -348,7 +348,7 @@ defineOptions({
                                 class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"
                             >
                                 <div>
-                                    <h3 class="font-bold">
+                                    <h3 class="text-base font-bold">
                                         {{ vacancy.title }}
                                     </h3>
                                     <p class="text-sm text-slate-500">

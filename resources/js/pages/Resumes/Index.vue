@@ -215,8 +215,10 @@ const formatDate = (date: string) =>
                             </Button>
                         </form>
                         <template v-else>
-                            <CardTitle>{{ resume.title }}</CardTitle>
-                            <CardDescription>
+                            <CardTitle class="text-lg leading-snug font-bold">{{
+                                resume.title
+                            }}</CardTitle>
+                            <CardDescription class="text-sm">
                                 Updated {{ formatDate(resume.updated_at) }}
                             </CardDescription>
                         </template>
@@ -229,7 +231,7 @@ const formatDate = (date: string) =>
                                     >{{ resume.completeness }}% Complete</span
                                 >
                             </div>
-                            <div class="grid gap-2 text-xs sm:grid-cols-2">
+                            <div class="grid gap-2 text-sm sm:grid-cols-2">
                                 <span
                                     v-for="item in resume.completeness_items.slice(
                                         0,
@@ -253,7 +255,7 @@ const formatDate = (date: string) =>
                             </div>
                         </div>
                         <div
-                            class="flex flex-wrap gap-4 text-xs text-foreground/60"
+                            class="flex flex-wrap gap-4 text-sm text-foreground/60"
                         >
                             <span
                                 >{{
@@ -312,7 +314,9 @@ const formatDate = (date: string) =>
 
             <Card v-if="selectedResume" class="h-fit lg:sticky lg:top-6">
                 <CardHeader>
-                    <CardTitle>Resume Insights</CardTitle>
+                    <CardTitle class="text-xl font-bold"
+                        >Resume Insights</CardTitle
+                    >
                     <CardDescription>
                         Selected Resume: {{ selectedResume.title }}
                     </CardDescription>

@@ -176,7 +176,7 @@ defineOptions({
                                 resource.category
                             }}</Badge
                             ><span
-                                class="flex items-center gap-1 text-xs text-slate-500"
+                                class="flex items-center gap-1 text-sm text-slate-500"
                                 ><Clock class="h-3.5 w-3.5" />{{
                                     resource.readingMinutes
                                 }}
@@ -184,7 +184,7 @@ defineOptions({
                             >
                         </div>
                         <h3 class="text-lg font-bold">{{ resource.title }}</h3>
-                        <p class="text-sm text-slate-500">
+                        <p class="text-base leading-relaxed text-slate-600">
                             {{ resource.description }}
                         </p>
                         <div class="flex items-center justify-between">

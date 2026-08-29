@@ -51,7 +51,7 @@ function handleNavigation() {
                     <Link :href="item.href" @click="handleNavigation">
                         <component :is="item.icon" />
                         <span
-                            class="truncate"
+                            class="truncate text-sm font-medium"
                             :class="state === 'collapsed' && 'hidden'"
                         >
                             {{ item.title }}
@@ -62,3 +62,4 @@ function handleNavigation() {
         </SidebarMenu>
     </SidebarGroup>
 </template>
+

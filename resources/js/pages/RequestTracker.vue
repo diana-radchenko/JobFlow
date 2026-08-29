@@ -202,7 +202,7 @@ defineOptions({
                             </p>
                         </div>
                         <Badge
-                            class="border-0 px-3 py-1.5"
+                            class="border-0 px-3 py-1.5 text-sm font-semibold"
                             :class="statusTone[application.tracker_stage]"
                         >
                             {{
@@ -217,22 +217,22 @@ defineOptions({
                         v-if="interviewFor(application)"
                         class="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/20"
                     >
-                        <div class="grid gap-3 text-sm sm:grid-cols-3">
+                        <div class="grid gap-3 text-[15px] sm:grid-cols-3">
                             <div>
                                 <span
-                                    class="block text-xs font-bold text-slate-500"
+                                    class="block text-sm font-semibold text-slate-600"
                                     >Interview Date</span
                                 >{{ interviewDate(interviewFor(application)!) }}
                             </div>
                             <div>
                                 <span
-                                    class="block text-xs font-bold text-slate-500"
+                                    class="block text-sm font-semibold text-slate-600"
                                     >Interview Time</span
                                 >{{ interviewTime(interviewFor(application)!) }}
                             </div>
                             <div>
                                 <span
-                                    class="block text-xs font-bold text-slate-500"
+                                    class="block text-sm font-semibold text-slate-600"
                                     >Timezone</span
                                 >{{
                                     interviewFor(application)!.timezone || 'UTC'
@@ -281,7 +281,7 @@ defineOptions({
                         @click="openJob(application)"
                     >
                         <CardContent class="p-4">
-                            <h3 class="font-bold">
+                            <h3 class="text-base leading-snug font-bold">
                                 {{ application.work_job?.title || 'Vacancy' }}
                             </h3>
                             <p class="mt-1 text-sm text-slate-500">
@@ -289,11 +289,9 @@ defineOptions({
                             </p>
                             <p
                                 v-if="interviewFor(application)"
-                                class="mt-3 text-xs font-semibold text-amber-700 dark:text-amber-300"
+                                class="mt-3 text-sm font-semibold text-amber-700 dark:text-amber-300"
                             >
-                                {{
-                                    interviewDate(interviewFor(application)!)
-                                }}
+                                {{ interviewDate(interviewFor(application)!) }}
                                 ·
                                 {{ interviewTime(interviewFor(application)!) }}
                             </p>
@@ -301,7 +299,7 @@ defineOptions({
                     </Card>
                     <p
                         v-if="board[stage].length === 0"
-                        class="py-5 text-center text-xs text-slate-400"
+                        class="py-5 text-center text-sm text-slate-500"
                     >
                         No applications
                     </p>

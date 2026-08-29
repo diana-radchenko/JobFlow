@@ -151,16 +151,17 @@ onUnmounted(() => {
                     }"
                 >
                     <div class="flex items-start justify-between gap-3">
-                        <span class="min-w-0 truncate font-semibold">{{
-                            participantName(conversation)
-                        }}</span>
-                        <span class="shrink-0 text-xs text-muted-foreground">{{
+                        <span
+                            class="min-w-0 truncate text-base font-semibold"
+                            >{{ participantName(conversation) }}</span
+                        >
+                        <span class="shrink-0 text-sm text-muted-foreground">{{
                             formatTime(conversation.latest_message?.created_at)
                         }}</span>
                     </div>
                     <div class="mt-1 flex items-center justify-between gap-3">
                         <p
-                            class="min-w-0 truncate text-xs text-muted-foreground"
+                            class="min-w-0 truncate text-sm text-muted-foreground"
                         >
                             {{ conversation.work_job.title }}
                         </p>
@@ -189,7 +190,7 @@ onUnmounted(() => {
                     class="flex items-start justify-between gap-4 border-b pb-4"
                 >
                     <div>
-                        <h2 class="font-bold">
+                        <h2 class="text-lg font-bold">
                             {{ participantName(selected) }}
                         </h2>
                         <p class="text-sm text-muted-foreground">
@@ -249,10 +250,12 @@ onUnmounted(() => {
                             v-if="message.type === 'system'"
                             class="mx-auto max-w-md rounded-xl border bg-muted/50 px-4 py-3 text-center"
                         >
-                            <p class="text-sm font-medium whitespace-pre-wrap">
+                            <p
+                                class="text-[15px] leading-relaxed font-medium whitespace-pre-wrap"
+                            >
                                 {{ message.body }}
                             </p>
-                            <p class="mt-1 text-xs text-muted-foreground">
+                            <p class="mt-1 text-sm text-muted-foreground">
                                 {{
                                     new Date(message.created_at).toLocaleString(
                                         'en-US',
@@ -284,10 +287,12 @@ onUnmounted(() => {
                                         : 'bg-accent'
                                 "
                             >
-                                <p class="whitespace-pre-wrap">
+                                <p
+                                    class="text-[15px] leading-relaxed whitespace-pre-wrap"
+                                >
                                     {{ message.body }}
                                 </p>
-                                <p class="mt-1 text-xs opacity-70">
+                                <p class="mt-1 text-sm opacity-70">
                                     {{ formatTime(message.created_at) }}
                                 </p>
                             </div>

@@ -672,7 +672,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                         }"
                     ></div>
                 </div>
-                <p class="mt-2 text-xs text-slate-500">
+                <p class="mt-2 text-sm text-slate-500">
                     Based on
                     {{
                         jobSearchMilestones.filter((item) => item.complete)
@@ -692,7 +692,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 <CardContent class="flex items-center gap-3 p-4">
                     <BriefcaseBusiness class="h-5 w-5 text-blue-600" />
                     <div>
-                        <p class="text-xs font-medium text-slate-500">
+                        <p class="text-sm font-medium text-slate-500">
                             Applications
                         </p>
                         <p class="text-2xl font-extrabold">
@@ -705,7 +705,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 <CardContent class="flex items-center gap-3 p-4">
                     <CalendarDays class="h-5 w-5 text-amber-600" />
                     <div>
-                        <p class="text-xs font-medium text-slate-500">
+                        <p class="text-sm font-medium text-slate-500">
                             Interviews
                         </p>
                         <p class="text-2xl font-extrabold">
@@ -718,7 +718,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 <CardContent class="flex items-center gap-3 p-4">
                     <FileCheck2 class="h-5 w-5 text-emerald-600" />
                     <div>
-                        <p class="text-xs font-medium text-slate-500">
+                        <p class="text-sm font-medium text-slate-500">
                             Resume completeness
                         </p>
                         <p class="text-2xl font-extrabold">
@@ -735,7 +735,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 <CardContent class="flex items-center gap-3 p-4">
                     <Target class="h-5 w-5 text-violet-600" />
                     <div>
-                        <p class="text-xs font-medium text-slate-500">
+                        <p class="text-sm font-medium text-slate-500">
                             Recommended matches
                         </p>
                         <p class="text-2xl font-extrabold">
@@ -849,7 +849,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                 ><strong class="block text-sm">{{
                                     step.title
                                 }}</strong
-                                ><span class="text-xs text-slate-500">{{
+                                ><span class="text-sm text-slate-500">{{
                                     step.description
                                 }}</span></span
                             >
@@ -964,11 +964,11 @@ const useArticleFallback = (event: Event, fallback: string) => {
                             <div class="flex items-start justify-between gap-3">
                                 <strong class="text-sm">{{ item.event }}</strong
                                 ><time
-                                    class="shrink-0 text-xs text-slate-500"
+                                    class="shrink-0 text-sm text-slate-500"
                                     >{{ activityTime(item.occurred_at) }}</time
                                 >
                             </div>
-                            <p class="mt-1 text-xs text-slate-500">
+                            <p class="mt-1 text-sm text-slate-500">
                                 {{ item.company }} · {{ item.vacancy }}
                             </p>
                         </div>
@@ -1473,7 +1473,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                         <div class="flex-1">
                                             <a
                                                 :href="job.url"
-                                                class="block text-[15px] leading-snug font-bold text-slate-900 transition-colors hover:text-primary dark:text-slate-100"
+                                                class="block text-lg leading-snug font-bold text-slate-900 transition-colors hover:text-primary dark:text-slate-100"
                                             >
                                                 {{ job.title }}
                                             </a>
@@ -1645,7 +1645,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                         }}</span>
                                     </div>
                                     <p
-                                        class="text-[15px] leading-snug font-bold text-slate-900 dark:text-slate-100"
+                                        class="text-lg leading-snug font-bold text-slate-900 dark:text-slate-100"
                                     >
                                         {{ article.title }}
                                     </p>

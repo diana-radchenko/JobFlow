@@ -181,7 +181,9 @@ function handleNavigation() {
                     <SidebarMenuButton size="lg" as-child>
                         <a href="#" @click.prevent>
                             <Globe />
-                            <span :class="state === 'collapsed' && 'hidden'"
+                            <span
+                                class="text-sm font-medium"
+                                :class="state === 'collapsed' && 'hidden'"
                                 >Support</span
                             >
                         </a>
@@ -196,7 +198,9 @@ function handleNavigation() {
                             @click="handleLogout"
                         >
                             <LogOut />
-                            <span :class="state === 'collapsed' && 'hidden'"
+                            <span
+                                class="text-sm font-medium"
+                                :class="state === 'collapsed' && 'hidden'"
                                 >Log out</span
                             >
                         </Link>
