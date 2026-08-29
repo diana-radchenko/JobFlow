@@ -315,29 +315,53 @@ defineOptions({
                     </CardContent>
                 </Card>
 
-                <div v-else class="grid gap-4 sm:grid-cols-3">
-                    <Card
-                        v-for="metric in [
-                            { label: 'Low', value: comparison.minimum },
-                            { label: 'Median', value: comparison.median },
-                            { label: 'High', value: comparison.maximum },
-                        ]"
-                        :key="metric.label"
-                        class="border-slate-900 bg-slate-950 text-white shadow-md dark:border-slate-700"
-                    >
-                        <CardContent class="p-5">
-                            <p class="text-sm font-bold text-slate-300">
-                                {{ metric.label }}
-                            </p>
-                            <p class="mt-2 text-3xl font-black">
-                                {{ formatSalary(metric.value) }}
-                            </p>
-                            <p class="mt-1 text-sm text-slate-300">
-                                {{ frequencyLabel }}
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
+                <Card
+                    v-else
+                    class="border-[#0B315B] bg-[#061E3A] text-white shadow-sm"
+                >
+                    <CardContent class="space-y-6 p-6 sm:p-8">
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div
+                                v-for="metric in [
+                                    {
+                                        label: 'Low',
+                                        value: comparison.minimum,
+                                    },
+                                    {
+                                        label: 'Median',
+                                        value: comparison.median,
+                                    },
+                                    {
+                                        label: 'High',
+                                        value: comparison.maximum,
+                                    },
+                                ]"
+                                :key="metric.label"
+                            >
+                                <p class="text-sm font-bold text-slate-300">
+                                    {{ metric.label }}
+                                </p>
+                                <p class="mt-2 text-xl font-black sm:text-3xl">
+                                    {{ formatSalary(metric.value) }}
+                                </p>
+                                <p class="mt-1 text-sm text-slate-300">
+                                    {{ frequencyLabel }}
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="relative h-2 rounded-full bg-white/15"
+                            aria-hidden="true"
+                        >
+                            <div
+                                class="absolute inset-y-0 left-0 w-1/2 rounded-full bg-blue-400"
+                            ></div>
+                            <div
+                                class="absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-blue-400"
+                            ></div>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 <Card
                     v-if="comparison.comparables.length"
