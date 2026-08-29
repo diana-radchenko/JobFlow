@@ -1,365 +1,200 @@
 <script setup lang="ts">
-import { Head, router, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { watchDebounced } from '@vueuse/core';
-import { BadgeCheck, MapPin, Heart } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
+import { BriefcaseBusiness, Building2, CalendarDays, MapPin } from 'lucide-vue-next';
+import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { WorkJob } from '@/types/laravel-models';
 import { jobSelection as jobSelectionRoute } from '@/routes';
 import { show as jobSelectionShow } from '@/routes/job-selection';
 
+type Filters = {
+    keyword?: string;
+    company?: string;
+    industry?: string;
+    position_level?: string;
+    employment_type?: string;
+    location?: string;
+    workplace_type?: string;
+    salary_min?: string;
+    date_posted?: string;
+};
+
 const props = defineProps<{
     jobs: WorkJob[];
-    filters?: {
-        incomeLevel?: string;
-        region?: string;
-        ownSalary?: string;
-        keyword?: string;
-        industry?: string;
-        position_level?: string;
-        company?: string;
-        employment_type?: string;
-    };
+    filters?: Filters;
     filterOptions: {
         industries: string[];
         positionLevels: string[];
         employmentTypes: string[];
+        workplaceTypes: string[];
     };
 }>();
 
-// own is a filter, where user writes his own dynamic filter value for salary (this is not a predefined value)
-
-const incomeLevel = ref(props.filters?.incomeLevel || 'does-not-matter');
-const region = ref(props.filters?.region || 'does-not-matter');
-const ownSalary = ref(props.filters?.ownSalary || '');
 const keyword = ref(props.filters?.keyword || '');
+const company = ref(props.filters?.company || '');
 const industry = ref(props.filters?.industry || '');
 const positionLevel = ref(props.filters?.position_level || '');
-const company = ref(props.filters?.company || '');
 const employmentType = ref(props.filters?.employment_type || '');
+const location = ref(props.filters?.location || '');
+const workplaceType = ref(props.filters?.workplace_type || '');
+const salaryMin = ref(props.filters?.salary_min || '');
+const datePosted = ref(props.filters?.date_posted || '');
 
-interface IncomeLevelOption {
-    id: string;
-    value: string;
-    label: string;
-    count: number;
-    isSpecial?: boolean;
-}
-
-const incomeLevelOptions: IncomeLevelOption[] = [
-    {
-        id: 'inc-1',
-        value: 'does-not-matter',
-        label: "It doesn't matter",
-        count: 244,
-    },
-    { id: 'inc-2', value: '45000', label: 'from $45,000', count: 218 },
-    { id: 'inc-3', value: '60000', label: 'from $60,000', count: 126 },
-    { id: 'inc-4', value: '80000', label: 'from $80,000', count: 61 },
-    { id: 'inc-5', value: '90000', label: 'from $90,000', count: 61 },
-    {
-        id: 'inc-6',
-        value: 'own',
-        label: 'Own salary',
-        count: 0,
-        isSpecial: true,
-    },
-];
-
-interface RegionOption {
-    id: string;
-    value: string;
-    label: string;
-    count: number;
-}
-
-const regionOptions: RegionOption[] = [
-    { id: 'reg-1', value: 'does-not-matter', label: 'All', count: 244 },
-    { id: 'reg-2', value: 'New York', label: 'New York', count: 244 },
-    { id: 'reg-3', value: 'Los Angeles', label: 'Los Angeles', count: 218 },
-    { id: 'reg-4', value: 'Chicago', label: 'Chicago', count: 126 },
-    { id: 'reg-5', value: 'Boston', label: 'Boston', count: 61 },
-];
-
-watch(ownSalary, (newVal) => {
-    if (newVal) {
-        incomeLevel.value = 'own';
-    }
+const filterValues = () => ({
+    keyword: keyword.value || undefined,
+    company: company.value || undefined,
+    industry: industry.value || undefined,
+    position_level: positionLevel.value || undefined,
+    employment_type: employmentType.value || undefined,
+    location: location.value || undefined,
+    workplace_type: workplaceType.value || undefined,
+    salary_min: salaryMin.value || undefined,
+    date_posted: datePosted.value || undefined,
 });
 
 watchDebounced(
-    [
-        incomeLevel,
-        region,
-        ownSalary,
-        keyword,
-        industry,
-        positionLevel,
-        company,
-        employmentType,
-    ],
-    ([newIncomeLevel, newRegion, newOwnSalary]) => {
-        router.get(
-            jobSelectionRoute.url(),
-            {
-                incomeLevel: newIncomeLevel,
-                region: newRegion,
-                ownSalary: newOwnSalary,
-                keyword: keyword.value,
-                industry: industry.value,
-                position_level: positionLevel.value,
-                company: company.value,
-                employment_type: employmentType.value,
-            },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-                only: ['jobs', 'filters'],
-            },
-        );
-    },
+    [keyword, company, industry, positionLevel, employmentType, location, workplaceType, salaryMin, datePosted],
+    () => router.get(jobSelectionRoute.url(), filterValues(), {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+        only: ['jobs', 'filters'],
+    }),
     { debounce: 300, maxWait: 1000 },
 );
 
+const clearFilters = () => {
+    keyword.value = '';
+    company.value = '';
+    industry.value = '';
+    positionLevel.value = '';
+    employmentType.value = '';
+    location.value = '';
+    workplaceType.value = '';
+    salaryMin.value = '';
+    datePosted.value = '';
+};
+
+const salary = (job: WorkJob) => {
+    if (job.salary_start === null && job.salary_end === null) {
+        return 'Salary not specified';
+    }
+
+    const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: job.salary_currency || 'USD',
+        maximumFractionDigits: 0,
+    });
+    const range = job.salary_start !== null && job.salary_end !== null
+        ? `${formatter.format(job.salary_start)}–${formatter.format(job.salary_end)}`
+        : formatter.format(job.salary_start ?? job.salary_end ?? 0);
+
+    return job.salary_period ? `${range} / ${job.salary_period}` : range;
+};
+
+const posted = (job: WorkJob) => job.published_at
+    ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(job.published_at))
+    : 'Date not specified';
+
 defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Job Selection',
-                href: jobSelectionRoute(),
-            },
-        ],
-    },
+    layout: { breadcrumbs: [{ title: 'Job Selection', href: jobSelectionRoute() }] },
 });
 </script>
 
 <template>
     <Head title="Job Selection" />
 
-    <div
-        class="flex h-full flex-1 gap-6 overflow-x-auto bg-white p-4 md:p-6 dark:bg-stone-900"
-    >
-        <!-- Sidebar Filters -->
-        <div class="flex w-72 flex-shrink-0 flex-col gap-6">
-            <div class="space-y-3 rounded-xl bg-blueish p-6">
-                <h3 class="font-bold">Vacancy filters</h3>
-                <Input
-                    v-model="keyword"
-                    placeholder="Job title or keyword"
-                /><Input v-model="company" placeholder="Company" />
-                <select
-                    v-model="industry"
-                    class="w-full rounded-md border bg-white p-2 dark:bg-stone-900"
-                >
+    <div class="flex h-full flex-1 gap-6 bg-white p-4 md:p-6 dark:bg-stone-900">
+        <aside class="w-72 flex-shrink-0 self-start rounded-xl bg-blueish p-6">
+            <div class="mb-5 flex items-center justify-between gap-3">
+                <h2 class="font-bold">Vacancy filters</h2>
+                <button type="button" class="text-sm font-semibold text-primary underline-offset-4 hover:underline" @click="clearFilters">
+                    Clear all
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <Input v-model="keyword" aria-label="Job title or keyword" placeholder="Job title or keyword" />
+                <Input v-model="company" aria-label="Company" placeholder="Company" />
+                <select v-model="industry" aria-label="Industry" class="filter-select">
                     <option value="">All industries</option>
-                    <option
-                        v-for="item in filterOptions.industries"
-                        :key="item"
-                    >
-                        {{ item }}
-                    </option>
+                    <option v-for="item in filterOptions.industries" :key="item" :value="item">{{ item }}</option>
                 </select>
-                <select
-                    v-model="positionLevel"
-                    class="w-full rounded-md border bg-white p-2 dark:bg-stone-900"
-                >
-                    <option value="">All levels</option>
-                    <option
-                        v-for="item in filterOptions.positionLevels"
-                        :key="item"
-                    >
-                        {{ item }}
-                    </option>
+                <select v-model="positionLevel" aria-label="Position level" class="filter-select">
+                    <option value="">All position levels</option>
+                    <option v-for="item in filterOptions.positionLevels" :key="item" :value="item">{{ item }}</option>
                 </select>
-                <select
-                    v-model="employmentType"
-                    class="w-full rounded-md border bg-white p-2 dark:bg-stone-900"
-                >
+                <select v-model="employmentType" aria-label="Employment type" class="filter-select">
                     <option value="">All employment types</option>
-                    <option
-                        v-for="item in filterOptions.employmentTypes"
-                        :key="item"
-                    >
-                        {{ item }}
-                    </option>
+                    <option v-for="item in filterOptions.employmentTypes" :key="item" :value="item">{{ item }}</option>
+                </select>
+                <Input v-model="location" aria-label="Location" placeholder="Location" />
+                <select v-model="workplaceType" aria-label="Work arrangement" class="filter-select">
+                    <option value="">All work arrangements</option>
+                    <option v-for="item in filterOptions.workplaceTypes" :key="item" :value="item">{{ item }}</option>
+                </select>
+                <Input v-model="salaryMin" type="number" min="0" aria-label="Minimum salary" placeholder="Minimum salary" />
+                <select v-model="datePosted" aria-label="Date posted" class="filter-select">
+                    <option value="">Any date posted</option>
+                    <option value="1">Past 24 hours</option>
+                    <option value="7">Past 7 days</option>
+                    <option value="30">Past 30 days</option>
                 </select>
             </div>
-            <!-- Income Level Filter -->
-            <div class="rounded-xl bg-blueish p-6">
-                <h3 class="mb-5 font-bold text-stone-900 dark:text-white">
-                    Income level
-                </h3>
-                <RadioGroup v-model="incomeLevel" class="flex flex-col gap-3.5">
-                    <template
-                        v-for="option in incomeLevelOptions"
-                        :key="option.id"
-                    >
-                        <div
-                            v-if="!option.isSpecial"
-                            class="flex items-center justify-between"
-                        >
-                            <div class="flex items-center gap-3">
-                                <RadioGroupItem
-                                    :id="option.id"
-                                    :value="option.value"
-                                />
-                                <label
-                                    :for="option.id"
-                                    class="cursor-pointer text-[15px] text-stone-600 dark:text-stone-300"
-                                    >{{ option.label }}</label
-                                >
-                            </div>
-                            <!-- <span class="text-sm text-stone-500">{{ option.count }}</span> -->
-                        </div>
-                        <div v-else class="mt-1 flex items-center gap-3">
-                            <RadioGroupItem
-                                :id="option.id"
-                                :value="option.value"
-                            />
-                            <label
-                                :for="option.id"
-                                class="cursor-pointer text-[15px] text-stone-600 dark:text-stone-300"
-                                >{{ option.label }}</label
-                            >
-                        </div>
-                    </template>
-                </RadioGroup>
+        </aside>
 
-                <div class="mt-4">
-                    <Input
-                        v-model="ownSalary"
-                        placeholder="from"
-                        class="rounded-lg border-0 bg-white py-5 placeholder:text-stone-400 focus-visible:ring-1 focus-visible:ring-stone-400 dark:bg-stone-900"
-                    />
-                </div>
+        <main class="min-w-0 flex-1 space-y-5">
+            <div v-if="jobs.length === 0" class="rounded-2xl border border-dashed border-stone-300 px-6 py-16 text-center dark:border-stone-700">
+                <BriefcaseBusiness class="mx-auto mb-4 h-10 w-10 text-stone-400" />
+                <p class="font-semibold text-stone-700 dark:text-stone-200">No vacancies match your current filters.</p>
             </div>
 
-            <!-- Region Filter -->
-            <div class="rounded-xl bg-blueish p-6">
-                <h3 class="mb-5 font-bold text-stone-900 dark:text-white">
-                    Region
-                </h3>
-                <RadioGroup v-model="region" class="flex flex-col gap-3.5">
-                    <div
-                        v-for="(option, index) in regionOptions"
-                        :key="option.id"
-                        :class="[
-                            index === regionOptions.length - 1 && !option.count
-                                ? 'flex items-center gap-3'
-                                : 'flex items-center justify-between',
-                        ]"
-                    >
-                        <div class="flex items-center gap-3">
-                            <RadioGroupItem
-                                :id="option.id"
-                                :value="option.value"
-                            />
-                            <label
-                                :for="option.id"
-                                class="cursor-pointer text-[15px] text-stone-600 dark:text-stone-300"
-                                >{{ option.label }}</label
-                            >
-                        </div>
-                        <!-- <span v-if="option.count > 0" class="text-sm text-stone-500">{{ option.count }}</span> -->
-                    </div>
-                </RadioGroup>
-            </div>
-
-            <!-- Analyze resume -->
-            <!--    <div class="rounded-xl bg-blueish p-6 dark:bg-stone-800">
-                <div class="flex items-center justify-between mb-1">
-                    <h3 class="font-bold text-stone-900 dark:text-white">Analyze your resume</h3>
-                    <Sparkles class="h-4 w-4 text-[#0b1c34] dark:text-white" />
-                </div>
-                <p class="text-[13px] text-stone-500 mb-4">Paste a link to your LinkedIn</p>
-                <Input placeholder="type..." class="bg-white border-0 py-5 focus-visible:ring-1 focus-visible:ring-stone-400 dark:bg-stone-900 rounded-lg placeholder:text-stone-400" />
-            </div> -->
-        </div>
-
-        <!-- Job Listings -->
-        <div class="flex flex-1 flex-col gap-5">
             <Link
                 v-for="job in jobs"
                 :key="job.id"
                 :href="jobSelectionShow.url(job)"
-                class="group relative flex justify-between rounded-2xl border border-stone-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-stone-800 dark:bg-stone-900"
+                class="group block rounded-2xl border border-stone-200 bg-white p-6 shadow-sm transition hover:border-primary/40 hover:shadow-md dark:border-stone-800 dark:bg-stone-900"
             >
-                <!-- Heart Icon (absolute top right) -->
-                <div class="absolute top-6 right-6">
-                    <button
-                        @click.prevent
-                        class="flex h-10 w-10 items-center justify-center rounded-full bg-blueish/60 transition-colors hover:bg-blueish dark:bg-stone-800 dark:hover:bg-stone-700"
-                    >
-                        <Heart class="h-5 w-5 text-stone-400" />
-                    </button>
-                </div>
+                <div class="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+                    <div class="min-w-0 space-y-4">
+                        <div>
+                            <h2 class="text-[22px] font-bold text-stone-900 group-hover:text-primary dark:text-white">{{ job.title }}</h2>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                <Badge v-if="job.workplace_type" variant="secondary">{{ job.workplace_type }}</Badge>
+                                <Badge v-if="job.industry" variant="outline">{{ job.industry }}</Badge>
+                                <Badge v-if="job.position_level" variant="outline">{{ job.position_level }}</Badge>
+                                <Badge v-if="job.employment_type" variant="outline">{{ job.employment_type }}</Badge>
+                            </div>
+                        </div>
 
-                <div class="flex flex-1 flex-col pr-20">
-                    <div class="mb-3 text-sm text-stone-500">
-                        There are currently 5 people considering this position
-                    </div>
-
-                    <div
-                        class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2"
-                    >
-                        <h2
-                            class="text-[22px] leading-tight font-bold text-stone-900 dark:text-white"
-                        >
-                            {{ job.title }}
-                        </h2>
-                        <div class="flex flex-wrap gap-2">
-                            <Badge
-                                v-for="(tech, index) in job.technologies.slice(
-                                    0,
-                                    5,
-                                )"
-                                :key="index"
-                                variant="secondary"
-                                class="rounded-full border-none bg-primary px-3.5 py-0.5 text-[13px] font-medium tracking-wide text-primary-foreground hover:bg-primary/60"
-                            >
-                                {{ tech }}
-                            </Badge>
+                        <div class="grid gap-2 text-sm text-stone-600 sm:grid-cols-2 dark:text-stone-300">
+                            <span class="flex items-center gap-2"><Building2 class="h-4 w-4" />{{ job.company }}</span>
+                            <span class="flex items-center gap-2"><MapPin class="h-4 w-4" />{{ job.location || 'Location not specified' }}</span>
+                            <span class="font-semibold text-stone-800 dark:text-stone-100">{{ salary(job) }}</span>
+                            <span class="flex items-center gap-2"><CalendarDays class="h-4 w-4" />Posted {{ posted(job) }}</span>
                         </div>
                     </div>
 
-                    <div
-                        class="mb-5 text-[15px] font-medium text-stone-600 italic dark:text-stone-300"
-                    >
-                        from ${{
-                            Number(job.salary_start).toLocaleString()
-                        }}/month
-                    </div>
-
-                    <div class="mb-2.5 flex items-center gap-1.5">
-                        <span
-                            class="text-[15px] font-bold text-stone-900 dark:text-white"
-                            >{{ job.company }}</span
-                        >
-                        <BadgeCheck
-                            class="h-5 w-5 fill-stone-900 stroke-white text-stone-900 dark:fill-white dark:stroke-stone-900 dark:text-white"
-                        />
-                    </div>
-
-                    <div
-                        class="flex items-center gap-1.5 text-sm font-medium text-stone-500"
-                    >
-                        <MapPin class="h-4 w-4" />
-                        <span>{{ job.location }}</span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col justify-end">
-                    <Button
-                        class="cursor-pointer rounded-full bg-primary px-10 py-6 text-xs font-semibold tracking-wider text-primary-foreground hover:bg-primary/70"
-                    >
-                        More
-                    </Button>
+                    <Button class="rounded-full px-8">View vacancy</Button>
                 </div>
             </Link>
-        </div>
+        </main>
     </div>
 </template>
+
+<style scoped>
+.filter-select {
+    width: 100%;
+    border-radius: 0.375rem;
+    border-width: 1px;
+    background-color: white;
+    padding: 0.5rem;
+}
+
+:global(.dark) .filter-select {
+    background-color: rgb(28 25 23);
+}
+</style>
