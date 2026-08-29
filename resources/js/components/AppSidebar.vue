@@ -157,9 +157,9 @@ function handleNavigation() {
     <Sidebar
         collapsible="icon"
         variant="inset"
-        class="border-r border-white/10 bg-[#071F49] text-slate-200 [--sidebar:#071F49] [--sidebar-accent:#0B2F66] [--sidebar-accent-foreground:#FFFFFF] [--sidebar-border:rgba(255,255,255,0.10)] [--sidebar-foreground:#DCE5F4] [--sidebar-primary:#3157D5] [--sidebar-primary-foreground:#FFFFFF]"
+        class="border-r border-white/10 bg-[#051C2E] text-slate-200 [--sidebar:#051C2E] [--sidebar-accent:#08263D] [--sidebar-accent-foreground:#FFFFFF] [--sidebar-border:rgba(255,255,255,0.10)] [--sidebar-foreground:#DCE5F4] [--sidebar-primary:#0A2E48] [--sidebar-primary-foreground:#FFFFFF]"
     >
-        <SidebarHeader class="bg-[#071F49] text-white">
+        <SidebarHeader class="bg-[#051C2E] text-white">
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton
@@ -175,11 +175,11 @@ function handleNavigation() {
             </SidebarMenu>
         </SidebarHeader>
 
-        <SidebarContent class="bg-[#071F49]">
+        <SidebarContent class="bg-[#051C2E]">
             <NavMain :items="mainNavItems" />
         </SidebarContent>
 
-        <SidebarFooter class="bg-[#071F49] text-slate-200">
+        <SidebarFooter class="bg-[#051C2E] text-slate-200">
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>

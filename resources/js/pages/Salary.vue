@@ -361,7 +361,7 @@ defineOptions({
 
                 <Card
                     v-else
-                    class="border-[#071F49] bg-[#071F49] text-white shadow-md"
+                    class="border-[#051C2E] bg-[#051C2E] text-white shadow-md"
                 >
                     <CardContent class="space-y-6 p-6 sm:p-8">
                         <div class="grid grid-cols-3 gap-4 text-center">

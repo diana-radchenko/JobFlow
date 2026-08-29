@@ -7,6 +7,7 @@ use App\Models\Resume;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -52,6 +53,9 @@ class ResumeController extends Controller
         ]);
 
         $user = auth()->user();
+
+        $validated['is_primary'] = ! $user->resumes()->exists();
+
         $resume = $user->resumes()->create($validated);
 
         $resume->skills()->sync($this->orderedIds($user->skills));
@@ -86,9 +90,36 @@ class ResumeController extends Controller
     {
         $this->authorize('delete', $resume);
 
-        $resume->delete();
+        $userId = $resume->user_id;
+        $wasPrimary = (bool) $resume->is_primary;
+
+        DB::transaction(function () use ($resume, $userId, $wasPrimary) {
+            $resume->delete();
+
+            if ($wasPrimary) {
+                Resume::where('user_id', $userId)
+                    ->orderByDesc('updated_at')
+                    ->first()
+                    ?->update(['is_primary' => true]);
+            }
+        });
 
         return redirect()->route('resumes.index')->with('success', 'Resume deleted successfully.');
+    }
+
+    public function setPrimary(Resume $resume): RedirectResponse
+    {
+        $this->authorize('update', $resume);
+
+        DB::transaction(function () use ($resume) {
+            Resume::where('user_id', $resume->user_id)
+                ->where('id', '!=', $resume->id)
+                ->update(['is_primary' => false]);
+
+            $resume->update(['is_primary' => true]);
+        });
+
+        return back()->with('success', 'Primary resume updated successfully.');
     }
 
     public function duplicate(Resume $resume): RedirectResponse

@@ -487,7 +487,7 @@ defineOptions({
                 <!-- Right Column: Live Interview + Past Sessions -->
                 <div class="w-full max-w-xl space-y-6 lg:justify-self-start">
                     <Card
-                        class="self-start overflow-hidden rounded-[20px] border border-[#071F49] bg-[#071F49] py-0 text-white shadow-md"
+                        class="self-start overflow-hidden rounded-[20px] border border-[#051C2E] bg-[#051C2E] py-0 text-white shadow-md"
                     >
                         <CardContent class="flex flex-col items-start p-0">
                             <button

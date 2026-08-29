@@ -68,6 +68,7 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
     Route::put('resumes/{resume}', [ResumeController::class, 'update'])->name('resumes.update');
     Route::delete('resumes/{resume}', [ResumeController::class, 'destroy'])->name('resumes.destroy');
     Route::post('resumes/{resume}/duplicate', [ResumeController::class, 'duplicate'])->name('resumes.duplicate');
+    Route::post('resumes/{resume}/primary', [ResumeController::class, 'setPrimary'])->name('resumes.primary');
 
     // AI Resume Scoring (dashboard "Score Resume" action)
     Route::post('resume-score', [ResumeScoreController::class, 'store'])->name('resume-score.store');

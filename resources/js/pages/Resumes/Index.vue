@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import {
     CheckCircle2,
     Circle,
@@ -45,18 +45,28 @@ interface ResumeSummary {
     work_experiences_count: number;
     completeness: number;
     completeness_items: { label: string; complete: boolean; weight: number }[];
+    is_primary: boolean;
 }
 
 const props = defineProps<{
     resumes: ResumeSummary[];
 }>();
 
-const selectedResumeId = ref<number | null>(props.resumes[0]?.id ?? null);
+const selectedResumeId = ref<number | null>(props.resumes[0]?.id != null ? Number(props.resumes[0].id) : null);
 const selectedResume = computed(
     () =>
-        props.resumes.find((resume) => resume.id === selectedResumeId.value) ??
+        props.resumes.find((resume) => Number(resume.id) === selectedResumeId.value) ??
         null,
 );
+
+const setPrimaryResume = (resume: ResumeSummary) => {
+    router.post(`/resumes/${resume.id}/primary`, {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            selectedResumeId.value = Number(resume.id);
+        },
+    });
+};
 
 const showCreateForm = ref(false);
 const createForm = useForm({ title: '' });
@@ -185,12 +195,22 @@ const formatDate = (date: string) =>
                     <Card
                         v-for="resume in resumes"
                         :key="resume.id"
-                        class="cursor-pointer border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
-                        :class="
-                            selectedResumeId === resume.id &&
-                            'border-primary bg-blue-50/60 ring-1 ring-primary/30'
-                        "
-                        @click="selectedResumeId = resume.id"
+                        class="cursor-pointer border shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                        :style="{
+                            backgroundColor:
+                                selectedResumeId === Number(resume.id)
+                                    ? '#F3F6F9'
+                                    : '#FFFFFF',
+                            borderColor:
+                                selectedResumeId === Number(resume.id)
+                                    ? '#0A2E48'
+                                    : '#E2E8F0',
+                            boxShadow:
+                                selectedResumeId === Number(resume.id)
+                                    ? '0 0 0 2px rgba(10, 46, 72, 0.16)'
+                                    : undefined,
+                        }"
+                        @click="selectedResumeId = Number(resume.id)"
                     >
                         <CardHeader>
                             <form
@@ -220,13 +240,31 @@ const formatDate = (date: string) =>
                                 </Button>
                             </form>
                             <template v-else>
-                                <CardTitle
-                                    class="text-[16px] leading-snug font-semibold"
-                                    >{{ resume.title }}</CardTitle
+                                <div class="flex flex-wrap items-start justify-between gap-2">
+                                    <div>
+                                        <CardTitle
+                                            class="text-[16px] leading-snug font-semibold"
+                                            >{{ resume.title }}</CardTitle
+                                        >
+                                        <CardDescription class="mt-1 text-sm">
+                                            Updated {{ formatDate(resume.updated_at) }}
+                                        </CardDescription>
+                                    </div>
+
+                                    <span
+                                        v-if="resume.is_primary"
+                                        class="inline-flex items-center rounded-full bg-[#051C2E] px-3 py-1 text-[11px] font-bold tracking-wide text-white"
+                                    >
+                                        PRIMARY RESUME
+                                    </span>
+                                </div>
+
+                                <p
+                                    v-if="resume.is_primary"
+                                    class="mt-3 rounded-lg bg-[#F3F6F9] px-3 py-2 text-[12.5px] leading-relaxed text-[#475467]"
                                 >
-                                <CardDescription class="text-sm">
-                                    Updated {{ formatDate(resume.updated_at) }}
-                                </CardDescription>
+                                    Used by JobFlow by default for job matching and recommendations.
+                                </p>
                             </template>
                         </CardHeader>
                         <CardContent class="space-y-4">
@@ -285,6 +323,17 @@ const formatDate = (date: string) =>
                                 >
                             </div>
                             <div class="flex flex-wrap gap-2">
+                                <Button
+                                    v-if="!resume.is_primary"
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    class="border-[#0A2E48] text-[#0A2E48] hover:bg-[#F3F6F9]"
+                                    @click.stop="setPrimaryResume(resume)"
+                                >
+                                    Set as Primary
+                                </Button>
+
                                 <Button as-child size="sm">
                                     <a :href="resumeEditor.show.url(resume.id)">
                                         Edit
@@ -333,7 +382,7 @@ const formatDate = (date: string) =>
 
                 <Card
                     v-if="selectedResume"
-                    class="order-1 h-fit border-[#071F49] bg-[#071F49] text-white shadow-md lg:sticky lg:top-6"
+                    class="order-1 h-fit border-[#051C2E] bg-[#051C2E] text-white shadow-md lg:sticky lg:top-6"
                 >
                     <CardHeader>
                         <CardTitle class="text-[18px] font-semibold"

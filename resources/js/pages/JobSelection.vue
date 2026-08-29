@@ -357,12 +357,12 @@ defineOptions({
                 class="group block rounded-2xl border border-stone-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md dark:border-stone-800 dark:bg-stone-900"
             >
                 <div
-                    class="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"
+                    class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
                 >
                     <div class="min-w-0 space-y-4">
                         <div>
                             <h2
-                                class="text-[16px] font-semibold text-[#14213D] group-hover:text-[#3157D5] dark:text-white"
+                                class="text-[16px] font-semibold text-[#14213D] group-hover:text-[#0A2E48] dark:text-white"
                             >
                                 {{ job.title }}
                             </h2>
@@ -393,7 +393,7 @@ defineOptions({
                         </div>
 
                         <div
-                            class="grid gap-2 text-base text-stone-600 sm:grid-cols-2 dark:text-stone-300"
+                            class="grid gap-x-8 gap-y-2 text-[14px] text-stone-600 sm:grid-cols-[minmax(180px,0.8fr)_minmax(260px,1.2fr)] dark:text-stone-300"
                         >
                             <span class="flex items-center gap-2"
                                 ><Building2 class="h-4 w-4" />{{
@@ -416,7 +416,7 @@ defineOptions({
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap items-center justify-end gap-2 lg:flex-nowrap lg:self-center">
                         <Button
                             type="button"
                             variant="outline"

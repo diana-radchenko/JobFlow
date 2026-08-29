@@ -652,7 +652,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
             </div>
 
             <Card
-                class="mb-5 border-[#0B2F66] bg-[#071F49] text-white shadow-md"
+                class="mb-5 border-[#051C2E] bg-[#051C2E] text-white shadow-md"
             >
                 <CardContent class="p-5">
                     <div
@@ -1641,7 +1641,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                             >
                                             <Button
                                                 size="sm"
-                                                class="bg-[#0B2F66] text-white hover:bg-[#071F49]"
+                                                class="bg-[#0A2E48] text-white hover:bg-[#051C2E]"
                                                 :disabled="
                                                     job.applied ||
                                                     !selectedResumeId

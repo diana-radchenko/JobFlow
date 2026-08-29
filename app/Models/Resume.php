@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'title', 'ai_conversation_id'])]
+#[Fillable(['user_id', 'title', 'ai_conversation_id', 'is_primary'])]
 class Resume extends Model
 {
     public function user(): BelongsTo

@@ -13,5 +13,9 @@ defineProps<Props>();
 </script>
 
 <template>
-    <img src="/logo-removebg-blue.png" alt="" />
+    <img
+        src="/logo-removebg-blue.png"
+        alt="FLOW"
+        class="size-10 object-contain brightness-0 invert"
+    />
 </template>

@@ -47,7 +47,7 @@ function handleNavigation() {
                     size="lg"
                     :is-active="isMenuItemActive(item)"
                     :tooltip="item.title"
-                    class="text-[13.5px] text-slate-200 transition-colors duration-200 hover:bg-[#0B2F66] hover:text-white data-[active=true]:bg-[#3157D5] data-[active=true]:font-semibold data-[active=true]:text-white"
+                    class="text-[13.5px] text-slate-200 transition-colors duration-200 hover:bg-[#08263D] hover:text-white data-[active=true]:bg-[#0A2E48] data-[active=true]:font-semibold data-[active=true]:text-white"
                 >
                     <Link :href="item.href" @click="handleNavigation">
                         <component :is="item.icon" />
