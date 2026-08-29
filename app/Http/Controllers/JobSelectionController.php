@@ -17,31 +17,36 @@ class JobSelectionController extends Controller
     public function jobSelection(JobSelectionRequest $request): Response
     {
         $query = WorkJob::published();
-        $query->when($request->keyword, fn ($q, $value) => $q->where(fn ($q) => $q->where('title', 'like', "%{$value}%")->orWhere('description', 'like', "%{$value}%")));
-        $query->when($request->industry, fn ($q, $value) => $q->where('industry', $value));
+        $query->when($request->keyword, fn ($q, $value) => $q->where(fn ($q) => $q
+            ->where('title', 'like', "%{$value}%")
+            ->orWhere('description', 'like', "%{$value}%")));
+        $query->when($request->industry, function ($query, $industry) {
+            $query->whereIn('industry', [
+                $industry,
+                ...config("jobs.industry_aliases.{$industry}", []),
+            ]);
+        });
         $query->when($request->position_level, fn ($q, $value) => $q->where('position_level', $value));
         $query->when($request->company, fn ($q, $value) => $q->where('company', 'like', "%{$value}%"));
         $query->when($request->employment_type, fn ($q, $value) => $q->where('employment_type', $value));
+        $query->when($request->location, fn ($q, $value) => $q->where('location', 'like', "%{$value}%"));
+        $query->when($request->workplace_type, fn ($q, $value) => $q->where('workplace_type', $value));
+        $query->when($request->salary_min, fn ($q, $value) => $q->where(fn ($salaryQuery) => $salaryQuery
+            ->where('salary_end', '>=', $value)
+            ->orWhere(fn ($fallback) => $fallback->whereNull('salary_end')->where('salary_start', '>=', $value))));
+        $query->when($request->date_posted, fn ($q, $days) => $q->where('published_at', '>=', now()->subDays((int) $days)));
 
-        if ($request->filled('region') && $request->region !== 'does-not-matter') {
-            $query->where('location', 'like', '%'.$request->region.'%');
-        }
-
-        // own is a filter, where user writes his own dynamic filter value for salary
-        if ($request->filled('incomeLevel') && $request->incomeLevel !== 'does-not-matter') {
-            if ($request->incomeLevel === 'own' && $request->filled('ownSalary')) {
-                $query->where('salary_start', '>=', $request->ownSalary);
-            } elseif (is_numeric($request->incomeLevel)) {
-                $query->where('salary_start', '>=', $request->incomeLevel);
-            }
-        }
-
-        $jobs = $query->get();
+        $jobs = $query->orderByDesc('published_at')->get();
 
         return Inertia::render('JobSelection', [
             'jobs' => $jobs,
-            'filters' => $request->only(['incomeLevel', 'region', 'ownSalary', 'keyword', 'industry', 'position_level', 'company', 'employment_type']),
-            'filterOptions' => ['industries' => config('jobs.industries'), 'positionLevels' => config('jobs.position_levels'), 'employmentTypes' => config('jobs.employment_types')],
+            'filters' => $request->only(['keyword', 'company', 'industry', 'position_level', 'employment_type', 'location', 'workplace_type', 'salary_min', 'date_posted']),
+            'filterOptions' => [
+                'industries' => config('jobs.industries'),
+                'positionLevels' => config('jobs.position_levels'),
+                'employmentTypes' => config('jobs.employment_types'),
+                'workplaceTypes' => config('jobs.workplace_types'),
+            ],
         ]);
     }
 

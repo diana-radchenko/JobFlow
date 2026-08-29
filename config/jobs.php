@@ -2,14 +2,21 @@
 
 return [
     'industries' => [
-        'Technology & Software', 'Education & Training', 'Healthcare & Life Sciences',
-        'Financial Services & Banking', 'Manufacturing', 'Engineering', 'Energy & Utilities',
-        'Retail & E-commerce', 'Consumer Goods', 'Professional Services & Consulting',
-        'Media & Communications', 'Telecommunications', 'Transportation & Logistics',
-        'Hospitality & Tourism', 'Construction & Real Estate', 'Government & Public Sector',
-        'Nonprofit & Social Services', 'Automotive', 'Aerospace & Defense', 'Agriculture & Food',
-        'Pharmaceuticals', 'Marketing & Advertising', 'Human Resources & Recruitment',
-        'Legal Services', 'Research & Science', 'Other',
+        'Technology / Software', 'IT Services', 'Cybersecurity', 'Education & Training',
+        'Engineering', 'Manufacturing', 'Healthcare', 'Financial Services',
+        'Professional Services', 'Retail & E-commerce', 'Media & Communications',
+        'Energy & Utilities', 'Transportation & Logistics', 'Hospitality & Tourism',
+        'Government & Public Sector', 'Nonprofit', 'Construction & Real Estate',
+        'Science & Research', 'Telecommunications', 'Other',
+    ],
+    // Previous controlled values remain queryable without rewriting production data.
+    'industry_aliases' => [
+        'Technology / Software' => ['Technology & Software'],
+        'Healthcare' => ['Healthcare & Life Sciences'],
+        'Financial Services' => ['Financial Services & Banking'],
+        'Professional Services' => ['Professional Services & Consulting'],
+        'Nonprofit' => ['Nonprofit & Social Services'],
+        'Science & Research' => ['Research & Science'],
     ],
     'position_levels' => ['Junior', 'Middle', 'Senior', 'Lead', 'Manager', 'Executive'],
     'employment_types' => ['Full-time', 'Part-time', 'Contract', 'Internship', 'Temporary', 'Freelance'],

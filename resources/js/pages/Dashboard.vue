@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import {
     Bot,
     SlidersHorizontal,
@@ -15,7 +15,7 @@ import {
     Target,
     Video,
 } from 'lucide-vue-next';
-import { computed, reactive, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,7 +38,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Spinner } from '@/components/ui/spinner';
 import { stringForHuman } from '@/helpers/strings';
 import type {
     InterviewSession,
@@ -48,19 +47,10 @@ import type {
 import { show as interviewSessionShow } from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { dashboard } from '@/routes';
 import { show as jobSelectionShow } from '@/routes/job-selection';
-import { store as scoreResumeRequest } from '@/routes/resume-score';
 
 interface DashboardResume {
     id: number;
     title: string;
-}
-
-interface ResumeScoreResult {
-    score: number;
-    summary: string;
-    highlights: string[];
-    additions: string[];
-    removals: string[];
 }
 
 interface DashboardSummary {
@@ -82,6 +72,22 @@ interface DashboardArticle {
     source: string;
 }
 
+interface RecommendationCriterion {
+    label: string;
+    score: number;
+    matches?: string[];
+}
+
+interface RecommendationPayload {
+    job: WorkJob;
+    score: number;
+    criteria: RecommendationCriterion[];
+    strong_matches: string[];
+    gaps: string[];
+    applied: boolean;
+    saved: boolean;
+}
+
 const props = defineProps<{
     applications: UserWorkJobApplication[] | null;
     interviewSessions: InterviewSession[] | null;
@@ -90,7 +96,7 @@ const props = defineProps<{
     profileFirstName: string;
     resumes: DashboardResume[];
     selectedResumeId: number | null;
-    recommendedJobs: Array<{ job: WorkJob; score: number; reasons: string[] }>;
+    recommendedJobs: RecommendationPayload[];
     articles: DashboardArticle[];
 }>();
 
@@ -537,7 +543,7 @@ const interviewTooltip = (date: Date) =>
         .join('\n\n');
 
 const recommendedJobs = computed(() =>
-    props.recommendedJobs.map(({ job, score, reasons }) => ({
+    props.recommendedJobs.map(({ job, score, criteria, strong_matches, gaps, applied, saved }) => ({
         id: job.id,
         url: jobSelectionShow(job.id).url,
         company: job.company,
@@ -548,126 +554,46 @@ const recommendedJobs = computed(() =>
             : 'Salary not specified',
         tags: (job.technologies ?? []).map(String).slice(0, 3),
         recommendationScore: score,
-        reasons,
+        criteria,
+        strongMatches: strong_matches,
+        gaps,
+        applied,
+        saved,
+        location: job.location,
+        workplaceType: job.workplace_type,
     })),
 );
 
 type RecommendedJob = (typeof recommendedJobs.value)[number];
 
-const jobScores = reactive<Record<number, ResumeScoreResult>>({});
-const scoringJobId = ref<number | null>(null);
-const scoreErrors = reactive<Record<number, string>>({});
+const selectRecommendationResume = (event: Event) => {
+    const resumeId = Number((event.target as HTMLSelectElement).value);
+    router.get(dashboard().url, { resume_id: resumeId }, { preserveState: true, preserveScroll: true });
+};
 
-const resumePickerOpen = ref(false);
-const resumePickerJob = ref<RecommendedJob | null>(null);
+const applyToRecommendedJob = (job: RecommendedJob) => {
+    if (!props.selectedResumeId || job.applied) {
+        return;
+    }
+
+    router.post(`/job-selection/${job.id}/apply`, { resume_id: props.selectedResumeId }, { preserveScroll: true });
+};
+
+const toggleSavedJob = (job: RecommendedJob) => {
+    const options = { preserveScroll: true };
+
+    if (job.saved) {
+        router.delete(`/saved-jobs/${job.id}`, options);
+    } else {
+        router.post(`/saved-jobs/${job.id}`, {}, options);
+    }
+};
 
 const recommendationsOpen = ref(false);
 const recommendationsJob = ref<RecommendedJob | null>(null);
-const activeRecommendations = computed<ResumeScoreResult | null>(() =>
-    recommendationsJob.value
-        ? (jobScores[recommendationsJob.value.id] ?? null)
-        : null,
-);
-
-const scoreLabel = (job: RecommendedJob) => {
-    const result = jobScores[job.id];
-
-    return result ? `${result.score}/100` : 'Not scored yet';
-};
-
-const scoreButtonLabel = (job: RecommendedJob) => {
-    if (scoringJobId.value === job.id) {
-        return 'SCORING…';
-    }
-
-    return jobScores[job.id] ? 'RESULT' : 'SCORE RESUME';
-};
-
-const scoreResumeForJob = async (job: RecommendedJob, resumeId: number) => {
-    scoringJobId.value = job.id;
-    delete scoreErrors[job.id];
-
-    try {
-        const response = await fetch(scoreResumeRequest.url(), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-                'X-CSRF-TOKEN': usePage().props.csrf_token as string,
-            },
-            body: JSON.stringify({
-                resume_id: resumeId,
-                job_title: job.title,
-                job_company: job.company,
-                job_salary: job.salary,
-                job_tags: job.tags,
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Request failed');
-        }
-
-        const data = (await response.json()) as ResumeScoreResult;
-        jobScores[job.id] = data;
-        recommendationsJob.value = job;
-        recommendationsOpen.value = true;
-    } catch (error) {
-        console.error('Failed to score resume:', error);
-        scoreErrors[job.id] = 'Could not score this resume. Please try again.';
-    } finally {
-        scoringJobId.value = null;
-    }
-};
-
-const startScoring = (job: RecommendedJob) => {
-    if (props.resumes.length === 0) {
-        router.visit('/resumes');
-
-        return;
-    }
-
-    if (props.resumes.length === 1) {
-        scoreResumeForJob(job, props.resumes[0].id);
-
-        return;
-    }
-
-    resumePickerJob.value = job;
-    resumePickerOpen.value = true;
-};
-
-const onScoreResume = (job: RecommendedJob) => {
-    if (scoringJobId.value !== null) {
-        return;
-    }
-
-    if (jobScores[job.id]) {
-        recommendationsJob.value = job;
-        recommendationsOpen.value = true;
-
-        return;
-    }
-
-    startScoring(job);
-};
-
-const onRescoreResume = (job: RecommendedJob) => {
-    if (scoringJobId.value !== null) {
-        return;
-    }
-
-    startScoring(job);
-};
-
-const selectResumeForScoring = (resumeId: number) => {
-    const job = resumePickerJob.value;
-    resumePickerOpen.value = false;
-    resumePickerJob.value = null;
-
-    if (job) {
-        scoreResumeForJob(job, resumeId);
-    }
+const showRecommendationExplanation = (job: RecommendedJob) => {
+    recommendationsJob.value = job;
+    recommendationsOpen.value = true;
 };
 
 const useArticleFallback = (event: Event, fallback: string) => {
@@ -1294,13 +1220,20 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                     <!-- AI Recommended Jobs -->
                     <div>
-                        <div class="mb-4 flex items-center gap-2">
-                            <h2
-                                class="text-lg font-bold text-slate-900 dark:text-slate-100"
+                        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">AI-Recommended Jobs for You</h2>
+                                <Sparkles class="h-5 w-5 text-primary" />
+                            </div>
+                            <select
+                                v-if="resumes.length"
+                                :value="selectedResumeId ?? ''"
+                                aria-label="Resume used for recommendations"
+                                class="rounded-lg border bg-background px-3 py-2 text-sm font-semibold"
+                                @change="selectRecommendationResume"
                             >
-                                AI-Recommended Jobs for You
-                            </h2>
-                            <Sparkles class="h-5 w-5 text-primary" />
+                                <option v-for="resume in resumes" :key="resume.id" :value="resume.id">{{ resume.title }}</option>
+                            </select>
                         </div>
                         <div class="space-y-4">
                             <p
@@ -1330,77 +1263,43 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                             >
                                                 {{ job.title }}
                                             </a>
+                                            <p class="mt-1 text-sm font-medium text-slate-500">{{ job.company }}</p>
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            class="-mt-1 -mr-1 h-8 w-8 shrink-0 rounded-full text-slate-400 hover:text-primary"
-                                        >
+                                        <Button variant="ghost" size="icon" :title="job.saved ? 'Remove saved job' : 'Save job'" @click="toggleSavedJob(job)">
                                             <Heart class="h-4 w-4" />
                                         </Button>
                                     </div>
 
-                                    <div
-                                        class="mb-5 flex items-center gap-3 pl-14"
-                                    >
-                                        <Badge>
-                                            Salary: {{ job.salary }}
-                                        </Badge>
-                                        <Badge
-                                            v-for="tag in job.tags"
-                                            :key="tag"
-                                            variant="outline"
-                                            class="border-slate-200 bg-white text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-950"
-                                        >
-                                            {{ tag }}
-                                        </Badge>
+                                    <div class="mb-4 flex flex-wrap gap-2 text-xs">
+                                        <Badge>{{ job.recommendationScore }}% match</Badge>
+                                        <Badge variant="outline">{{ job.salary }}</Badge>
+                                        <Badge v-if="job.location" variant="outline">{{ job.location }}</Badge>
+                                        <Badge v-if="job.workplaceType" variant="outline">{{ job.workplaceType }}</Badge>
                                     </div>
 
-                                    <div
-                                        class="flex items-center justify-between rounded-xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
-                                    >
-                                        <div
-                                            class="px-4 text-sm font-bold text-slate-700 dark:text-slate-300"
-                                        >
-                                            AI SCORE: {{ scoreLabel(job) }}
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <Button
-                                                variant="ghost"
-                                                class="h-9 rounded-lg border border-slate-100 bg-white text-xs font-bold text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                                                :disabled="
-                                                    scoringJobId === job.id
-                                                "
-                                                @click="onScoreResume(job)"
-                                            >
-                                                <Spinner
-                                                    v-if="
-                                                        scoringJobId === job.id
-                                                    "
-                                                    class="mr-2 h-3 w-3"
-                                                />
-                                                {{ scoreButtonLabel(job) }}
-                                            </Button>
-                                            <Button
-                                                v-if="jobScores[job.id]"
-                                                variant="ghost"
-                                                class="h-9 shrink-0 rounded-lg border border-slate-100 bg-white text-xs font-bold text-slate-900 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                                                :disabled="
-                                                    scoringJobId === job.id
-                                                "
-                                                title="Score again"
-                                                @click="onRescoreResume(job)"
-                                            >
-                                                SCORE
-                                            </Button>
+                                    <div v-if="job.strongMatches.length" class="mb-3 text-xs text-emerald-700 dark:text-emerald-300">
+                                        <p v-for="match in job.strongMatches.slice(0, 2)" :key="match">✓ {{ match }}</p>
+                                    </div>
+                                    <div v-if="job.gaps.length" class="mb-4 text-xs text-amber-700 dark:text-amber-300">
+                                        <p v-for="gap in job.gaps.slice(0, 1)" :key="gap">△ {{ gap }}</p>
+                                    </div>
+
+                                    <div class="flex flex-wrap gap-2">
+                                        <Button variant="outline" size="sm" @click="showRecommendationExplanation(job)">Why this matches</Button>
+                                        <Button variant="outline" size="sm" @click="router.visit(job.url)">View vacancy</Button>
+                                        <Button size="sm" :disabled="job.applied || !selectedResumeId" @click="applyToRecommendedJob(job)">
+                                            {{ job.applied ? 'Applied' : 'Apply' }}
+                                        </Button>
+                                        <Button variant="ghost" size="sm" @click="toggleSavedJob(job)">
+                                            {{ job.saved ? 'Saved' : 'Save' }}
+                                        </Button>
+                                    </div>
+
+                                    <div class="mt-4 rounded-xl border border-slate-100 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-950">
+                                        <div v-for="criterion in job.criteria" :key="criterion.label" class="flex justify-between gap-3 py-1">
+                                            <span>{{ criterion.label }}</span><strong>{{ criterion.score }}%</strong>
                                         </div>
                                     </div>
-                                    <p
-                                        v-if="scoreErrors[job.id]"
-                                        class="mt-2 text-xs text-destructive"
-                                    >
-                                        {{ scoreErrors[job.id] }}
-                                    </p>
                                 </CardContent>
                             </Card>
                         </div>
@@ -1474,100 +1373,32 @@ const useArticleFallback = (event: Event, fallback: string) => {
             </div>
         </div>
 
-        <!-- Resume Picker Dialog (shown when the user has multiple resumes) -->
-        <Dialog
-            :open="resumePickerOpen"
-            @update:open="resumePickerOpen = $event"
-        >
-            <DialogContent class="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Choose a resume to score</DialogTitle>
-                    <DialogDescription>
-                        Which resume should the AI use to score your fit for "{{
-                            resumePickerJob?.title
-                        }}"?
-                    </DialogDescription>
-                </DialogHeader>
-                <div class="space-y-2">
-                    <Button
-                        v-for="resume in props.resumes"
-                        :key="resume.id"
-                        type="button"
-                        variant="outline"
-                        class="w-full justify-start"
-                        @click="selectResumeForScoring(resume.id)"
-                    >
-                        {{ resume.title }}
-                    </Button>
-                </div>
-            </DialogContent>
-        </Dialog>
-
-        <!-- AI Score Recommendations Dialog -->
+        <!-- Explainable recommendation details -->
         <Dialog
             :open="recommendationsOpen"
             @update:open="recommendationsOpen = $event"
         >
             <DialogContent class="sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>
-                        AI Score: {{ activeRecommendations?.score }}/100
-                    </DialogTitle>
+                    <DialogTitle>{{ recommendationsJob?.recommendationScore }}% Overall Match</DialogTitle>
                     <DialogDescription>
-                        {{ activeRecommendations?.summary }}
+                        Calculated from the selected resume and real vacancy fields.
                     </DialogDescription>
                 </DialogHeader>
                 <div class="max-h-[60vh] space-y-4 overflow-y-auto">
-                    <div v-if="activeRecommendations?.highlights.length">
-                        <h4 class="mb-1 text-sm font-bold text-foreground">
-                            Highlight
-                        </h4>
-                        <ul
-                            class="list-disc space-y-1 pl-5 text-sm text-foreground/70"
-                        >
-                            <li
-                                v-for="(
-                                    item, index
-                                ) in activeRecommendations.highlights"
-                                :key="index"
-                            >
-                                {{ item }}
-                            </li>
-                        </ul>
+                    <div v-for="criterion in recommendationsJob?.criteria" :key="criterion.label" class="rounded-lg border p-3">
+                        <div class="flex justify-between gap-3 text-sm font-bold">
+                            <span>{{ criterion.label }}</span><span>{{ criterion.score }}%</span>
+                        </div>
+                        <p v-if="criterion.matches?.length" class="mt-1 text-xs text-muted-foreground">{{ criterion.matches.join(', ') }}</p>
                     </div>
-                    <div v-if="activeRecommendations?.additions.length">
-                        <h4 class="mb-1 text-sm font-bold text-foreground">
-                            Add
-                        </h4>
-                        <ul
-                            class="list-disc space-y-1 pl-5 text-sm text-foreground/70"
-                        >
-                            <li
-                                v-for="(
-                                    item, index
-                                ) in activeRecommendations.additions"
-                                :key="index"
-                            >
-                                {{ item }}
-                            </li>
-                        </ul>
+                    <div v-if="recommendationsJob?.strongMatches.length">
+                        <h4 class="mb-1 text-sm font-bold">Strong matches</h4>
+                        <p v-for="item in recommendationsJob.strongMatches" :key="item" class="text-sm text-emerald-700">✓ {{ item }}</p>
                     </div>
-                    <div v-if="activeRecommendations?.removals.length">
-                        <h4 class="mb-1 text-sm font-bold text-foreground">
-                            Remove
-                        </h4>
-                        <ul
-                            class="list-disc space-y-1 pl-5 text-sm text-foreground/70"
-                        >
-                            <li
-                                v-for="(
-                                    item, index
-                                ) in activeRecommendations.removals"
-                                :key="index"
-                            >
-                                {{ item }}
-                            </li>
-                        </ul>
+                    <div v-if="recommendationsJob?.gaps.length">
+                        <h4 class="mb-1 text-sm font-bold">Potential gaps</h4>
+                        <p v-for="item in recommendationsJob.gaps" :key="item" class="text-sm text-amber-700">△ {{ item }}</p>
                     </div>
                 </div>
                 <DialogFooter>
@@ -1579,4 +1410,3 @@ const useArticleFallback = (event: Event, fallback: string) => {
         </Dialog>
     </div>
 </template>
-

@@ -24,14 +24,15 @@ class JobSelectionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'region' => ['nullable', 'string', 'max:255'],
-            'incomeLevel' => ['nullable', 'string'],
-            'ownSalary' => ['nullable', 'numeric', 'min:0'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'salary_min' => ['nullable', 'numeric', 'min:0'],
             'keyword' => ['nullable', 'string', 'max:255'],
             'industry' => ['nullable', Rule::in(config('jobs.industries'))],
             'position_level' => ['nullable', Rule::in(config('jobs.position_levels'))],
             'company' => ['nullable', 'string', 'max:255'],
             'employment_type' => ['nullable', Rule::in(config('jobs.employment_types'))],
+            'workplace_type' => ['nullable', Rule::in(config('jobs.workplace_types'))],
+            'date_posted' => ['nullable', Rule::in(['1', '7', '30'])],
         ];
     }
 }
