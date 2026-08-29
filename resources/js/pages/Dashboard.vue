@@ -48,6 +48,7 @@ interface DashboardResume {
 interface DashboardSummary {
     applications: number;
     interviews: number;
+    offers: number;
     resumeCompleteness: number | null;
     recommendedMatches: number;
     jobSearchProgress: number;
@@ -651,16 +652,14 @@ const useArticleFallback = (event: Event, fallback: string) => {
             </div>
 
             <Card
-                class="mb-6 border-slate-200/70 shadow-sm dark:border-slate-800"
+                class="mb-6 border-[#0B315B] bg-[#061E3A] text-white shadow-sm"
             >
                 <CardContent class="p-5">
                     <div
                         class="flex flex-wrap items-center justify-between gap-3"
                     >
                         <div>
-                            <p
-                                class="text-sm font-semibold text-slate-600 dark:text-slate-300"
-                            >
+                            <p class="text-sm font-semibold text-slate-200">
                                 Job Search Progress
                             </p>
                             <p class="mt-1 text-2xl font-extrabold">
@@ -669,13 +668,13 @@ const useArticleFallback = (event: Event, fallback: string) => {
                         </div>
                         <a
                             href="#next-steps"
-                            class="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline"
+                            class="inline-flex items-center gap-1 text-sm font-bold text-sky-200 hover:text-white hover:underline"
                         >
                             View next steps <ArrowRight class="h-4 w-4" />
                         </a>
                     </div>
                     <div
-                        class="mt-4 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+                        class="mt-4 h-2 overflow-hidden rounded-full bg-white/15"
                         role="progressbar"
                         aria-label="Job search progress"
                         aria-valuemin="0"
@@ -683,13 +682,13 @@ const useArticleFallback = (event: Event, fallback: string) => {
                         :aria-valuenow="dashboardSummary.jobSearchProgress"
                     >
                         <div
-                            class="h-full rounded-full bg-primary transition-[width]"
+                            class="h-full rounded-full bg-blue-400 transition-[width]"
                             :style="{
                                 width: `${dashboardSummary.jobSearchProgress}%`,
                             }"
                         ></div>
                     </div>
-                    <p class="mt-2 text-sm text-slate-500">
+                    <p class="mt-2 text-sm text-slate-300">
                         Based on
                         {{
                             jobSearchMilestones.filter((item) => item.complete)
@@ -758,13 +757,13 @@ const useArticleFallback = (event: Event, fallback: string) => {
                     class="border-slate-200/70 shadow-sm dark:border-slate-800"
                 >
                     <CardContent class="flex items-center gap-3 p-4">
-                        <Target class="h-5 w-5 text-violet-600" />
+                        <Target class="h-5 w-5 text-emerald-600" />
                         <div>
                             <p class="text-sm font-medium text-slate-500">
-                                Recommended matches
+                                Offers
                             </p>
                             <p class="text-2xl font-extrabold">
-                                {{ dashboardSummary.recommendedMatches }}
+                                {{ dashboardSummary.offers }}
                             </p>
                         </div>
                     </CardContent>

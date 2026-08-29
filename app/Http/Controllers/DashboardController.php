@@ -65,6 +65,7 @@ class DashboardController extends Controller
             'dashboardSummary' => [
                 'applications' => $applications->count(),
                 'interviews' => $interviewSessions->count(),
+                'offers' => $applications->whereIn('status', ['offer', 'hired'])->count(),
                 'resumeCompleteness' => $resumeSummary['completeness'] ?? null,
                 'recommendedMatches' => count($recommendedJobs),
                 'jobSearchProgress' => $jobSearchProgress['percentage'],

@@ -7,7 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
-type Category = 'All' | 'Job Search' | 'Career Skills' | 'Labor Market';
+type Category =
+    | 'All'
+    | 'Job Search'
+    | 'Career Skills'
+    | 'Labor Market'
+    | 'AI & Hiring';
 
 const resources = ref([
     {
@@ -16,8 +21,9 @@ const resources = ref([
         description:
             'Global labor-market trends, growing roles and the skills employers expect to need.',
         category: 'Labor Market' as Category,
+        source: 'World Economic Forum',
         readingMinutes: 20,
-        image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=900',
+        image: '/articles/flexible-work.svg',
         url: 'https://www.weforum.org/publications/the-future-of-jobs-report-2025/',
         favorite: false,
     },
@@ -27,19 +33,21 @@ const resources = ref([
         description:
             'A practical overview of fields offering opportunities to experienced workers.',
         category: 'Job Search' as Category,
+        source: 'AARP',
         readingMinutes: 12,
-        image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=900',
+        image: '/articles/career-pivot.svg',
         url: 'https://www.aarp.org/work/job-search/in-demand-job-fields-workers-over-50/',
         favorite: false,
     },
     {
         id: 'proximus-freelance',
-        title: 'Freelance Work at Proximus',
+        title: 'Why freelance at Proximus?',
         description:
             'Explore current freelance opportunities and flexible project work at Proximus.',
         category: 'Job Search' as Category,
+        source: 'Proximus',
         readingMinutes: 5,
-        image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=900',
+        image: '/articles/freelance-career.svg',
         url: 'https://proximus.talent-pool.com/freelance',
         favorite: false,
     },
@@ -49,9 +57,34 @@ const resources = ref([
         description:
             'Why emotional intelligence and cognitive ability both matter at work.',
         category: 'Career Skills' as Category,
+        source: 'Daniel Goleman',
         readingMinutes: 7,
-        image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=900',
+        image: '/articles/graduate-internship.svg',
         url: 'https://danielgolemanemotionalintelligence.com/iq-or-ei-you-need-both/',
+        favorite: false,
+    },
+    {
+        id: 'ai-screening-hbr',
+        title: 'How to Get Hired When AI Does the Screening',
+        description:
+            'Practical guidance on preparing for AI-assisted resume screening and modern hiring processes.',
+        category: 'AI & Hiring' as Category,
+        source: 'Harvard Business Review',
+        readingMinutes: 6,
+        image: '/articles/flexible-work.svg',
+        url: 'https://hbr.org/2025/02/how-to-get-hired-when-ai-does-the-screening',
+        favorite: false,
+    },
+    {
+        id: 'skills-on-the-rise-2025',
+        title: 'Skills on the Rise in 2025',
+        description:
+            'A data-driven overview of fast-growing skills professionals can develop for the changing labor market.',
+        category: 'Career Skills' as Category,
+        source: 'LinkedIn',
+        readingMinutes: 5,
+        image: '/articles/career-pivot.svg',
+        url: 'https://www.linkedin.com/business/talent/blog/learning-and-development/skills-on-the-rise',
         favorite: false,
     },
 ]);
@@ -61,6 +94,7 @@ const categories: Category[] = [
     'Job Search',
     'Career Skills',
     'Labor Market',
+    'AI & Hiring',
 ];
 const search = ref('');
 const category = ref<Category>('All');
@@ -78,7 +112,7 @@ const visibleResources = computed(() => {
         .filter(
             (item) =>
                 !query ||
-                `${item.title} ${item.description} ${item.category}`
+                `${item.title} ${item.description} ${item.category} ${item.source}`
                     .toLowerCase()
                     .includes(query),
         )
@@ -172,6 +206,10 @@ defineOptions({
                             :alt="`${resource.title} cover`"
                             class="h-44 w-full object-cover"
                             loading="lazy"
+                            @error="
+                                ($event.currentTarget as HTMLImageElement).src =
+                                    '/articles/article-fallback.svg'
+                            "
                         />
                         <CardContent class="space-y-3 p-5">
                             <div
@@ -193,6 +231,9 @@ defineOptions({
                             </h3>
                             <p class="text-base leading-relaxed text-slate-600">
                                 {{ resource.description }}
+                            </p>
+                            <p class="text-sm font-semibold text-slate-500">
+                                {{ resource.source }}
                             </p>
                             <div class="flex items-center justify-between">
                                 <Button as-child size="sm"

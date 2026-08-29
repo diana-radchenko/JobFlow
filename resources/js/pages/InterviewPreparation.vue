@@ -414,7 +414,7 @@ defineOptions({
                 <!-- Right Column: Live Interview + Past Sessions -->
                 <div class="space-y-6">
                     <Card
-                        class="self-start overflow-hidden rounded-[24px] border border-primary/15 bg-gradient-to-br from-primary/5 via-white to-sky-50/70 py-0 shadow-sm"
+                        class="self-start overflow-hidden rounded-[24px] border border-[#0B315B] bg-[#061E3A] py-0 text-white shadow-sm"
                     >
                         <CardContent class="flex flex-col items-start p-0">
                             <button
@@ -424,14 +424,14 @@ defineOptions({
                                     !!activeSession ||
                                     !resumeId
                                 "
-                                class="group relative flex w-full max-w-md flex-col items-center justify-center gap-3 overflow-hidden rounded-[24px] border border-primary/20 bg-gradient-to-br from-primary/10 via-white to-primary/5 p-6 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 dark:border-primary/20 dark:from-primary/15 dark:via-slate-950 dark:to-slate-950"
+                                class="group relative flex w-full max-w-md flex-col items-center justify-center gap-3 overflow-hidden rounded-[24px] border border-white/10 bg-transparent p-6 text-center transition-all hover:border-blue-300/40 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <div
                                     class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,theme(colors.primary.DEFAULT/8%),transparent_70%)] opacity-0 transition-opacity group-hover:opacity-100"
                                 />
 
                                 <div
-                                    class="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-300 group-hover:scale-110"
+                                    class="flex h-14 w-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-sm transition-transform duration-300 group-hover:scale-105"
                                 >
                                     <Loader2
                                         v-if="form.processing"
@@ -442,12 +442,12 @@ defineOptions({
 
                                 <div>
                                     <h4
-                                        class="mb-1 text-lg font-bold text-slate-900 dark:text-slate-100"
+                                        class="mb-1 text-lg font-bold text-white"
                                     >
-                                        AI Interview
+                                        Interview Ready
                                     </h4>
                                     <p
-                                        class="mx-auto max-w-sm text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                                        class="mx-auto max-w-sm text-sm leading-relaxed text-slate-300"
                                     >
                                         <strong class="block">{{
                                             selectedApplication?.work_job
@@ -488,7 +488,7 @@ defineOptions({
                                 </div>
 
                                 <div
-                                    class="flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition-transform group-hover:scale-105 dark:bg-slate-100 dark:text-slate-900"
+                                    class="flex items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-semibold text-[#061E3A] transition-transform group-hover:scale-105"
                                 >
                                     {{
                                         form.processing
