@@ -107,10 +107,10 @@ const formatDate = (date: string) =>
 <template>
     <Head title="My Resumes" />
 
-    <div class="min-h-full bg-slate-50/70 p-6 dark:bg-slate-950">
-        <div class="mx-auto max-w-7xl space-y-6">
+    <div class="jobflow-page dark:bg-slate-950">
+        <div class="jobflow-page-frame">
             <div>
-                <h1 class="text-2xl font-semibold">My Resumes</h1>
+                <h1 class="jobflow-page-title">Resume Center</h1>
                 <p class="text-sm text-foreground/60">
                     Keep separate resumes to highlight different skills and
                     experience for different job applications.
@@ -177,9 +177,11 @@ const formatDate = (date: string) =>
             </div>
 
             <div
-                class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"
+                class="grid gap-5 lg:grid-cols-[minmax(300px,0.75fr)_minmax(0,1.65fr)]"
             >
-                <div class="grid content-start gap-4 sm:grid-cols-2">
+                <div
+                    class="order-2 grid content-start gap-4 lg:grid-cols-1 xl:grid-cols-2"
+                >
                     <Card
                         v-for="resume in resumes"
                         :key="resume.id"
@@ -219,7 +221,7 @@ const formatDate = (date: string) =>
                             </form>
                             <template v-else>
                                 <CardTitle
-                                    class="text-lg leading-snug font-bold"
+                                    class="text-[16px] leading-snug font-semibold"
                                     >{{ resume.title }}</CardTitle
                                 >
                                 <CardDescription class="text-sm">
@@ -331,11 +333,11 @@ const formatDate = (date: string) =>
 
                 <Card
                     v-if="selectedResume"
-                    class="h-fit border-[#0B315B] bg-[#061E3A] text-white shadow-sm lg:sticky lg:top-6"
+                    class="order-1 h-fit border-[#071F49] bg-[#071F49] text-white shadow-md lg:sticky lg:top-6"
                 >
                     <CardHeader>
-                        <CardTitle class="text-xl font-bold"
-                            >Resume Insights</CardTitle
+                        <CardTitle class="text-[18px] font-semibold"
+                            >Resume Completeness</CardTitle
                         >
                         <CardDescription>
                             Selected Resume: {{ selectedResume.title }}
@@ -362,26 +364,36 @@ const formatDate = (date: string) =>
                                 ></div>
                             </div>
                         </div>
-                        <div class="space-y-2 text-sm">
-                            <div
-                                v-for="item in selectedResume.completeness_items"
-                                :key="item.label"
-                                class="flex items-center gap-2"
-                            >
-                                <CheckCircle2
-                                    v-if="item.complete"
-                                    class="h-4 w-4 text-emerald-600"
-                                />
-                                <Circle v-else class="h-4 w-4 text-amber-600" />
-                                <span
-                                    :class="!item.complete && 'font-semibold'"
+                        <div class="rounded-2xl bg-white p-4 text-[#14213D]">
+                            <h3 class="mb-3 text-[15px] font-semibold">
+                                Resume Insights
+                            </h3>
+                            <div class="space-y-2 text-[13px]">
+                                <div
+                                    v-for="item in selectedResume.completeness_items"
+                                    :key="item.label"
+                                    class="flex items-center gap-2"
                                 >
-                                    {{
-                                        item.complete
-                                            ? item.label
-                                            : `Add ${item.label.toLowerCase()}`
-                                    }}
-                                </span>
+                                    <CheckCircle2
+                                        v-if="item.complete"
+                                        class="h-4 w-4 text-emerald-600"
+                                    />
+                                    <Circle
+                                        v-else
+                                        class="h-4 w-4 text-amber-600"
+                                    />
+                                    <span
+                                        :class="
+                                            !item.complete && 'font-semibold'
+                                        "
+                                    >
+                                        {{
+                                            item.complete
+                                                ? item.label
+                                                : `Add ${item.label.toLowerCase()}`
+                                        }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="grid gap-2">
@@ -413,4 +425,3 @@ const formatDate = (date: string) =>
         </div>
     </div>
 </template>
-

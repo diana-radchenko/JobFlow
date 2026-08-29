@@ -138,15 +138,15 @@ defineOptions({
 
 <template>
     <Head title="Career Development" />
-    <div class="min-h-full bg-slate-50/80 px-5 py-8 dark:bg-slate-950">
-        <div class="mx-auto w-full max-w-7xl space-y-8">
+    <div class="jobflow-page dark:bg-slate-950">
+        <div class="jobflow-page-frame">
             <section>
                 <p
                     class="text-sm font-bold tracking-wide text-primary uppercase"
                 >
                     Recommended for You
                 </p>
-                <h1 class="mt-1 text-3xl font-black">Career Development</h1>
+                <h1 class="jobflow-page-title mt-1">Career Development</h1>
                 <p class="mt-2 text-slate-500">
                     Practical resources for your job search and long-term career
                     skills.
@@ -196,7 +196,7 @@ defineOptions({
             <section>
                 <div class="mb-4 flex items-center gap-2">
                     <BookOpen class="h-6 w-6 text-primary" />
-                    <h2 class="text-2xl font-extrabold">Career Resources</h2>
+                    <h2 class="jobflow-section-title">Career Resources</h2>
                 </div>
                 <div
                     v-if="visibleResources.length"

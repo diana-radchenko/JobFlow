@@ -9,13 +9,14 @@ const { state } = useSidebar();
     <div
         class="flex aspect-square size-14 items-center justify-center rounded-md text-sidebar-primary-foreground"
     >
-        <AppLogoIcon class="size-10 fill-current text-white dark:text-black" />
+        <AppLogoIcon class="size-10 fill-current text-white dark:text-white" />
     </div>
     <div
         class="ml-2 grid flex-1 text-left text-base"
         :class="state === 'collapsed' && 'hidden'"
     >
-        <span class="mb-0.5 truncate leading-tight font-bold">JobFlow</span>
+        <span class="mb-0.5 truncate leading-tight font-bold text-white"
+            >JobFlow</span
+        >
     </div>
 </template>
-

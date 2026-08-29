@@ -172,23 +172,21 @@ defineOptions({
 <template>
     <Head title="Interview Preparation" />
 
-    <div class="min-h-full bg-slate-50/80 px-5 py-8 font-sans">
+    <div class="jobflow-page font-sans">
         <div class="mx-auto max-w-[1400px]">
             <div class="mb-8">
                 <h1
-                    class="mb-6 text-sm font-bold text-slate-900 dark:text-slate-100"
+                    class="mb-3 text-[13px] font-semibold text-[#7047EB] dark:text-violet-300"
                 >
                     Interview Preparation with AI
                 </h1>
 
                 <div class="flex items-start justify-between">
                     <div>
-                        <h2
-                            class="mb-2 text-2xl font-bold text-slate-900 dark:text-slate-100"
-                        >
+                        <h2 class="jobflow-page-title mb-2 dark:text-slate-100">
                             Get Ready for Your Interview with AI
                         </h2>
-                        <p class="text-lg text-slate-600 dark:text-slate-400">
+                        <p class="text-sm text-slate-600 dark:text-slate-400">
                             Practice real interview questions, get AI feedback,
                             and boost your confidence!
                         </p>
@@ -489,7 +487,7 @@ defineOptions({
                 <!-- Right Column: Live Interview + Past Sessions -->
                 <div class="w-full max-w-xl space-y-6 lg:justify-self-start">
                     <Card
-                        class="self-start overflow-hidden rounded-[24px] border border-[#0B315B] bg-[#061E3A] py-0 text-white shadow-sm"
+                        class="self-start overflow-hidden rounded-[20px] border border-[#071F49] bg-[#071F49] py-0 text-white shadow-md"
                     >
                         <CardContent class="flex flex-col items-start p-0">
                             <button

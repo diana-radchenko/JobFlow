@@ -87,7 +87,7 @@ const submissionDate = (application: TrackerApplication) =>
     }).format(new Date(application.created_at!));
 
 const statusTone: Record<Stage, string> = {
-    Applied: 'bg-slate-100 text-slate-800',
+    Applied: 'bg-blue-100 text-blue-800',
     Viewed: 'bg-blue-100 text-blue-800',
     Shortlisted: 'bg-violet-100 text-violet-800',
     Interview: 'bg-amber-100 text-amber-900',
@@ -111,13 +111,11 @@ defineOptions({
 <template>
     <Head title="Application Tracker" />
 
-    <div class="min-h-full bg-slate-50/80 px-5 py-8 dark:bg-slate-950">
-        <div class="mx-auto w-full max-w-7xl space-y-6">
+    <div class="jobflow-page dark:bg-slate-950">
+        <div class="jobflow-page-frame">
             <header class="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h1
-                        class="text-2xl font-black text-slate-950 dark:text-white"
-                    >
+                    <h1 class="jobflow-page-title dark:text-white">
                         Application Tracker
                     </h1>
                     <p class="mt-1 text-sm text-slate-500">
@@ -362,4 +360,3 @@ defineOptions({
     color: var(--primary-foreground);
 }
 </style>
-

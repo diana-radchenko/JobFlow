@@ -126,13 +126,13 @@ onUnmounted(() => {
 <template>
     <Head title="Chat" />
     <div
-        class="grid min-h-full w-full gap-4 bg-slate-50/80 p-4 md:p-6 lg:grid-cols-[minmax(280px,30%)_minmax(0,70%)] dark:bg-slate-950"
+        class="grid min-h-full w-full gap-4 bg-[#F5F7FB] p-5 md:p-6 lg:grid-cols-[minmax(280px,30%)_minmax(0,70%)] dark:bg-slate-950"
     >
         <Card
-            class="border-slate-200 bg-slate-100/70 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            class="border-[#E7ECF3] bg-[#EEF3FA] shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
             <CardContent class="space-y-3 pt-6">
-                <h1 class="text-xl font-bold">Chat</h1>
+                <h1 class="text-[18px] font-semibold text-[#14213D]">Chat</h1>
                 <input
                     v-model="search"
                     class="w-full rounded-md border bg-background p-2"
@@ -146,9 +146,9 @@ onUnmounted(() => {
                             query: { conversation: conversation.id },
                         }).url
                     "
-                    class="block rounded-xl border bg-white p-3 transition-all duration-200 hover:border-primary/25 hover:shadow-sm dark:bg-slate-950"
+                    class="block rounded-xl border bg-white p-3 transition-all duration-200 hover:border-[#3157D5]/35 hover:shadow-sm dark:bg-slate-950"
                     :class="{
-                        'border-primary bg-blue-50 shadow-sm dark:bg-slate-800':
+                        'border-[#3157D5] bg-[#EEF3FA] shadow-sm dark:bg-slate-800':
                             selected?.id === conversation.id,
                     }"
                 >
@@ -342,4 +342,3 @@ onUnmounted(() => {
         </Card>
     </div>
 </template>
-

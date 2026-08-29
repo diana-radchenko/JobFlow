@@ -156,10 +156,10 @@ defineOptions({
     <Head title="Job Selection" />
 
     <div
-        class="flex min-h-full flex-1 gap-6 bg-slate-50/80 p-4 md:p-6 dark:bg-stone-950"
+        class="flex min-h-full flex-1 gap-5 bg-[#F5F7FB] p-5 text-[#14213D] md:p-6 dark:bg-stone-950"
     >
         <aside
-            class="w-72 flex-shrink-0 self-start rounded-2xl border border-blue-100 bg-blue-50/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            class="w-72 flex-shrink-0 self-start rounded-[18px] border border-[#D9E2EF] bg-[#EEF3FA] p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
             <div class="mb-5 flex items-center justify-between gap-3">
                 <h2 class="text-lg font-bold">Vacancy filters</h2>
@@ -273,7 +273,7 @@ defineOptions({
 
         <main class="min-w-0 flex-1 space-y-5">
             <header>
-                <h1 class="text-2xl font-bold text-slate-950 dark:text-white">
+                <h1 class="jobflow-page-title dark:text-white">
                     Job Selection
                 </h1>
                 <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
@@ -362,7 +362,7 @@ defineOptions({
                     <div class="min-w-0 space-y-4">
                         <div>
                             <h2
-                                class="text-[22px] font-bold text-stone-900 group-hover:text-primary dark:text-white"
+                                class="text-[16px] font-semibold text-[#14213D] group-hover:text-[#3157D5] dark:text-white"
                             >
                                 {{ job.title }}
                             </h2>
@@ -449,4 +449,3 @@ defineOptions({
     background-color: rgb(28 25 23);
 }
 </style>
-
