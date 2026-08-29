@@ -34,16 +34,29 @@ class DashboardController extends Controller
             fn (InterviewSession $session) => $session->scheduled_at?->isFuture(),
         );
 
-        $profileFirstName = str(auth()->user()->email)->before('@')->toString();
+        $user = $request->user();
+        $profileFirstName = str($user->name ?: $user->email)
+            ->before(' ')
+            ->before('@')
+            ->toString();
 
-        $resumes = auth()->user()->resumes()
+        $resumes = $user->resumes()
             ->select(['id', 'title'])
             ->orderByDesc('updated_at')
             ->get();
         $selectedResume = ($request->filled('resume_id')
-            ? auth()->user()->resumes()->find($request->integer('resume_id'))
-            : null) ?? auth()->user()->resumes()->latest('updated_at')->first();
+            ? $user->resumes()->find($request->integer('resume_id'))
+            : null) ?? $user->resumes()->latest('updated_at')->first();
         $recommendedJobs = $selectedResume ? $recommendations->forResume($selectedResume) : [];
+        $resumeSummary = $this->resumeSummary($selectedResume);
+        $jobSearchProgress = $this->jobSearchProgress(
+            $resumeSummary,
+            $applications,
+            $user->savedWorkJobs()->exists(),
+            InterviewSession::where('user_id', $user->id)
+                ->whereIn('status', ['scheduled', 'completed'])
+                ->exists(),
+        );
 
         return Inertia::render('Dashboard', [
             'applications' => $applications,
@@ -52,14 +65,17 @@ class DashboardController extends Controller
             'dashboardSummary' => [
                 'applications' => $applications->count(),
                 'interviews' => $interviewSessions->count(),
-                'resumeCompleteness' => $this->resumeCompleteness($selectedResume),
+                'resumeCompleteness' => $resumeSummary['completeness'] ?? null,
                 'recommendedMatches' => count($recommendedJobs),
+                'jobSearchProgress' => $jobSearchProgress['percentage'],
             ],
             'profileFirstName' => $profileFirstName,
             'resumes' => $resumes,
             'selectedResumeId' => $selectedResume?->id,
+            'selectedResumeSummary' => $resumeSummary,
+            'jobSearchMilestones' => $jobSearchProgress['milestones'],
             'recommendedJobs' => $recommendedJobs,
-            'nextSteps' => $this->nextSteps($selectedResume, $applications, $nextInterview, $recommendedJobs),
+            'nextSteps' => $this->nextSteps($selectedResume, $resumeSummary['completeness'] ?? null, $applications, $nextInterview, $recommendedJobs),
             'recentActivity' => $this->recentActivity($applications, $interviewSessions),
             'articles' => config('dashboard.articles', []),
         ]);
@@ -70,16 +86,14 @@ class DashboardController extends Controller
      * @param  Collection<int, mixed>|array<int, mixed>  $recommendedJobs
      * @return array<int, array{title: string, description: string, href: string, action: string}>
      */
-    private function nextSteps(?Resume $resume, Collection $applications, ?InterviewSession $nextInterview, Collection|array $recommendedJobs): array
+    private function nextSteps(?Resume $resume, ?int $resumeCompleteness, Collection $applications, ?InterviewSession $nextInterview, Collection|array $recommendedJobs): array
     {
         $steps = collect();
         $recommendedJobs = collect($recommendedJobs);
-        $completeness = $this->resumeCompleteness($resume);
-
         if (! $resume) {
             $steps->push(['title' => 'Create your resume', 'description' => 'Add a resume to unlock applications and matching jobs.', 'href' => route('resumes.index'), 'action' => 'Create Resume']);
-        } elseif ($completeness !== null && $completeness < 75) {
-            $steps->push(['title' => 'Improve your resume', 'description' => "Your resume is {$completeness}% complete.", 'href' => route('resume-editor.show', $resume), 'action' => 'Update Resume']);
+        } elseif ($resumeCompleteness !== null && $resumeCompleteness < 75) {
+            $steps->push(['title' => 'Improve your resume', 'description' => "Your resume is {$resumeCompleteness}% complete.", 'href' => route('resume-editor.show', $resume), 'action' => 'Update Resume']);
         }
 
         if ($nextInterview) {
@@ -140,7 +154,10 @@ class DashboardController extends Controller
         return $activity->sortByDesc('occurred_at')->take(5)->values()->all();
     }
 
-    private function resumeCompleteness(?Resume $resume): ?int
+    /**
+     * @return array{title: string, completeness: int, checklist: array<int, array{label: string, complete: bool}>, href: string}|null
+     */
+    private function resumeSummary(?Resume $resume): ?array
     {
         if (! $resume) {
             return null;
@@ -150,10 +167,11 @@ class DashboardController extends Controller
             ->loadMissing('additionalInformation');
 
         $profile = auth()->user()->profile;
+        $hasProfile = $profile && collect(['first_name', 'last_name', 'phone', 'city', 'country'])
+            ->contains(fn (string $field) => filled($profile->{$field}));
         $sections = [
             filled($resume->title),
-            $profile && collect(['first_name', 'last_name', 'phone', 'city', 'country'])
-                ->contains(fn (string $field) => filled($profile->{$field})),
+            $hasProfile,
             $resume->skills_count > 0,
             $resume->work_experiences_count > 0,
             $resume->educations_count > 0,
@@ -166,7 +184,45 @@ class DashboardController extends Controller
             ])->contains(fn ($value) => filled($value)),
         ];
 
-        return (int) round(collect($sections)->filter()->count() / count($sections) * 100);
+        return [
+            'title' => $resume->title,
+            'completeness' => (int) round(collect($sections)->filter()->count() / count($sections) * 100),
+            'checklist' => [
+                ['label' => 'Personal details added', 'complete' => (bool) $hasProfile],
+                ['label' => 'Skills added', 'complete' => $resume->skills_count > 0],
+                ['label' => 'Work experience added', 'complete' => $resume->work_experiences_count > 0],
+                ['label' => 'Education added', 'complete' => $resume->educations_count > 0],
+            ],
+            'href' => route('resume-editor.show', $resume),
+        ];
+    }
+
+    /**
+     * @param  array{title: string, completeness: int, checklist: array<int, array{label: string, complete: bool}>, href: string}|null  $resumeSummary
+     * @param  Collection<int, UserWorkJobApplication>  $applications
+     * @return array{percentage: int, milestones: array<int, array{label: string, weight: int, complete: bool}>}
+     */
+    private function jobSearchProgress(?array $resumeSummary, Collection $applications, bool $hasSavedJob, bool $hasInterview): array
+    {
+        $hasApplication = $applications->isNotEmpty();
+        $hasEmployerInteraction = $applications->contains(
+            fn (UserWorkJobApplication $application) => $application->viewed_at !== null
+                || $application->status->value !== 'applied',
+        );
+
+        $milestones = [
+            ['label' => 'Resume created', 'weight' => 20, 'complete' => $resumeSummary !== null],
+            ['label' => 'Resume has meaningful content', 'weight' => 20, 'complete' => ($resumeSummary['completeness'] ?? 0) >= 50],
+            ['label' => 'Job saved', 'weight' => 10, 'complete' => $hasSavedJob],
+            ['label' => 'Application submitted', 'weight' => 20, 'complete' => $hasApplication],
+            ['label' => 'Employer interaction received', 'weight' => 15, 'complete' => $hasEmployerInteraction],
+            ['label' => 'Interview scheduled or completed', 'weight' => 15, 'complete' => $hasInterview],
+        ];
+
+        return [
+            'percentage' => collect($milestones)->where('complete', true)->sum('weight'),
+            'milestones' => $milestones,
+        ];
     }
 }
 

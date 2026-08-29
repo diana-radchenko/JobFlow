@@ -161,7 +161,7 @@ function handleNavigation() {
                     <SidebarMenuButton
                         size="lg"
                         as-child
-                        class="hover:bg-transparent hover:text-inherit active:bg-transparent active:text-inherit"
+                        class="h-auto py-2 hover:bg-transparent hover:text-inherit active:bg-transparent active:text-inherit"
                     >
                         <Link :href="logoUrl" @click="handleNavigation">
                             <AppLogo />
@@ -207,3 +207,4 @@ function handleNavigation() {
     </Sidebar>
     <slot />
 </template>
+
