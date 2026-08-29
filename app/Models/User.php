@@ -139,5 +139,10 @@ class User extends Authenticatable
             ->withPivot('status')
             ->withTimestamps();
     }
+
+    public function savedWorkJobs(): BelongsToMany
+    {
+        return $this->belongsToMany(WorkJob::class, 'saved_work_jobs')->withTimestamps();
+    }
 }
 

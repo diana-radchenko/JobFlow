@@ -39,9 +39,9 @@ class DashboardController extends Controller
             ->select(['id', 'title'])
             ->orderByDesc('updated_at')
             ->get();
-        $selectedResume = $request->filled('resume_id')
+        $selectedResume = ($request->filled('resume_id')
             ? auth()->user()->resumes()->find($request->integer('resume_id'))
-            : auth()->user()->resumes()->latest('updated_at')->first();
+            : null) ?? auth()->user()->resumes()->latest('updated_at')->first();
         $recommendedJobs = $selectedResume ? $recommendations->forResume($selectedResume) : [];
 
         return Inertia::render('Dashboard', [
@@ -91,5 +91,4 @@ class DashboardController extends Controller
         return (int) round(collect($sections)->filter()->count() / count($sections) * 100);
     }
 }
-
 

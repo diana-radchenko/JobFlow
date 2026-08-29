@@ -64,4 +64,9 @@ class WorkJob extends Model
             ->withPivot('status')
             ->withTimestamps();
     }
+
+    public function savedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'saved_work_jobs')->withTimestamps();
+    }
 }

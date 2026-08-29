@@ -7,6 +7,7 @@ use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\Employer\InterviewScheduleController;
 use App\Http\Controllers\JobChatController;
 use App\Http\Controllers\SalaryController;
+use App\Http\Controllers\SavedJobController;
 use App\Http\Controllers\InterviewPreparationController;
 use App\Http\Controllers\InterviewSessionController;
 use App\Http\Controllers\JobSelectionController;
@@ -58,6 +59,8 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
     Route::get('job-selection', [JobSelectionController::class, 'jobSelection'])->name('job-selection');
     Route::get('job-selection/{job}', [JobSelectionController::class, 'show'])->name('job-selection.show');
     Route::post('job-selection/{job}/apply', [JobSelectionController::class, 'apply'])->name('job-selection.apply');
+    Route::post('saved-jobs/{job}', [SavedJobController::class, 'store'])->name('saved-jobs.store');
+    Route::delete('saved-jobs/{job}', [SavedJobController::class, 'destroy'])->name('saved-jobs.destroy');
 
     // Resumes (list/create/rename/delete/duplicate)
     Route::get('resumes', [ResumeController::class, 'index'])->name('resumes.index');
