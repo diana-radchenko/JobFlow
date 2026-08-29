@@ -109,17 +109,15 @@ defineOptions({
 <template>
     <Head title="Salary Comparison" />
 
-    <div class="min-h-full bg-slate-50/80 px-5 py-8 dark:bg-slate-950">
-        <div class="mx-auto w-full max-w-6xl space-y-6">
+    <div class="jobflow-page dark:bg-slate-950">
+        <div class="mx-auto w-full max-w-7xl space-y-7">
             <section>
                 <p
                     class="text-sm font-bold tracking-wide text-primary uppercase"
                 >
                     JobFlow salary data
                 </p>
-                <h1
-                    class="mt-1 text-3xl font-black text-slate-950 dark:text-white"
-                >
+                <h1 class="jobflow-page-title mt-1 dark:text-white">
                     Salary Insights
                 </h1>
                 <p class="mt-2 max-w-3xl text-slate-600 dark:text-slate-300">
@@ -363,7 +361,7 @@ defineOptions({
 
                 <Card
                     v-else
-                    class="border-[#0B315B] bg-[#061E3A] text-white shadow-sm"
+                    class="border-[#071F49] bg-[#071F49] text-white shadow-md"
                 >
                     <CardContent class="space-y-6 p-6 sm:p-8">
                         <div class="grid grid-cols-3 gap-4 text-center">
@@ -400,7 +398,7 @@ defineOptions({
                             aria-hidden="true"
                         >
                             <div
-                                class="absolute inset-y-0 left-0 w-1/2 rounded-full bg-blue-400"
+                                class="absolute inset-y-0 left-0 w-1/2 rounded-full bg-gradient-to-r from-[#3157D5] to-[#7047EB]"
                             ></div>
                             <div
                                 class="absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-blue-400"

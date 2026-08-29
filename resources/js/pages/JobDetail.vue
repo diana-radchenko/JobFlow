@@ -118,7 +118,9 @@ defineOptions({
 <template>
     <Head :title="job.title" />
 
-    <div class="flex h-full flex-1 flex-col bg-white dark:bg-stone-900">
+    <div
+        class="flex h-full flex-1 flex-col bg-[#F5F7FB] text-[#14213D] dark:bg-stone-900"
+    >
         <!-- Back Button -->
         <div class="border-b border-stone-200 dark:border-stone-800">
             <div class="flex items-center gap-2 p-4 md:p-6">
@@ -372,4 +374,3 @@ defineOptions({
         </div>
     </div>
 </template>
-

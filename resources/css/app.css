@@ -193,6 +193,57 @@
 
 /* Rendered markdown (job descriptions, AI chat replies) */
 @layer components {
+    .candidate-workspace {
+        --background: #f5f7fb;
+        --foreground: #14213d;
+        --card: #ffffff;
+        --card-foreground: #14213d;
+        --primary: #0b2f66;
+        --primary-foreground: #ffffff;
+        --muted: #eef3fa;
+        --muted-foreground: #667085;
+        --accent: #eef3fa;
+        --accent-foreground: #14213d;
+        --border: #e7ecf3;
+        --input: #d9e2ef;
+        --ring: #3157d5;
+        background: #f5f7fb;
+        color: #14213d;
+        font-size: 14px;
+    }
+
+    .candidate-workspace [data-slot='card'] {
+        border-color: #e7ecf3;
+        border-radius: 18px;
+        box-shadow: 0 4px 20px rgb(7 31 73 / 6%);
+    }
+
+    .candidate-workspace [data-slot='button'] {
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .jobflow-page {
+        @apply min-h-full bg-[#F5F7FB] px-5 py-6 text-[#14213D] md:px-6;
+    }
+
+    .jobflow-page-frame {
+        @apply mx-auto w-full max-w-7xl space-y-7;
+    }
+
+    .jobflow-page-title {
+        @apply text-[23px] leading-tight font-bold tracking-tight text-[#14213D];
+    }
+
+    .jobflow-section-title {
+        @apply text-[18px] leading-tight font-semibold text-[#14213D];
+    }
+
+    .jobflow-surface {
+        @apply rounded-[18px] border border-[#E7ECF3] bg-white shadow-[0_4px_20px_rgba(7,31,73,0.06)];
+    }
+
     .markdown-body h1,
     .markdown-body h2,
     .markdown-body h3 {
