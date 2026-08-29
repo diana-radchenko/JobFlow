@@ -635,7 +635,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
     <Head title="Dashboard" />
 
     <div
-        class="min-h-full bg-slate-50/80 px-5 py-8 font-sans dark:bg-slate-950"
+        class="dashboard-shell min-h-full bg-[#F5F7FB] px-5 py-6 font-sans text-[#14213D] dark:bg-slate-950 dark:text-slate-100"
     >
         <div class="container mx-auto max-w-[1400px]">
             <div class="mb-4 flex items-center gap-3">
@@ -645,14 +645,14 @@ const useArticleFallback = (event: Event, fallback: string) => {
                     <Bot class="h-6 w-6 text-slate-700 dark:text-slate-300" />
                 </div>
                 <h1
-                    class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50"
+                    class="text-[23px] font-bold tracking-tight text-[#14213D] dark:text-slate-50"
                 >
                     Welcome back, {{ props.profileFirstName }}!
                 </h1>
             </div>
 
             <Card
-                class="mb-6 border-[#0B315B] bg-[#061E3A] text-white shadow-sm"
+                class="mb-5 border-[#0B2F66] bg-[#071F49] text-white shadow-md"
             >
                 <CardContent class="p-5">
                     <div
@@ -662,13 +662,13 @@ const useArticleFallback = (event: Event, fallback: string) => {
                             <p class="text-sm font-semibold text-slate-200">
                                 Job Search Progress
                             </p>
-                            <p class="mt-1 text-2xl font-extrabold">
+                            <p class="mt-1 text-[22px] font-bold">
                                 {{ dashboardSummary.jobSearchProgress }}%
                             </p>
                         </div>
                         <a
                             href="#next-steps"
-                            class="inline-flex items-center gap-1 text-sm font-bold text-sky-200 hover:text-white hover:underline"
+                            class="inline-flex items-center gap-1 text-[13px] font-bold text-blue-200 hover:text-white hover:underline"
                         >
                             View next steps <ArrowRight class="h-4 w-4" />
                         </a>
@@ -682,13 +682,13 @@ const useArticleFallback = (event: Event, fallback: string) => {
                         :aria-valuenow="dashboardSummary.jobSearchProgress"
                     >
                         <div
-                            class="h-full rounded-full bg-blue-400 transition-[width]"
+                            class="h-full rounded-full bg-gradient-to-r from-[#3157D5] to-[#22A06B] transition-[width]"
                             :style="{
                                 width: `${dashboardSummary.jobSearchProgress}%`,
                             }"
                         ></div>
                     </div>
-                    <p class="mt-2 text-sm text-slate-300">
+                    <p class="mt-2 text-[13px] text-slate-300">
                         Based on
                         {{
                             jobSearchMilestones.filter((item) => item.complete)
@@ -702,18 +702,18 @@ const useArticleFallback = (event: Event, fallback: string) => {
 
             <section
                 aria-label="Job search summary"
-                class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4"
+                class="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4"
             >
                 <Card
                     class="border-slate-200/70 shadow-sm dark:border-slate-800"
                 >
-                    <CardContent class="flex items-center gap-3 p-4">
-                        <BriefcaseBusiness class="h-5 w-5 text-blue-600" />
+                    <CardContent class="flex items-center gap-3 p-[18px]">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F1EEFF] text-[#7047EB]"><BriefcaseBusiness class="h-4.5 w-4.5" /></span>
                         <div>
-                            <p class="text-sm font-medium text-slate-500">
+                            <p class="text-[13px] font-medium text-[#667085]">
                                 Applications
                             </p>
-                            <p class="text-2xl font-extrabold">
+                            <p class="text-xl font-bold">
                                 {{ dashboardSummary.applications }}
                             </p>
                         </div>
@@ -722,13 +722,13 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 <Card
                     class="border-slate-200/70 shadow-sm dark:border-slate-800"
                 >
-                    <CardContent class="flex items-center gap-3 p-4">
-                        <CalendarDays class="h-5 w-5 text-amber-600" />
+                    <CardContent class="flex items-center gap-3 p-[18px]">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EEF3FA] text-[#3157D5]"><CalendarDays class="h-4.5 w-4.5" /></span>
                         <div>
-                            <p class="text-sm font-medium text-slate-500">
+                            <p class="text-[13px] font-medium text-[#667085]">
                                 Interviews
                             </p>
-                            <p class="text-2xl font-extrabold">
+                            <p class="text-xl font-bold">
                                 {{ dashboardSummary.interviews }}
                             </p>
                         </div>
@@ -737,13 +737,13 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 <Card
                     class="border-slate-200/70 shadow-sm dark:border-slate-800"
                 >
-                    <CardContent class="flex items-center gap-3 p-4">
-                        <FileCheck2 class="h-5 w-5 text-emerald-600" />
+                    <CardContent class="flex items-center gap-3 p-[18px]">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-[#3157D5]"><FileCheck2 class="h-4.5 w-4.5" /></span>
                         <div>
-                            <p class="text-sm font-medium text-slate-500">
+                            <p class="text-[13px] font-medium text-[#667085]">
                                 Resume completeness
                             </p>
-                            <p class="text-2xl font-extrabold">
+                            <p class="text-xl font-bold">
                                 {{
                                     dashboardSummary.resumeCompleteness === null
                                         ? '—'
@@ -756,13 +756,13 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 <Card
                     class="border-slate-200/70 shadow-sm dark:border-slate-800"
                 >
-                    <CardContent class="flex items-center gap-3 p-4">
-                        <Target class="h-5 w-5 text-emerald-600" />
+                    <CardContent class="flex items-center gap-3 p-[18px]">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-[#22A06B]"><Target class="h-4.5 w-4.5" /></span>
                         <div>
-                            <p class="text-sm font-medium text-slate-500">
+                            <p class="text-[13px] font-medium text-[#667085]">
                                 Offers
                             </p>
-                            <p class="text-2xl font-extrabold">
+                            <p class="text-xl font-bold">
                                 {{ dashboardSummary.offers }}
                             </p>
                         </div>
@@ -772,7 +772,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
 
             <Card
                 v-if="nextInterview"
-                class="mb-6 overflow-hidden border-amber-200 bg-gradient-to-r from-amber-50 to-white shadow-sm dark:border-amber-900/60 dark:from-amber-950/30 dark:to-slate-950"
+                class="mb-5 overflow-hidden border-amber-200 bg-gradient-to-r from-amber-50 to-white shadow-sm dark:border-amber-900/60 dark:from-amber-950/30 dark:to-slate-950"
             >
                 <CardContent
                     class="flex flex-col gap-5 p-5 xl:flex-row xl:items-center xl:justify-between"
@@ -790,7 +790,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                 Next Interview
                             </p>
                             <h2
-                                class="mt-1 truncate text-xl font-extrabold text-slate-950 dark:text-white"
+                                class="mt-1 truncate text-lg font-bold text-slate-950 dark:text-white"
                             >
                                 {{
                                     nextInterview.work_job?.title ?? 'Interview'
@@ -841,7 +841,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
 
             <Card
                 v-else
-                class="mb-6 border-dashed border-amber-200 shadow-none dark:border-amber-900/60"
+                class="mb-5 border-dashed border-amber-200 shadow-none dark:border-amber-900/60"
             >
                 <CardContent
                     class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
@@ -863,7 +863,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 </CardContent>
             </Card>
 
-            <section class="mb-6 grid gap-6 lg:grid-cols-3">
+            <section class="mb-5 grid gap-4 lg:grid-cols-3">
                 <Card
                     class="border-slate-200/70 shadow-sm dark:border-slate-800"
                 >
@@ -1042,12 +1042,12 @@ const useArticleFallback = (event: Event, fallback: string) => {
             </section>
 
             <div
-                class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)]"
+                class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)]"
             >
                 <!-- Left Column: Schedule -->
                 <div class="space-y-6">
                     <h2
-                        class="text-xl font-bold text-slate-900 dark:text-slate-100"
+                        class="text-lg font-bold text-slate-900 dark:text-slate-100"
                     >
                         Schedule
                     </h2>
@@ -1318,7 +1318,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 </div>
 
                 <!-- Right Column -->
-                <div class="space-y-6">
+                <div class="space-y-5 lg:contents">
                     <!-- Application Tracker -->
                     <div>
                         <div
@@ -1326,7 +1326,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                         >
                             <div>
                                 <h2
-                                    class="text-xl font-bold text-slate-900 dark:text-slate-100"
+                                    class="text-lg font-bold text-slate-900 dark:text-slate-100"
                                 >
                                     Application Tracker
                                 </h2>
@@ -1469,9 +1469,9 @@ const useArticleFallback = (event: Event, fallback: string) => {
                     </div>
 
                     <!-- Bottom Row: AI Jobs & Articles -->
-                    <div class="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <div class="mt-1 space-y-7 lg:col-span-2">
                         <!-- AI Recommended Jobs -->
-                        <div>
+                        <section>
                             <div
                                 class="mb-4 flex flex-wrap items-center justify-between gap-3"
                             >
@@ -1479,30 +1479,39 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                     <h2
                                         class="text-lg font-bold text-slate-900 dark:text-slate-100"
                                     >
-                                        AI-Recommended Jobs for You
+                                        AI Recommended Jobs for You
                                     </h2>
-                                    <Sparkles class="h-5 w-5 text-primary" />
+                                    <Sparkles class="h-4.5 w-4.5 text-[#7047EB]" />
                                 </div>
-                                <select
-                                    v-if="resumes.length"
-                                    :value="selectedResumeId ?? ''"
-                                    aria-label="Resume used for recommendations"
-                                    class="rounded-lg border bg-background px-3 py-2 text-sm font-semibold"
-                                    @change="selectRecommendationResume"
-                                >
-                                    <option
-                                        v-for="resume in resumes"
-                                        :key="resume.id"
-                                        :value="resume.id"
+                                <div class="flex items-center gap-3">
+                                    <select
+                                        v-if="resumes.length"
+                                        :value="selectedResumeId ?? ''"
+                                        aria-label="Resume used for recommendations"
+                                        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] font-semibold"
+                                        @change="selectRecommendationResume"
                                     >
-                                        {{ resume.title }}
-                                    </option>
-                                </select>
+                                        <option
+                                            v-for="resume in resumes"
+                                            :key="resume.id"
+                                            :value="resume.id"
+                                        >
+                                            {{ resume.title }}
+                                        </option>
+                                    </select>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-1 text-[13px] font-bold text-[#0B2F66] hover:text-[#3157D5] hover:underline"
+                                        @click="router.visit('/job-selection')"
+                                    >
+                                        View all jobs <ArrowRight class="h-4 w-4" />
+                                    </button>
+                                </div>
                             </div>
-                            <div class="space-y-4">
+                            <div class="grid gap-4 md:grid-cols-2">
                                 <div
                                     v-if="recommendedJobs.length === 0"
-                                    class="rounded-2xl border border-dashed p-5 text-center text-sm text-slate-500"
+                                    class="rounded-2xl border border-dashed p-5 text-center text-sm text-slate-500 md:col-span-2"
                                 >
                                     <p
                                         class="font-semibold text-slate-700 dark:text-slate-200"
@@ -1524,7 +1533,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                 <Card
                                     v-for="job in recommendedJobs"
                                     :key="job.id"
-                                    class="rounded-[24px] border border-blue-100 bg-blue-50/60 py-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                                    class="h-full rounded-[18px] border border-[#D9E2EF] bg-white py-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#3157D5]/35 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
                                 >
                                     <CardContent class="p-5">
                                         <div
@@ -1538,7 +1547,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                             <div class="flex-1">
                                                 <a
                                                     :href="job.url"
-                                                    class="block text-lg leading-snug font-bold text-slate-900 transition-colors hover:text-primary dark:text-slate-100"
+                                                    class="block text-[16px] leading-snug font-semibold text-[#14213D] transition-colors hover:text-[#3157D5] dark:text-slate-100"
                                                 >
                                                     {{ job.title }}
                                                 </a>
@@ -1565,7 +1574,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                         <div
                                             class="mb-4 flex flex-wrap gap-2 text-xs"
                                         >
-                                            <Badge
+                                            <Badge class="border-0 bg-emerald-50 text-[#22A06B] hover:bg-emerald-50"
                                                 >{{ job.recommendationScore }}%
                                                 match</Badge
                                             >
@@ -1632,6 +1641,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                             >
                                             <Button
                                                 size="sm"
+                                                class="bg-[#0B2F66] text-white hover:bg-[#071F49]"
                                                 :disabled="
                                                     job.applied ||
                                                     !selectedResumeId
@@ -1658,34 +1668,35 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                         </div>
                                     </CardContent>
                                 </Card>
-                                <Button
-                                    variant="link"
-                                    class="px-0 font-semibold"
-                                    @click="router.visit('/job-selection')"
-                                >
-                                    Explore more jobs
-                                    <ArrowRight class="h-4 w-4" />
-                                </Button>
                             </div>
-                        </div>
+                        </section>
 
                         <!-- Interesting Articles -->
-                        <div>
-                            <div class="mb-4 flex items-center gap-2">
-                                <h2
-                                    class="text-lg font-bold text-slate-900 dark:text-slate-100"
+                        <section>
+                            <div class="mb-4 flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-2">
+                                    <h2
+                                        class="text-lg font-bold text-slate-900 dark:text-slate-100"
+                                    >
+                                        Interesting Articles
+                                    </h2>
+                                    <Sparkles class="h-4.5 w-4.5 text-[#7047EB]" />
+                                </div>
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-1 text-[13px] font-bold text-[#0B2F66] hover:text-[#3157D5] hover:underline"
+                                    @click="router.visit('/development')"
                                 >
-                                    Interesting Articles
-                                </h2>
-                                <Sparkles class="h-5 w-5 text-primary" />
+                                    View all resources <ArrowRight class="h-4 w-4" />
+                                </button>
                             </div>
-                            <div class="space-y-4">
+                            <div class="grid gap-4 md:grid-cols-2">
                                 <a
-                                    v-for="article in articles"
+                                    v-for="article in articles.slice(0, 2)"
                                     :key="article.id"
                                     :href="article.url"
                                     target="_blank"
-                                    class="flex flex-col gap-3 overflow-hidden rounded-[24px] border border-slate-200/70 bg-white py-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                                    class="flex h-full flex-col gap-3 overflow-hidden rounded-[18px] border border-[#D9E2EF] bg-white py-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#3157D5]/35 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
                                 >
                                     <img
                                         :src="article.image"
@@ -1711,7 +1722,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                             }}</span>
                                         </div>
                                         <p
-                                            class="text-lg leading-snug font-bold text-slate-900 dark:text-slate-100"
+                                            class="text-[16px] leading-snug font-semibold text-[#14213D] dark:text-slate-100"
                                         >
                                             {{ article.title }}
                                         </p>
@@ -1725,22 +1736,14 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                             class="mt-3 flex items-center justify-between text-xs font-semibold text-slate-500"
                                         >
                                             <span>{{ article.source }}</span>
-                                            <span class="text-primary"
-                                                >Open / Read →</span
+                                            <span class="text-[#0B2F66]"
+                                                >Read article →</span
                                             >
                                         </div>
                                     </div>
                                 </a>
-                                <Button
-                                    variant="link"
-                                    class="px-0 font-semibold"
-                                    @click="router.visit('/development')"
-                                >
-                                    View all resources
-                                    <ArrowRight class="h-4 w-4" />
-                                </Button>
                             </div>
-                        </div>
+                        </section>
                     </div>
                 </div>
             </div>
@@ -1811,4 +1814,20 @@ const useArticleFallback = (event: Event, fallback: string) => {
         </Dialog>
     </div>
 </template>
+
+<style scoped>
+.dashboard-shell {
+    font-size: 14px;
+}
+
+.dashboard-shell :deep([data-slot='card']) {
+    border-color: #d9e2ef;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgb(7 31 73 / 0.06);
+}
+
+.dashboard-shell :deep(button) {
+    font-size: 13px;
+}
+</style>
 

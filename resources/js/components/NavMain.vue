@@ -39,7 +39,7 @@ function handleNavigation() {
 </script>
 
 <template>
-    <SidebarGroup class="px-2 py-0">
+    <SidebarGroup class="px-2 py-0 text-slate-200">
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton
@@ -47,12 +47,12 @@ function handleNavigation() {
                     size="lg"
                     :is-active="isMenuItemActive(item)"
                     :tooltip="item.title"
-                    class="transition-colors duration-200 data-[active=true]:bg-primary data-[active=true]:font-semibold data-[active=true]:text-primary-foreground"
+                    class="text-[13.5px] text-slate-200 transition-colors duration-200 hover:bg-[#0B2F66] hover:text-white data-[active=true]:bg-[#3157D5] data-[active=true]:font-semibold data-[active=true]:text-white"
                 >
                     <Link :href="item.href" @click="handleNavigation">
                         <component :is="item.icon" />
                         <span
-                            class="truncate text-sm font-medium"
+                            class="truncate text-[13.5px] font-medium"
                             :class="state === 'collapsed' && 'hidden'"
                         >
                             {{ item.title }}
