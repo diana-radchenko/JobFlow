@@ -545,27 +545,37 @@ const interviewTooltip = (date: Date) =>
         .join('\n\n');
 
 const recommendedJobs = computed(() =>
-    props.recommendedJobs.map(
-        ({ job, score, criteria, strong_matches, gaps, applied, saved }) => ({
-            id: job.id,
-            url: jobSelectionShow(job.id).url,
-            company: job.company,
-            logoText: job.company.slice(0, 2).toUpperCase(),
-            title: job.title,
-            salary: job.salary_start
-                ? `$${Number(job.salary_start).toLocaleString()}`
-                : 'Salary not specified',
-            tags: (job.technologies ?? []).map(String).slice(0, 3),
-            recommendationScore: score,
-            criteria,
-            strongMatches: strong_matches,
-            gaps,
-            applied,
-            saved,
-            location: job.location,
-            workplaceType: job.workplace_type,
-        }),
-    ),
+    props.recommendedJobs
+        .slice(0, 2)
+        .map(
+            ({
+                job,
+                score,
+                criteria,
+                strong_matches,
+                gaps,
+                applied,
+                saved,
+            }) => ({
+                id: job.id,
+                url: jobSelectionShow(job.id).url,
+                company: job.company,
+                logoText: job.company.slice(0, 2).toUpperCase(),
+                title: job.title,
+                salary: job.salary_start
+                    ? `$${Number(job.salary_start).toLocaleString()}`
+                    : 'Salary not specified',
+                tags: (job.technologies ?? []).map(String).slice(0, 3),
+                recommendationScore: score,
+                criteria,
+                strongMatches: strong_matches,
+                gaps,
+                applied,
+                saved,
+                location: job.location,
+                workplaceType: job.workplace_type,
+            }),
+        ),
 );
 
 type RecommendedJob = (typeof recommendedJobs.value)[number];
@@ -623,513 +633,505 @@ const useArticleFallback = (event: Event, fallback: string) => {
 <template>
     <Head title="Dashboard" />
 
-    <div class="container mx-auto max-w-[1400px] px-5 py-8 font-sans">
-        <div class="mb-4 flex items-center gap-3">
-            <div
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800"
-            >
-                <Bot class="h-6 w-6 text-slate-700 dark:text-slate-300" />
+    <div
+        class="min-h-full bg-slate-50/80 px-5 py-8 font-sans dark:bg-slate-950"
+    >
+        <div class="container mx-auto max-w-[1400px]">
+            <div class="mb-4 flex items-center gap-3">
+                <div
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800"
+                >
+                    <Bot class="h-6 w-6 text-slate-700 dark:text-slate-300" />
+                </div>
+                <h1
+                    class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50"
+                >
+                    Welcome back, {{ props.profileFirstName }}!
+                </h1>
             </div>
-            <h1
-                class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50"
+
+            <Card
+                class="mb-6 border-slate-200/70 shadow-sm dark:border-slate-800"
             >
-                Welcome back, {{ props.profileFirstName }}!
-            </h1>
-        </div>
-
-        <Card class="mb-6 border-slate-200/70 shadow-sm dark:border-slate-800">
-            <CardContent class="p-5">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <p
-                            class="text-sm font-semibold text-slate-600 dark:text-slate-300"
-                        >
-                            Job Search Progress
-                        </p>
-                        <p class="mt-1 text-2xl font-extrabold">
-                            {{ dashboardSummary.jobSearchProgress }}%
-                        </p>
-                    </div>
-                    <a
-                        href="#next-steps"
-                        class="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline"
-                    >
-                        View next steps <ArrowRight class="h-4 w-4" />
-                    </a>
-                </div>
-                <div
-                    class="mt-4 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
-                    role="progressbar"
-                    aria-label="Job search progress"
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                    :aria-valuenow="dashboardSummary.jobSearchProgress"
-                >
-                    <div
-                        class="h-full rounded-full bg-primary transition-[width]"
-                        :style="{
-                            width: `${dashboardSummary.jobSearchProgress}%`,
-                        }"
-                    ></div>
-                </div>
-                <p class="mt-2 text-sm text-slate-500">
-                    Based on
-                    {{
-                        jobSearchMilestones.filter((item) => item.complete)
-                            .length
-                    }}
-                    of {{ jobSearchMilestones.length }} real job-search
-                    milestones completed.
-                </p>
-            </CardContent>
-        </Card>
-
-        <section
-            aria-label="Job search summary"
-            class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4"
-        >
-            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
-                <CardContent class="flex items-center gap-3 p-4">
-                    <BriefcaseBusiness class="h-5 w-5 text-blue-600" />
-                    <div>
-                        <p class="text-sm font-medium text-slate-500">
-                            Applications
-                        </p>
-                        <p class="text-2xl font-extrabold">
-                            {{ dashboardSummary.applications }}
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
-            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
-                <CardContent class="flex items-center gap-3 p-4">
-                    <CalendarDays class="h-5 w-5 text-amber-600" />
-                    <div>
-                        <p class="text-sm font-medium text-slate-500">
-                            Interviews
-                        </p>
-                        <p class="text-2xl font-extrabold">
-                            {{ dashboardSummary.interviews }}
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
-            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
-                <CardContent class="flex items-center gap-3 p-4">
-                    <FileCheck2 class="h-5 w-5 text-emerald-600" />
-                    <div>
-                        <p class="text-sm font-medium text-slate-500">
-                            Resume completeness
-                        </p>
-                        <p class="text-2xl font-extrabold">
-                            {{
-                                dashboardSummary.resumeCompleteness === null
-                                    ? '—'
-                                    : `${dashboardSummary.resumeCompleteness}%`
-                            }}
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
-            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
-                <CardContent class="flex items-center gap-3 p-4">
-                    <Target class="h-5 w-5 text-violet-600" />
-                    <div>
-                        <p class="text-sm font-medium text-slate-500">
-                            Recommended matches
-                        </p>
-                        <p class="text-2xl font-extrabold">
-                            {{ dashboardSummary.recommendedMatches }}
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
-        </section>
-
-        <Card
-            v-if="nextInterview"
-            class="mb-6 overflow-hidden border-amber-200 bg-gradient-to-r from-amber-50 to-white shadow-sm dark:border-amber-900/60 dark:from-amber-950/30 dark:to-slate-950"
-        >
-            <CardContent
-                class="flex flex-col gap-5 p-5 xl:flex-row xl:items-center xl:justify-between"
-            >
-                <div class="flex min-w-0 gap-4">
-                    <div
-                        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white"
-                    >
-                        <CalendarDays class="h-6 w-6" />
-                    </div>
-                    <div class="min-w-0">
-                        <p
-                            class="text-sm font-bold text-amber-800 dark:text-amber-300"
-                        >
-                            Next Interview
-                        </p>
-                        <h2
-                            class="mt-1 truncate text-xl font-extrabold text-slate-950 dark:text-white"
-                        >
-                            {{ nextInterview.work_job?.title ?? 'Interview' }}
-                        </h2>
-                        <p
-                            class="font-medium text-slate-600 dark:text-slate-300"
-                        >
-                            {{ nextInterview.work_job?.company ?? 'Employer' }}
-                        </p>
-                    </div>
-                </div>
-                <div
-                    class="grid gap-2 text-sm text-slate-700 sm:grid-cols-3 dark:text-slate-200"
-                >
-                    <span class="flex items-center gap-2"
-                        ><CalendarDays class="h-4 w-4 text-amber-600" />{{
-                            interviewDate(nextInterview)
-                        }}</span
-                    >
-                    <span class="flex items-center gap-2"
-                        ><Clock3 class="h-4 w-4 text-amber-600" />{{
-                            interviewTime(nextInterview)
-                        }}</span
-                    >
-                    <span class="flex items-center gap-2"
-                        ><Video class="h-4 w-4 text-amber-600" />{{
-                            interviewFormat(nextInterview)
-                        }}</span
-                    >
-                </div>
-                <div class="flex shrink-0 flex-wrap gap-2">
-                    <Button
-                        variant="outline"
-                        @click="visitSession(nextInterview)"
-                        >View Details</Button
-                    >
-                    <Button @click="prepareForInterview"
-                        ><Sparkles class="mr-2 h-4 w-4" />Prepare with
-                        AI</Button
-                    >
-                </div>
-            </CardContent>
-        </Card>
-
-        <Card
-            v-else
-            class="mb-6 border-dashed border-amber-200 shadow-none dark:border-amber-900/60"
-        >
-            <CardContent
-                class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
-            >
-                <div class="flex items-center gap-3">
-                    <CalendarDays class="h-8 w-8 text-amber-600" />
-                    <div>
-                        <h2 class="font-bold">No upcoming interviews</h2>
-                        <p class="text-sm text-slate-500">
-                            When an employer schedules an interview, it will
-                            appear here automatically.
-                        </p>
-                    </div>
-                </div>
-                <Button variant="outline" @click="prepareForInterview"
-                    ><Sparkles class="mr-2 h-4 w-4" />Practice with AI</Button
-                >
-            </CardContent>
-        </Card>
-
-        <section class="mb-6 grid gap-6 lg:grid-cols-3">
-            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
-                <CardContent id="next-steps" class="scroll-mt-6 p-5">
-                    <h2 class="mb-4 text-lg font-bold">Your Next Steps</h2>
-                    <div class="space-y-3">
-                        <button
-                            v-for="step in nextSteps"
-                            :key="step.title"
-                            type="button"
-                            class="flex w-full items-center justify-between gap-4 rounded-xl border p-3 text-left transition hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-slate-900"
-                            @click="router.visit(step.href)"
-                        >
-                            <span
-                                ><strong class="block text-sm">{{
-                                    step.title
-                                }}</strong
-                                ><span class="text-sm text-slate-500">{{
-                                    step.description
-                                }}</span></span
-                            >
-                            <span
-                                class="flex shrink-0 items-center gap-1 text-xs font-bold text-primary"
-                                >{{ step.action
-                                }}<ArrowRight class="h-3.5 w-3.5"
-                            /></span>
-                        </button>
-                    </div>
-                </CardContent>
-            </Card>
-            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
                 <CardContent class="p-5">
-                    <div class="mb-4 flex items-center gap-2">
-                        <FileCheck2 class="h-5 w-5 text-emerald-600" />
-                        <h2 class="text-lg font-bold">Resume Status</h2>
-                    </div>
-                    <div v-if="selectedResumeSummary">
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <p class="font-bold">
-                                    {{ selectedResumeSummary.title }}
-                                </p>
-                                <p class="mt-1 text-sm text-slate-500">
-                                    Resume Completeness:
-                                    <strong
-                                        >{{
-                                            selectedResumeSummary.completeness
-                                        }}%</strong
-                                    >
-                                </p>
-                            </div>
-                        </div>
-                        <div class="mt-4 space-y-2">
-                            <div
-                                v-for="item in selectedResumeSummary.checklist"
-                                :key="item.label"
-                                class="flex items-center gap-2 text-sm"
-                            >
-                                <CheckCircle2
-                                    v-if="item.complete"
-                                    class="h-4 w-4 text-emerald-600"
-                                />
-                                <Circle v-else class="h-4 w-4 text-amber-600" />
-                                <span
-                                    :class="!item.complete && 'font-semibold'"
-                                >
-                                    {{
-                                        item.complete
-                                            ? item.label
-                                            : item.label.replace(
-                                                  ' added',
-                                                  ' — add this',
-                                              )
-                                    }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex flex-wrap gap-2">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                @click="
-                                    router.visit(selectedResumeSummary.href)
-                                "
-                                >Open Resume</Button
-                            >
-                            <Button
-                                size="sm"
-                                @click="
-                                    router.visit(selectedResumeSummary.href)
-                                "
-                                >Improve Resume</Button
-                            >
-                        </div>
-                    </div>
                     <div
-                        v-else
-                        class="rounded-xl border border-dashed p-4 text-center"
+                        class="flex flex-wrap items-center justify-between gap-3"
                     >
-                        <p class="font-semibold">No resume yet</p>
-                        <p class="mt-1 text-sm text-slate-500">
-                            Create a resume to track completeness and unlock job
-                            matching.
-                        </p>
-                        <Button
-                            class="mt-3"
-                            size="sm"
-                            @click="router.visit('/resumes')"
+                        <div>
+                            <p
+                                class="text-sm font-semibold text-slate-600 dark:text-slate-300"
+                            >
+                                Job Search Progress
+                            </p>
+                            <p class="mt-1 text-2xl font-extrabold">
+                                {{ dashboardSummary.jobSearchProgress }}%
+                            </p>
+                        </div>
+                        <a
+                            href="#next-steps"
+                            class="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline"
                         >
-                            Create Resume
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
-                <CardContent class="p-5">
-                    <div class="mb-4 flex items-center gap-2">
-                        <Activity class="h-5 w-5 text-primary" />
-                        <h2 class="text-lg font-bold">Recent Activity</h2>
+                            View next steps <ArrowRight class="h-4 w-4" />
+                        </a>
                     </div>
                     <div
-                        v-if="recentActivity.length"
-                        class="divide-y dark:divide-slate-800"
+                        class="mt-4 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+                        role="progressbar"
+                        aria-label="Job search progress"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        :aria-valuenow="dashboardSummary.jobSearchProgress"
                     >
                         <div
-                            v-for="item in recentActivity"
-                            :key="`${item.event}-${item.occurred_at}`"
-                            class="py-3 first:pt-0 last:pb-0"
+                            class="h-full rounded-full bg-primary transition-[width]"
+                            :style="{
+                                width: `${dashboardSummary.jobSearchProgress}%`,
+                            }"
+                        ></div>
+                    </div>
+                    <p class="mt-2 text-sm text-slate-500">
+                        Based on
+                        {{
+                            jobSearchMilestones.filter((item) => item.complete)
+                                .length
+                        }}
+                        of {{ jobSearchMilestones.length }} real job-search
+                        milestones completed.
+                    </p>
+                </CardContent>
+            </Card>
+
+            <section
+                aria-label="Job search summary"
+                class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4"
+            >
+                <Card
+                    class="border-slate-200/70 shadow-sm dark:border-slate-800"
+                >
+                    <CardContent class="flex items-center gap-3 p-4">
+                        <BriefcaseBusiness class="h-5 w-5 text-blue-600" />
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">
+                                Applications
+                            </p>
+                            <p class="text-2xl font-extrabold">
+                                {{ dashboardSummary.applications }}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card
+                    class="border-slate-200/70 shadow-sm dark:border-slate-800"
+                >
+                    <CardContent class="flex items-center gap-3 p-4">
+                        <CalendarDays class="h-5 w-5 text-amber-600" />
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">
+                                Interviews
+                            </p>
+                            <p class="text-2xl font-extrabold">
+                                {{ dashboardSummary.interviews }}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card
+                    class="border-slate-200/70 shadow-sm dark:border-slate-800"
+                >
+                    <CardContent class="flex items-center gap-3 p-4">
+                        <FileCheck2 class="h-5 w-5 text-emerald-600" />
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">
+                                Resume completeness
+                            </p>
+                            <p class="text-2xl font-extrabold">
+                                {{
+                                    dashboardSummary.resumeCompleteness === null
+                                        ? '—'
+                                        : `${dashboardSummary.resumeCompleteness}%`
+                                }}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card
+                    class="border-slate-200/70 shadow-sm dark:border-slate-800"
+                >
+                    <CardContent class="flex items-center gap-3 p-4">
+                        <Target class="h-5 w-5 text-violet-600" />
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">
+                                Recommended matches
+                            </p>
+                            <p class="text-2xl font-extrabold">
+                                {{ dashboardSummary.recommendedMatches }}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </section>
+
+            <Card
+                v-if="nextInterview"
+                class="mb-6 overflow-hidden border-amber-200 bg-gradient-to-r from-amber-50 to-white shadow-sm dark:border-amber-900/60 dark:from-amber-950/30 dark:to-slate-950"
+            >
+                <CardContent
+                    class="flex flex-col gap-5 p-5 xl:flex-row xl:items-center xl:justify-between"
+                >
+                    <div class="flex min-w-0 gap-4">
+                        <div
+                            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white"
                         >
-                            <div class="flex items-start justify-between gap-3">
-                                <strong class="text-sm">{{ item.event }}</strong
-                                ><time
-                                    class="shrink-0 text-sm text-slate-500"
-                                    >{{ activityTime(item.occurred_at) }}</time
-                                >
-                            </div>
-                            <p class="mt-1 text-sm text-slate-500">
-                                {{ item.company }} · {{ item.vacancy }}
+                            <CalendarDays class="h-6 w-6" />
+                        </div>
+                        <div class="min-w-0">
+                            <p
+                                class="text-sm font-bold text-amber-800 dark:text-amber-300"
+                            >
+                                Next Interview
+                            </p>
+                            <h2
+                                class="mt-1 truncate text-xl font-extrabold text-slate-950 dark:text-white"
+                            >
+                                {{
+                                    nextInterview.work_job?.title ?? 'Interview'
+                                }}
+                            </h2>
+                            <p
+                                class="font-medium text-slate-600 dark:text-slate-300"
+                            >
+                                {{
+                                    nextInterview.work_job?.company ??
+                                    'Employer'
+                                }}
                             </p>
                         </div>
                     </div>
                     <div
-                        v-else
-                        class="rounded-xl border border-dashed p-5 text-center"
+                        class="grid gap-2 text-sm text-slate-700 sm:grid-cols-3 dark:text-slate-200"
                     >
-                        <p class="font-semibold">No activity yet</p>
-                        <p class="mt-1 text-sm text-slate-500">
-                            Applications and employer updates will appear here.
-                        </p>
+                        <span class="flex items-center gap-2"
+                            ><CalendarDays class="h-4 w-4 text-amber-600" />{{
+                                interviewDate(nextInterview)
+                            }}</span
+                        >
+                        <span class="flex items-center gap-2"
+                            ><Clock3 class="h-4 w-4 text-amber-600" />{{
+                                interviewTime(nextInterview)
+                            }}</span
+                        >
+                        <span class="flex items-center gap-2"
+                            ><Video class="h-4 w-4 text-amber-600" />{{
+                                interviewFormat(nextInterview)
+                            }}</span
+                        >
+                    </div>
+                    <div class="flex shrink-0 flex-wrap gap-2">
                         <Button
-                            class="mt-3"
-                            size="sm"
                             variant="outline"
-                            @click="router.visit('/job-selection')"
-                            >Browse Jobs</Button
+                            @click="visitSession(nextInterview)"
+                            >View Details</Button
+                        >
+                        <Button @click="prepareForInterview"
+                            ><Sparkles class="mr-2 h-4 w-4" />Prepare with
+                            AI</Button
                         >
                     </div>
                 </CardContent>
             </Card>
-        </section>
 
-        <div
-            class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)]"
-        >
-            <!-- Left Column: Schedule -->
-            <div class="space-y-6">
-                <h2
-                    class="text-xl font-bold text-slate-900 dark:text-slate-100"
+            <Card
+                v-else
+                class="mb-6 border-dashed border-amber-200 shadow-none dark:border-amber-900/60"
+            >
+                <CardContent
+                    class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
                 >
-                    Schedule
-                </h2>
+                    <div class="flex items-center gap-3">
+                        <CalendarDays class="h-8 w-8 text-amber-600" />
+                        <div>
+                            <h2 class="font-bold">No upcoming interviews</h2>
+                            <p class="text-sm text-slate-500">
+                                When an employer schedules an interview, it will
+                                appear here automatically.
+                            </p>
+                        </div>
+                    </div>
+                    <Button variant="outline" @click="prepareForInterview"
+                        ><Sparkles class="mr-2 h-4 w-4" />Practice with
+                        AI</Button
+                    >
+                </CardContent>
+            </Card>
 
+            <section class="mb-6 grid gap-6 lg:grid-cols-3">
                 <Card
-                    v-if="scheduledInterviews.length"
-                    class="overflow-hidden rounded-[24px] border-0 bg-slate-50 shadow-sm dark:bg-slate-900"
+                    class="border-slate-200/70 shadow-sm dark:border-slate-800"
                 >
-                    <CardContent class="p-0">
-                        <!-- View Mode Switch -->
-                        <div
-                            class="flex items-center justify-center gap-1 border-b border-slate-200/60 px-4 pt-4 pb-2 dark:border-slate-800"
-                        >
-                            <Button
-                                v-for="mode in calendarViewModes"
-                                :key="mode"
-                                type="button"
-                                size="sm"
-                                :variant="
-                                    viewMode === mode ? 'default' : 'ghost'
-                                "
-                                class="rounded-full px-3 capitalize"
-                                @click="viewMode = mode"
-                            >
-                                {{ mode }}
-                            </Button>
-                        </div>
-
-                        <!-- Calendar Header -->
-                        <div
-                            class="flex items-center justify-between border-b border-slate-200/60 px-4 pt-4 dark:border-slate-800"
-                        >
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="h-8 w-8 rounded-full text-slate-500 hover:text-primary"
-                                @click="goToPrevious"
-                            >
-                                <ChevronLeft class="h-4 w-4" />
-                            </Button>
-                            <span
-                                class="text-xs font-bold text-slate-500 dark:text-slate-400"
-                            >
-                                {{ periodLabel }}
-                            </span>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="h-8 w-8 rounded-full text-slate-500 hover:text-primary"
-                                @click="goToNext"
-                            >
-                                <ChevronRight class="h-4 w-4" />
-                            </Button>
-                        </div>
-
-                        <!-- Week View -->
-                        <div
-                            v-if="viewMode === 'week'"
-                            class="flex justify-between border-b border-slate-200/60 px-4 py-6 dark:border-slate-800"
-                        >
+                    <CardContent id="next-steps" class="scroll-mt-6 p-5">
+                        <h2 class="mb-4 text-lg font-bold">Your Next Steps</h2>
+                        <div class="space-y-3">
                             <button
-                                v-for="day in weekDays"
-                                :key="day.date.toISOString()"
+                                v-for="step in nextSteps"
+                                :key="step.title"
                                 type="button"
-                                :title="interviewTooltip(day.date)"
-                                class="flex cursor-pointer flex-col items-center gap-1 rounded-lg px-1 py-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-                                @click="selectDay(day.date)"
+                                class="flex w-full items-center justify-between gap-4 rounded-xl border p-3 text-left transition hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-slate-900"
+                                @click="router.visit(step.href)"
                             >
                                 <span
-                                    class="text-xs font-medium text-slate-500 dark:text-slate-400"
-                                    :class="{
-                                        'font-bold text-slate-900 dark:text-slate-100':
-                                            day.active,
-                                    }"
+                                    ><strong class="block text-sm">{{
+                                        step.title
+                                    }}</strong
+                                    ><span class="text-sm text-slate-500">{{
+                                        step.description
+                                    }}</span></span
                                 >
-                                    {{ day.day }}
-                                </span>
                                 <span
-                                    class="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold"
-                                    :class="
-                                        day.active
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'text-slate-400 dark:text-slate-500'
-                                    "
-                                >
-                                    {{ day.dateLabel }}
-                                </span>
-                                <span
-                                    class="h-1.5 w-1.5 rounded-full"
-                                    :class="
-                                        day.hasEvent
-                                            ? 'bg-primary'
-                                            : 'bg-transparent'
-                                    "
-                                ></span>
+                                    class="flex shrink-0 items-center gap-1 text-xs font-bold text-primary"
+                                    >{{ step.action
+                                    }}<ArrowRight class="h-3.5 w-3.5"
+                                /></span>
                             </button>
                         </div>
-
-                        <!-- Month View -->
-                        <div
-                            v-else-if="viewMode === 'month'"
-                            class="border-b border-slate-200/60 px-4 py-6 dark:border-slate-800"
-                        >
-                            <div
-                                class="mb-2 grid grid-cols-7 text-center text-xs font-medium text-slate-500 dark:text-slate-400"
-                            >
-                                <span
-                                    v-for="label in DAY_LABELS"
-                                    :key="label"
-                                    >{{ label }}</span
+                    </CardContent>
+                </Card>
+                <Card
+                    class="border-slate-200/70 shadow-sm dark:border-slate-800"
+                >
+                    <CardContent class="p-5">
+                        <div class="mb-4 flex items-center gap-2">
+                            <FileCheck2 class="h-5 w-5 text-emerald-600" />
+                            <h2 class="text-lg font-bold">Resume Status</h2>
+                        </div>
+                        <div v-if="selectedResumeSummary">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="font-bold">
+                                        {{ selectedResumeSummary.title }}
+                                    </p>
+                                    <p class="mt-1 text-sm text-slate-500">
+                                        Resume Completeness:
+                                        <strong
+                                            >{{
+                                                selectedResumeSummary.completeness
+                                            }}%</strong
+                                        >
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-4 space-y-2">
+                                <div
+                                    v-for="item in selectedResumeSummary.checklist"
+                                    :key="item.label"
+                                    class="flex items-center gap-2 text-sm"
+                                >
+                                    <CheckCircle2
+                                        v-if="item.complete"
+                                        class="h-4 w-4 text-emerald-600"
+                                    />
+                                    <Circle
+                                        v-else
+                                        class="h-4 w-4 text-amber-600"
+                                    />
+                                    <span
+                                        :class="
+                                            !item.complete && 'font-semibold'
+                                        "
+                                    >
+                                        {{
+                                            item.complete
+                                                ? item.label
+                                                : item.label.replace(
+                                                      ' added',
+                                                      ' — add this',
+                                                  )
+                                        }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    @click="
+                                        router.visit(selectedResumeSummary.href)
+                                    "
+                                    >Open Resume</Button
+                                >
+                                <Button
+                                    size="sm"
+                                    @click="
+                                        router.visit(selectedResumeSummary.href)
+                                    "
+                                    >Improve Resume</Button
                                 >
                             </div>
-                            <div class="grid grid-cols-7 gap-y-2">
+                        </div>
+                        <div
+                            v-else
+                            class="rounded-xl border border-dashed p-4 text-center"
+                        >
+                            <p class="font-semibold">No resume yet</p>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Create a resume to track completeness and unlock
+                                job matching.
+                            </p>
+                            <Button
+                                class="mt-3"
+                                size="sm"
+                                @click="router.visit('/resumes')"
+                            >
+                                Create Resume
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card
+                    class="border-slate-200/70 shadow-sm dark:border-slate-800"
+                >
+                    <CardContent class="p-5">
+                        <div class="mb-4 flex items-center gap-2">
+                            <Activity class="h-5 w-5 text-primary" />
+                            <h2 class="text-lg font-bold">Recent Activity</h2>
+                        </div>
+                        <div
+                            v-if="recentActivity.length"
+                            class="divide-y dark:divide-slate-800"
+                        >
+                            <div
+                                v-for="item in recentActivity"
+                                :key="`${item.event}-${item.occurred_at}`"
+                                class="py-3 first:pt-0 last:pb-0"
+                            >
+                                <div
+                                    class="flex items-start justify-between gap-3"
+                                >
+                                    <strong class="text-sm">{{
+                                        item.event
+                                    }}</strong
+                                    ><time
+                                        class="shrink-0 text-sm text-slate-500"
+                                        >{{
+                                            activityTime(item.occurred_at)
+                                        }}</time
+                                    >
+                                </div>
+                                <p class="mt-1 text-sm text-slate-500">
+                                    {{ item.company }} · {{ item.vacancy }}
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            v-else
+                            class="rounded-xl border border-dashed p-5 text-center"
+                        >
+                            <p class="font-semibold">No activity yet</p>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Applications and employer updates will appear
+                                here.
+                            </p>
+                            <Button
+                                class="mt-3"
+                                size="sm"
+                                variant="outline"
+                                @click="router.visit('/job-selection')"
+                                >Browse Jobs</Button
+                            >
+                        </div>
+                    </CardContent>
+                </Card>
+            </section>
+
+            <div
+                class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)]"
+            >
+                <!-- Left Column: Schedule -->
+                <div class="space-y-6">
+                    <h2
+                        class="text-xl font-bold text-slate-900 dark:text-slate-100"
+                    >
+                        Schedule
+                    </h2>
+
+                    <Card
+                        v-if="scheduledInterviews.length"
+                        class="overflow-hidden rounded-[24px] border-0 bg-slate-50 shadow-sm dark:bg-slate-900"
+                    >
+                        <CardContent class="p-0">
+                            <!-- View Mode Switch -->
+                            <div
+                                class="flex items-center justify-center gap-1 border-b border-slate-200/60 px-4 pt-4 pb-2 dark:border-slate-800"
+                            >
+                                <Button
+                                    v-for="mode in calendarViewModes"
+                                    :key="mode"
+                                    type="button"
+                                    size="sm"
+                                    :variant="
+                                        viewMode === mode ? 'default' : 'ghost'
+                                    "
+                                    class="rounded-full px-3 capitalize"
+                                    @click="viewMode = mode"
+                                >
+                                    {{ mode }}
+                                </Button>
+                            </div>
+
+                            <!-- Calendar Header -->
+                            <div
+                                class="flex items-center justify-between border-b border-slate-200/60 px-4 pt-4 dark:border-slate-800"
+                            >
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8 rounded-full text-slate-500 hover:text-primary"
+                                    @click="goToPrevious"
+                                >
+                                    <ChevronLeft class="h-4 w-4" />
+                                </Button>
+                                <span
+                                    class="text-xs font-bold text-slate-500 dark:text-slate-400"
+                                >
+                                    {{ periodLabel }}
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8 rounded-full text-slate-500 hover:text-primary"
+                                    @click="goToNext"
+                                >
+                                    <ChevronRight class="h-4 w-4" />
+                                </Button>
+                            </div>
+
+                            <!-- Week View -->
+                            <div
+                                v-if="viewMode === 'week'"
+                                class="flex justify-between border-b border-slate-200/60 px-4 py-6 dark:border-slate-800"
+                            >
                                 <button
-                                    v-for="day in monthDays"
+                                    v-for="day in weekDays"
                                     :key="day.date.toISOString()"
                                     type="button"
                                     :title="interviewTooltip(day.date)"
-                                    class="flex cursor-pointer flex-col items-center gap-1 rounded-lg py-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-                                    :class="{
-                                        'opacity-40': !day.inCurrentMonth,
-                                    }"
+                                    class="flex cursor-pointer flex-col items-center gap-1 rounded-lg px-1 py-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
                                     @click="selectDay(day.date)"
                                 >
                                     <span
-                                        class="flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold"
+                                        class="text-xs font-medium text-slate-500 dark:text-slate-400"
+                                        :class="{
+                                            'font-bold text-slate-900 dark:text-slate-100':
+                                                day.active,
+                                        }"
+                                    >
+                                        {{ day.day }}
+                                    </span>
+                                    <span
+                                        class="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold"
                                         :class="
                                             day.active
                                                 ? 'bg-primary text-primary-foreground'
-                                                : 'text-slate-500 dark:text-slate-400'
+                                                : 'text-slate-400 dark:text-slate-500'
                                         "
                                     >
                                         {{ day.dateLabel }}
@@ -1144,527 +1146,601 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                     ></span>
                                 </button>
                             </div>
-                        </div>
 
-                        <!-- Year View -->
-                        <div
-                            v-else
-                            class="border-b border-slate-200/60 px-4 py-6 dark:border-slate-800"
-                        >
-                            <div class="grid grid-cols-3 gap-3">
-                                <button
-                                    v-for="month in yearMonths"
-                                    :key="month.date.toISOString()"
-                                    type="button"
-                                    class="flex cursor-pointer flex-col items-center gap-1 rounded-lg py-3 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-                                    @click="selectMonth(month.date)"
-                                >
-                                    <span
-                                        class="text-sm font-bold"
-                                        :class="
-                                            month.active
-                                                ? 'text-primary'
-                                                : 'text-slate-500 dark:text-slate-400'
-                                        "
-                                    >
-                                        {{ month.label }}
-                                    </span>
-                                    <span
-                                        class="h-1.5 w-1.5 rounded-full"
-                                        :class="
-                                            month.hasEvent
-                                                ? 'bg-primary'
-                                                : 'bg-transparent'
-                                        "
-                                    ></span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Timeline -->
-                        <div v-if="timelineEvents.length" class="relative p-6">
-                            <!-- Continuous line -->
+                            <!-- Month View -->
                             <div
-                                class="absolute top-10 bottom-6 left-[4.5rem] w-px border-l-2 border-dashed border-slate-300 dark:border-slate-700"
-                            ></div>
-
-                            <div
-                                v-for="(event, index) in timelineEvents"
-                                :key="index"
-                                class="relative mb-8 flex min-h-[3rem] gap-6 last:mb-0"
+                                v-else-if="viewMode === 'month'"
+                                class="border-b border-slate-200/60 px-4 py-6 dark:border-slate-800"
                             >
-                                <!-- Time Badge -->
                                 <div
-                                    class="relative z-10 flex w-20 shrink-0 justify-end"
+                                    class="mb-2 grid grid-cols-7 text-center text-xs font-medium text-slate-500 dark:text-slate-400"
                                 >
-                                    <div
-                                        class="flex h-10 items-center justify-center rounded-full px-4 text-xs font-bold shadow-sm"
-                                        :class="
-                                            event.isPast
-                                                ? 'bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
-                                                : 'bg-primary text-primary-foreground'
-                                        "
+                                    <span
+                                        v-for="label in DAY_LABELS"
+                                        :key="label"
+                                        >{{ label }}</span
                                     >
-                                        {{ event.time }}
-                                    </div>
                                 </div>
-
-                                <!-- Event Card -->
-                                <div class="mt-6 flex-1">
+                                <div class="grid grid-cols-7 gap-y-2">
                                     <button
+                                        v-for="day in monthDays"
+                                        :key="day.date.toISOString()"
                                         type="button"
-                                        class="relative w-full cursor-pointer rounded-[16px] p-4 text-left shadow-sm transition-opacity hover:opacity-90"
-                                        :class="
-                                            event.isPast
-                                                ? 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
-                                                : 'bg-primary text-primary-foreground'
-                                        "
-                                        @click="visitSession(event.session)"
+                                        :title="interviewTooltip(day.date)"
+                                        class="flex cursor-pointer flex-col items-center gap-1 rounded-lg py-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                                        :class="{
+                                            'opacity-40': !day.inCurrentMonth,
+                                        }"
+                                        @click="selectDay(day.date)"
                                     >
-                                        <div class="text-[15px] font-bold">
-                                            {{ event.title }}
-                                        </div>
-                                        <div class="mt-1 text-sm opacity-80">
-                                            {{ event.duration }}
-                                        </div>
                                         <span
-                                            v-if="event.isPast"
-                                            class="mt-2 inline-block text-xs font-bold tracking-wide uppercase"
-                                            >Past interview</span
+                                            class="flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold"
+                                            :class="
+                                                day.active
+                                                    ? 'bg-primary text-primary-foreground'
+                                                    : 'text-slate-500 dark:text-slate-400'
+                                            "
                                         >
-                                        <div
-                                            class="absolute top-4 right-4 h-2 w-2 rounded-full bg-white"
-                                        ></div>
+                                            {{ day.dateLabel }}
+                                        </span>
+                                        <span
+                                            class="h-1.5 w-1.5 rounded-full"
+                                            :class="
+                                                day.hasEvent
+                                                    ? 'bg-primary'
+                                                    : 'bg-transparent'
+                                            "
+                                        ></span>
                                     </button>
                                 </div>
                             </div>
-                        </div>
-                        <div
-                            v-else
-                            class="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400"
-                        >
-                            No interviews on this day.
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card v-else class="rounded-[24px] border-dashed shadow-none">
-                    <CardContent class="p-6 text-center">
-                        <CalendarDays
-                            class="mx-auto mb-3 h-8 w-8 text-slate-400"
-                        />
-                        <p class="font-semibold">Your calendar is clear</p>
-                        <p class="mt-1 text-sm text-slate-500">
-                            Upcoming employer interviews will be added
-                            automatically.
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
 
-            <!-- Right Column -->
-            <div class="space-y-6">
-                <!-- Application Tracker -->
-                <div>
-                    <div
-                        class="mt-2 mb-4 flex items-center justify-between gap-4"
-                    >
-                        <div>
-                            <h2
-                                class="text-xl font-bold text-slate-900 dark:text-slate-100"
+                            <!-- Year View -->
+                            <div
+                                v-else
+                                class="border-b border-slate-200/60 px-4 py-6 dark:border-slate-800"
                             >
-                                Application Tracker
-                            </h2>
-                        </div>
-                        <button
-                            type="button"
-                            class="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline"
-                            @click="visitRequestTracker"
-                        >
-                            View all applications <ArrowRight class="h-4 w-4" />
-                        </button>
-                    </div>
-
-                    <Card
-                        class="overflow-hidden rounded-[24px] border border-slate-200/60 bg-slate-50 shadow-sm dark:bg-slate-900"
-                    >
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-50 dark:bg-slate-900/50">
-                                    <tr>
-                                        <th
-                                            class="px-6 py-4 font-bold whitespace-nowrap text-slate-900 dark:text-slate-100"
-                                        >
-                                            Company Name
-                                        </th>
-                                        <th
-                                            class="px-6 py-4 font-bold whitespace-nowrap text-slate-900 dark:text-slate-100"
-                                        >
-                                            Job Title
-                                        </th>
-                                        <th
-                                            class="px-6 py-4 font-bold whitespace-nowrap text-slate-900 dark:text-slate-100"
-                                        >
-                                            Salary
-                                        </th>
-                                        <th
-                                            class="px-6 py-4 text-right font-bold whitespace-nowrap text-slate-900 dark:text-slate-100"
-                                        >
-                                            <button
-                                                type="button"
-                                                @click="visitRequestTracker"
-                                                class="cursor-pointer transition-colors hover:text-primary"
-                                            >
-                                                Application Status
-                                            </button>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody
-                                    class="divide-y divide-white dark:divide-slate-800"
-                                >
-                                    <tr
-                                        v-for="app in tableApplications"
-                                        :key="app.id"
-                                        @click="visitJob(app)"
-                                        :class="
-                                            app.jobId
-                                                ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800'
-                                                : ''
-                                        "
-                                        class="bg-white transition-colors duration-200 dark:bg-slate-950"
+                                <div class="grid grid-cols-3 gap-3">
+                                    <button
+                                        v-for="month in yearMonths"
+                                        :key="month.date.toISOString()"
+                                        type="button"
+                                        class="flex cursor-pointer flex-col items-center gap-1 rounded-lg py-3 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                                        @click="selectMonth(month.date)"
                                     >
-                                        <td
-                                            class="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400"
+                                        <span
+                                            class="text-sm font-bold"
+                                            :class="
+                                                month.active
+                                                    ? 'text-primary'
+                                                    : 'text-slate-500 dark:text-slate-400'
+                                            "
                                         >
-                                            {{ app.company }}
-                                        </td>
-                                        <td
-                                            class="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400"
+                                            {{ month.label }}
+                                        </span>
+                                        <span
+                                            class="h-1.5 w-1.5 rounded-full"
+                                            :class="
+                                                month.hasEvent
+                                                    ? 'bg-primary'
+                                                    : 'bg-transparent'
+                                            "
+                                        ></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Timeline -->
+                            <div
+                                v-if="timelineEvents.length"
+                                class="relative p-6"
+                            >
+                                <!-- Continuous line -->
+                                <div
+                                    class="absolute top-10 bottom-6 left-[4.5rem] w-px border-l-2 border-dashed border-slate-300 dark:border-slate-700"
+                                ></div>
+
+                                <div
+                                    v-for="(event, index) in timelineEvents"
+                                    :key="index"
+                                    class="relative mb-8 flex min-h-[3rem] gap-6 last:mb-0"
+                                >
+                                    <!-- Time Badge -->
+                                    <div
+                                        class="relative z-10 flex w-20 shrink-0 justify-end"
+                                    >
+                                        <div
+                                            class="flex h-10 items-center justify-center rounded-full px-4 text-xs font-bold shadow-sm"
+                                            :class="
+                                                event.isPast
+                                                    ? 'bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                                                    : 'bg-primary text-primary-foreground'
+                                            "
                                         >
-                                            {{ app.title }}
-                                        </td>
-                                        <td
-                                            class="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400"
+                                            {{ event.time }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Event Card -->
+                                    <div class="mt-6 flex-1">
+                                        <button
+                                            type="button"
+                                            class="relative w-full cursor-pointer rounded-[16px] p-4 text-left shadow-sm transition-opacity hover:opacity-90"
+                                            :class="
+                                                event.isPast
+                                                    ? 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                                                    : 'bg-primary text-primary-foreground'
+                                            "
+                                            @click="visitSession(event.session)"
                                         >
-                                            {{ app.salary }}
-                                        </td>
-                                        <td
-                                            class="px-6 py-4 text-right whitespace-nowrap"
-                                        >
-                                            <div
-                                                class="inline-flex w-full min-w-[160px] items-center justify-end gap-3"
-                                            >
-                                                <Badge
-                                                    :aria-label="`Application status: ${app.status}`"
-                                                    class="gap-1.5 border-0 px-3 py-1 font-bold"
-                                                    :class="app.statusTone"
-                                                >
-                                                    <span
-                                                        aria-hidden="true"
-                                                        class="text-[10px]"
-                                                        >●</span
-                                                    >
-                                                    {{ app.status }}
-                                                    <span class="sr-only">{{
-                                                        app.statusIcon
-                                                    }}</span>
-                                                </Badge>
+                                            <div class="text-[15px] font-bold">
+                                                {{ event.title }}
                                             </div>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="tableApplications.length === 0">
-                                        <td
-                                            colspan="4"
-                                            class="px-6 py-8 text-center"
-                                        >
-                                            <p class="font-semibold">
-                                                No applications yet
-                                            </p>
-                                            <p
-                                                class="mt-1 text-sm text-slate-500"
+                                            <div
+                                                class="mt-1 text-sm opacity-80"
                                             >
-                                                Applications you submit will
-                                                appear here.
-                                            </p>
-                                            <Button
-                                                class="mt-3"
-                                                size="sm"
-                                                variant="outline"
-                                                @click="
-                                                    router.visit(
-                                                        '/job-selection',
-                                                    )
-                                                "
-                                                >Browse Jobs</Button
+                                                {{ event.duration }}
+                                            </div>
+                                            <span
+                                                v-if="event.isPast"
+                                                class="mt-2 inline-block text-xs font-bold tracking-wide uppercase"
+                                                >Past interview</span
                                             >
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                                            <div
+                                                class="absolute top-4 right-4 h-2 w-2 rounded-full bg-white"
+                                            ></div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                v-else
+                                class="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+                            >
+                                No interviews on this day.
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card
+                        v-else
+                        class="rounded-[24px] border-dashed shadow-none"
+                    >
+                        <CardContent class="p-6 text-center">
+                            <CalendarDays
+                                class="mx-auto mb-3 h-8 w-8 text-slate-400"
+                            />
+                            <p class="font-semibold">Your calendar is clear</p>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Upcoming employer interviews will be added
+                                automatically.
+                            </p>
+                        </CardContent>
                     </Card>
                 </div>
 
-                <!-- Bottom Row: AI Jobs & Articles -->
-                <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <!-- AI Recommended Jobs -->
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- Application Tracker -->
                     <div>
                         <div
-                            class="mb-4 flex flex-wrap items-center justify-between gap-3"
+                            class="mt-2 mb-4 flex items-center justify-between gap-4"
                         >
-                            <div class="flex items-center gap-2">
+                            <div>
+                                <h2
+                                    class="text-xl font-bold text-slate-900 dark:text-slate-100"
+                                >
+                                    Application Tracker
+                                </h2>
+                            </div>
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline"
+                                @click="visitRequestTracker"
+                            >
+                                View all applications
+                                <ArrowRight class="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <Card
+                            class="overflow-hidden rounded-[24px] border border-slate-200/60 bg-slate-50 shadow-sm dark:bg-slate-900"
+                        >
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead
+                                        class="bg-slate-50 dark:bg-slate-900/50"
+                                    >
+                                        <tr>
+                                            <th
+                                                class="px-6 py-4 font-bold whitespace-nowrap text-slate-900 dark:text-slate-100"
+                                            >
+                                                Company Name
+                                            </th>
+                                            <th
+                                                class="px-6 py-4 font-bold whitespace-nowrap text-slate-900 dark:text-slate-100"
+                                            >
+                                                Job Title
+                                            </th>
+                                            <th
+                                                class="px-6 py-4 font-bold whitespace-nowrap text-slate-900 dark:text-slate-100"
+                                            >
+                                                Salary
+                                            </th>
+                                            <th
+                                                class="px-6 py-4 text-right font-bold whitespace-nowrap text-slate-900 dark:text-slate-100"
+                                            >
+                                                <button
+                                                    type="button"
+                                                    @click="visitRequestTracker"
+                                                    class="cursor-pointer transition-colors hover:text-primary"
+                                                >
+                                                    Application Status
+                                                </button>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody
+                                        class="divide-y divide-white dark:divide-slate-800"
+                                    >
+                                        <tr
+                                            v-for="app in tableApplications"
+                                            :key="app.id"
+                                            @click="visitJob(app)"
+                                            :class="
+                                                app.jobId
+                                                    ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800'
+                                                    : ''
+                                            "
+                                            class="bg-white transition-colors duration-200 dark:bg-slate-950"
+                                        >
+                                            <td
+                                                class="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400"
+                                            >
+                                                {{ app.company }}
+                                            </td>
+                                            <td
+                                                class="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400"
+                                            >
+                                                {{ app.title }}
+                                            </td>
+                                            <td
+                                                class="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400"
+                                            >
+                                                {{ app.salary }}
+                                            </td>
+                                            <td
+                                                class="px-6 py-4 text-right whitespace-nowrap"
+                                            >
+                                                <div
+                                                    class="inline-flex w-full min-w-[160px] items-center justify-end gap-3"
+                                                >
+                                                    <Badge
+                                                        :aria-label="`Application status: ${app.status}`"
+                                                        class="gap-1.5 border-0 px-3 py-1 font-bold"
+                                                        :class="app.statusTone"
+                                                    >
+                                                        <span
+                                                            aria-hidden="true"
+                                                            class="text-[10px]"
+                                                            >●</span
+                                                        >
+                                                        {{ app.status }}
+                                                        <span class="sr-only">{{
+                                                            app.statusIcon
+                                                        }}</span>
+                                                    </Badge>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr
+                                            v-if="
+                                                tableApplications.length === 0
+                                            "
+                                        >
+                                            <td
+                                                colspan="4"
+                                                class="px-6 py-8 text-center"
+                                            >
+                                                <p class="font-semibold">
+                                                    No applications yet
+                                                </p>
+                                                <p
+                                                    class="mt-1 text-sm text-slate-500"
+                                                >
+                                                    Applications you submit will
+                                                    appear here.
+                                                </p>
+                                                <Button
+                                                    class="mt-3"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    @click="
+                                                        router.visit(
+                                                            '/job-selection',
+                                                        )
+                                                    "
+                                                    >Browse Jobs</Button
+                                                >
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </Card>
+                    </div>
+
+                    <!-- Bottom Row: AI Jobs & Articles -->
+                    <div class="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <!-- AI Recommended Jobs -->
+                        <div>
+                            <div
+                                class="mb-4 flex flex-wrap items-center justify-between gap-3"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <h2
+                                        class="text-lg font-bold text-slate-900 dark:text-slate-100"
+                                    >
+                                        AI-Recommended Jobs for You
+                                    </h2>
+                                    <Sparkles class="h-5 w-5 text-primary" />
+                                </div>
+                                <select
+                                    v-if="resumes.length"
+                                    :value="selectedResumeId ?? ''"
+                                    aria-label="Resume used for recommendations"
+                                    class="rounded-lg border bg-background px-3 py-2 text-sm font-semibold"
+                                    @change="selectRecommendationResume"
+                                >
+                                    <option
+                                        v-for="resume in resumes"
+                                        :key="resume.id"
+                                        :value="resume.id"
+                                    >
+                                        {{ resume.title }}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="space-y-4">
+                                <div
+                                    v-if="recommendedJobs.length === 0"
+                                    class="rounded-2xl border border-dashed p-5 text-center text-sm text-slate-500"
+                                >
+                                    <p
+                                        class="font-semibold text-slate-700 dark:text-slate-200"
+                                    >
+                                        No matching jobs yet
+                                    </p>
+                                    <p class="mt-1">
+                                        Complete or update your resume to
+                                        improve your job recommendations.
+                                    </p>
+                                    <Button
+                                        class="mt-3"
+                                        size="sm"
+                                        variant="outline"
+                                        @click="router.visit('/resumes')"
+                                        >Update Resume</Button
+                                    >
+                                </div>
+                                <Card
+                                    v-for="job in recommendedJobs"
+                                    :key="job.id"
+                                    class="rounded-[24px] border border-blue-100 bg-blue-50/60 py-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                                >
+                                    <CardContent class="p-5">
+                                        <div
+                                            class="mb-4 flex items-start gap-4"
+                                        >
+                                            <div
+                                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-sm"
+                                            >
+                                                {{ job.logoText }}
+                                            </div>
+                                            <div class="flex-1">
+                                                <a
+                                                    :href="job.url"
+                                                    class="block text-lg leading-snug font-bold text-slate-900 transition-colors hover:text-primary dark:text-slate-100"
+                                                >
+                                                    {{ job.title }}
+                                                </a>
+                                                <p
+                                                    class="mt-1 text-sm font-medium text-slate-500"
+                                                >
+                                                    {{ job.company }}
+                                                </p>
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                :title="
+                                                    job.saved
+                                                        ? 'Remove saved job'
+                                                        : 'Save job'
+                                                "
+                                                @click="toggleSavedJob(job)"
+                                            >
+                                                <Heart class="h-4 w-4" />
+                                            </Button>
+                                        </div>
+
+                                        <div
+                                            class="mb-4 flex flex-wrap gap-2 text-xs"
+                                        >
+                                            <Badge
+                                                >{{ job.recommendationScore }}%
+                                                match</Badge
+                                            >
+                                            <Badge variant="outline">{{
+                                                job.salary
+                                            }}</Badge>
+                                            <Badge
+                                                v-if="job.location"
+                                                variant="outline"
+                                                >{{ job.location }}</Badge
+                                            >
+                                            <Badge
+                                                v-if="job.workplaceType"
+                                                variant="outline"
+                                                >{{ job.workplaceType }}</Badge
+                                            >
+                                        </div>
+
+                                        <div
+                                            v-if="job.strongMatches.length"
+                                            class="mb-3 text-xs text-emerald-700 dark:text-emerald-300"
+                                        >
+                                            <p
+                                                v-for="match in job.strongMatches.slice(
+                                                    0,
+                                                    2,
+                                                )"
+                                                :key="match"
+                                            >
+                                                ✓ {{ match }}
+                                            </p>
+                                        </div>
+                                        <div
+                                            v-if="job.gaps.length"
+                                            class="mb-4 text-xs text-amber-700 dark:text-amber-300"
+                                        >
+                                            <p
+                                                v-for="gap in job.gaps.slice(
+                                                    0,
+                                                    1,
+                                                )"
+                                                :key="gap"
+                                            >
+                                                △ {{ gap }}
+                                            </p>
+                                        </div>
+
+                                        <div class="flex flex-wrap gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                @click="
+                                                    showRecommendationExplanation(
+                                                        job,
+                                                    )
+                                                "
+                                                >Why this matches</Button
+                                            >
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                @click="router.visit(job.url)"
+                                                >View vacancy</Button
+                                            >
+                                            <Button
+                                                size="sm"
+                                                :disabled="
+                                                    job.applied ||
+                                                    !selectedResumeId
+                                                "
+                                                @click="
+                                                    applyToRecommendedJob(job)
+                                                "
+                                            >
+                                                {{
+                                                    job.applied
+                                                        ? 'Applied'
+                                                        : 'Apply'
+                                                }}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                @click="toggleSavedJob(job)"
+                                            >
+                                                {{
+                                                    job.saved ? 'Saved' : 'Save'
+                                                }}
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                                <Button
+                                    variant="link"
+                                    class="px-0 font-semibold"
+                                    @click="router.visit('/job-selection')"
+                                >
+                                    Explore more jobs
+                                    <ArrowRight class="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <!-- Interesting Articles -->
+                        <div>
+                            <div class="mb-4 flex items-center gap-2">
                                 <h2
                                     class="text-lg font-bold text-slate-900 dark:text-slate-100"
                                 >
-                                    AI-Recommended Jobs for You
+                                    Interesting Articles
                                 </h2>
                                 <Sparkles class="h-5 w-5 text-primary" />
                             </div>
-                            <select
-                                v-if="resumes.length"
-                                :value="selectedResumeId ?? ''"
-                                aria-label="Resume used for recommendations"
-                                class="rounded-lg border bg-background px-3 py-2 text-sm font-semibold"
-                                @change="selectRecommendationResume"
-                            >
-                                <option
-                                    v-for="resume in resumes"
-                                    :key="resume.id"
-                                    :value="resume.id"
+                            <div class="space-y-4">
+                                <a
+                                    v-for="article in articles"
+                                    :key="article.id"
+                                    :href="article.url"
+                                    target="_blank"
+                                    class="flex flex-col gap-3 overflow-hidden rounded-[24px] border border-slate-200/70 bg-white py-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
                                 >
-                                    {{ resume.title }}
-                                </option>
-                            </select>
-                        </div>
-                        <div class="space-y-4">
-                            <div
-                                v-if="recommendedJobs.length === 0"
-                                class="rounded-2xl border border-dashed p-5 text-center text-sm text-slate-500"
-                            >
-                                <p
-                                    class="font-semibold text-slate-700 dark:text-slate-200"
-                                >
-                                    No matching jobs yet
-                                </p>
-                                <p class="mt-1">
-                                    Complete or update your resume to improve
-                                    your job recommendations.
-                                </p>
+                                    <img
+                                        :src="article.image"
+                                        :alt="`${article.title} cover`"
+                                        class="h-40 w-full rounded-t-[16px] object-cover"
+                                        loading="lazy"
+                                        @error="
+                                            useArticleFallback(
+                                                $event,
+                                                article.fallback_image,
+                                            )
+                                        "
+                                    />
+                                    <div class="px-4 pb-4">
+                                        <div
+                                            class="mb-2 flex items-center justify-between gap-3 text-xs font-bold"
+                                        >
+                                            <span class="text-primary">{{
+                                                article.category
+                                            }}</span>
+                                            <span class="text-slate-500">{{
+                                                article.reading_time
+                                            }}</span>
+                                        </div>
+                                        <p
+                                            class="text-lg leading-snug font-bold text-slate-900 dark:text-slate-100"
+                                        >
+                                            {{ article.title }}
+                                        </p>
+                                        <p
+                                            v-if="article.description"
+                                            class="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400"
+                                        >
+                                            {{ article.description }}
+                                        </p>
+                                        <div
+                                            class="mt-3 flex items-center justify-between text-xs font-semibold text-slate-500"
+                                        >
+                                            <span>{{ article.source }}</span>
+                                            <span class="text-primary"
+                                                >Open / Read →</span
+                                            >
+                                        </div>
+                                    </div>
+                                </a>
                                 <Button
-                                    class="mt-3"
-                                    size="sm"
-                                    variant="outline"
-                                    @click="router.visit('/resumes')"
-                                    >Update Resume</Button
+                                    variant="link"
+                                    class="px-0 font-semibold"
+                                    @click="router.visit('/development')"
                                 >
+                                    View all resources
+                                    <ArrowRight class="h-4 w-4" />
+                                </Button>
                             </div>
-                            <Card
-                                v-for="job in recommendedJobs"
-                                :key="job.id"
-                                class="rounded-[24px] border border-slate-200/60 bg-slate-50 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                            >
-                                <CardContent class="p-5">
-                                    <div class="mb-4 flex items-start gap-4">
-                                        <div
-                                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-sm"
-                                        >
-                                            {{ job.logoText }}
-                                        </div>
-                                        <div class="flex-1">
-                                            <a
-                                                :href="job.url"
-                                                class="block text-lg leading-snug font-bold text-slate-900 transition-colors hover:text-primary dark:text-slate-100"
-                                            >
-                                                {{ job.title }}
-                                            </a>
-                                            <p
-                                                class="mt-1 text-sm font-medium text-slate-500"
-                                            >
-                                                {{ job.company }}
-                                            </p>
-                                        </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            :title="
-                                                job.saved
-                                                    ? 'Remove saved job'
-                                                    : 'Save job'
-                                            "
-                                            @click="toggleSavedJob(job)"
-                                        >
-                                            <Heart class="h-4 w-4" />
-                                        </Button>
-                                    </div>
-
-                                    <div
-                                        class="mb-4 flex flex-wrap gap-2 text-xs"
-                                    >
-                                        <Badge
-                                            >{{ job.recommendationScore }}%
-                                            match</Badge
-                                        >
-                                        <Badge variant="outline">{{
-                                            job.salary
-                                        }}</Badge>
-                                        <Badge
-                                            v-if="job.location"
-                                            variant="outline"
-                                            >{{ job.location }}</Badge
-                                        >
-                                        <Badge
-                                            v-if="job.workplaceType"
-                                            variant="outline"
-                                            >{{ job.workplaceType }}</Badge
-                                        >
-                                    </div>
-
-                                    <div
-                                        v-if="job.strongMatches.length"
-                                        class="mb-3 text-xs text-emerald-700 dark:text-emerald-300"
-                                    >
-                                        <p
-                                            v-for="match in job.strongMatches.slice(
-                                                0,
-                                                2,
-                                            )"
-                                            :key="match"
-                                        >
-                                            ✓ {{ match }}
-                                        </p>
-                                    </div>
-                                    <div
-                                        v-if="job.gaps.length"
-                                        class="mb-4 text-xs text-amber-700 dark:text-amber-300"
-                                    >
-                                        <p
-                                            v-for="gap in job.gaps.slice(0, 1)"
-                                            :key="gap"
-                                        >
-                                            △ {{ gap }}
-                                        </p>
-                                    </div>
-
-                                    <div class="flex flex-wrap gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            @click="
-                                                showRecommendationExplanation(
-                                                    job,
-                                                )
-                                            "
-                                            >Why this matches</Button
-                                        >
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            @click="router.visit(job.url)"
-                                            >View vacancy</Button
-                                        >
-                                        <Button
-                                            size="sm"
-                                            :disabled="
-                                                job.applied || !selectedResumeId
-                                            "
-                                            @click="applyToRecommendedJob(job)"
-                                        >
-                                            {{
-                                                job.applied
-                                                    ? 'Applied'
-                                                    : 'Apply'
-                                            }}
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            @click="toggleSavedJob(job)"
-                                        >
-                                            {{ job.saved ? 'Saved' : 'Save' }}
-                                        </Button>
-                                    </div>
-
-                                    <div
-                                        class="mt-4 rounded-xl border border-slate-100 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-950"
-                                    >
-                                        <div
-                                            v-for="criterion in job.criteria"
-                                            :key="criterion.label"
-                                            class="flex justify-between gap-3 py-1"
-                                        >
-                                            <span>{{ criterion.label }}</span
-                                            ><strong
-                                                >{{ criterion.score }}%</strong
-                                            >
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-
-                    <!-- Interesting Articles -->
-                    <div>
-                        <div class="mb-4 flex items-center gap-2">
-                            <h2
-                                class="text-lg font-bold text-slate-900 dark:text-slate-100"
-                            >
-                                Interesting Articles
-                            </h2>
-                            <Sparkles class="h-5 w-5 text-primary" />
-                        </div>
-                        <div class="space-y-4">
-                            <a
-                                v-for="article in articles"
-                                :key="article.id"
-                                :href="article.url"
-                                target="_blank"
-                                class="flex flex-col gap-3 overflow-hidden rounded-[24px] border border-slate-200/60 bg-white py-0 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
-                            >
-                                <img
-                                    :src="article.image"
-                                    :alt="`${article.title} cover`"
-                                    class="h-40 w-full rounded-t-[16px] object-cover"
-                                    loading="lazy"
-                                    @error="
-                                        useArticleFallback(
-                                            $event,
-                                            article.fallback_image,
-                                        )
-                                    "
-                                />
-                                <div class="px-4 pb-4">
-                                    <div
-                                        class="mb-2 flex items-center justify-between gap-3 text-xs font-bold"
-                                    >
-                                        <span class="text-primary">{{
-                                            article.category
-                                        }}</span>
-                                        <span class="text-slate-500">{{
-                                            article.reading_time
-                                        }}</span>
-                                    </div>
-                                    <p
-                                        class="text-lg leading-snug font-bold text-slate-900 dark:text-slate-100"
-                                    >
-                                        {{ article.title }}
-                                    </p>
-                                    <p
-                                        v-if="article.description"
-                                        class="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400"
-                                    >
-                                        {{ article.description }}
-                                    </p>
-                                    <div
-                                        class="mt-3 flex items-center justify-between text-xs font-semibold text-slate-500"
-                                    >
-                                        <span>{{ article.source }}</span>
-                                        <span class="text-primary"
-                                            >Open / Read →</span
-                                        >
-                                    </div>
-                                </div>
-                            </a>
                         </div>
                     </div>
                 </div>

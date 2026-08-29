@@ -98,143 +98,153 @@ defineOptions({
 
 <template>
     <Head title="Career Development" />
-    <div class="mx-auto w-full max-w-7xl space-y-8 px-5 py-8">
-        <section>
-            <p class="text-sm font-bold tracking-wide text-primary uppercase">
-                Recommended for You
-            </p>
-            <h1 class="mt-1 text-3xl font-black">Career Development</h1>
-            <p class="mt-2 text-slate-500">
-                Practical resources for your job search and long-term career
-                skills.
-            </p>
-        </section>
-        <Card
-            ><CardContent
-                class="grid gap-3 p-5 lg:grid-cols-[minmax(0,1fr)_auto_auto]"
-            >
-                <div class="relative">
-                    <Search
-                        class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
-                    /><Input
-                        v-model="search"
-                        class="pl-9"
-                        placeholder="Search career resources"
-                    />
-                </div>
-                <select
-                    v-model="sort"
-                    class="resource-select"
-                    aria-label="Sort resources"
+    <div class="min-h-full bg-slate-50/80 px-5 py-8 dark:bg-slate-950">
+        <div class="mx-auto w-full max-w-7xl space-y-8">
+            <section>
+                <p
+                    class="text-sm font-bold tracking-wide text-primary uppercase"
                 >
-                    <option value="title">Sort by title</option>
-                    <option value="shortest">Shortest first</option>
-                    <option value="longest">Longest first</option>
-                </select>
-                <Button
-                    type="button"
-                    :variant="favoritesOnly ? 'default' : 'outline'"
-                    @click="favoritesOnly = !favoritesOnly"
-                    ><Heart class="mr-2 h-4 w-4" />Favorites only</Button
-                >
-            </CardContent></Card
-        >
-        <div class="flex flex-wrap gap-2" aria-label="Resource categories">
-            <Button
-                v-for="item in categories"
-                :key="item"
-                type="button"
-                size="sm"
-                :variant="category === item ? 'default' : 'outline'"
-                @click="category = item"
-                >{{ item }}</Button
-            >
-        </div>
-        <section>
-            <div class="mb-4 flex items-center gap-2">
-                <BookOpen class="h-6 w-6 text-primary" />
-                <h2 class="text-2xl font-extrabold">Career Resources</h2>
-            </div>
-            <div
-                v-if="visibleResources.length"
-                class="grid gap-5 md:grid-cols-2 xl:grid-cols-3"
-            >
-                <Card
-                    v-for="resource in visibleResources"
-                    :key="resource.id"
-                    class="overflow-hidden py-0"
-                >
-                    <img
-                        :src="resource.image"
-                        :alt="`${resource.title} cover`"
-                        class="h-44 w-full object-cover"
-                        loading="lazy"
-                    />
-                    <CardContent class="space-y-3 p-5">
-                        <div class="flex items-center justify-between gap-3">
-                            <Badge variant="secondary">{{
-                                resource.category
-                            }}</Badge
-                            ><span
-                                class="flex items-center gap-1 text-sm text-slate-500"
-                                ><Clock class="h-3.5 w-3.5" />{{
-                                    resource.readingMinutes
-                                }}
-                                min</span
-                            >
-                        </div>
-                        <h3 class="text-lg font-bold">{{ resource.title }}</h3>
-                        <p class="text-base leading-relaxed text-slate-600">
-                            {{ resource.description }}
-                        </p>
-                        <div class="flex items-center justify-between">
-                            <Button as-child size="sm"
-                                ><a
-                                    :href="resource.url"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >Open / Read</a
-                                ></Button
-                            ><Button
-                                type="button"
-                                size="icon"
-                                variant="ghost"
-                                :aria-label="
-                                    resource.favorite
-                                        ? 'Remove favorite'
-                                        : 'Add favorite'
-                                "
-                                @click="resource.favorite = !resource.favorite"
-                                ><Heart
-                                    class="h-4 w-4"
-                                    :class="
-                                        resource.favorite &&
-                                        'fill-primary text-primary'
-                                    "
-                            /></Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-            <div
-                v-else
-                class="rounded-2xl border border-dashed p-10 text-center"
-            >
-                <p class="font-semibold">
-                    No career resources match these filters.
+                    Recommended for You
                 </p>
+                <h1 class="mt-1 text-3xl font-black">Career Development</h1>
+                <p class="mt-2 text-slate-500">
+                    Practical resources for your job search and long-term career
+                    skills.
+                </p>
+            </section>
+            <Card
+                ><CardContent
+                    class="grid gap-3 p-5 lg:grid-cols-[minmax(0,1fr)_auto_auto]"
+                >
+                    <div class="relative">
+                        <Search
+                            class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+                        /><Input
+                            v-model="search"
+                            class="pl-9"
+                            placeholder="Search career resources"
+                        />
+                    </div>
+                    <select
+                        v-model="sort"
+                        class="resource-select"
+                        aria-label="Sort resources"
+                    >
+                        <option value="title">Sort by title</option>
+                        <option value="shortest">Shortest first</option>
+                        <option value="longest">Longest first</option>
+                    </select>
+                    <Button
+                        type="button"
+                        :variant="favoritesOnly ? 'default' : 'outline'"
+                        @click="favoritesOnly = !favoritesOnly"
+                        ><Heart class="mr-2 h-4 w-4" />Favorites only</Button
+                    >
+                </CardContent></Card
+            >
+            <div class="flex flex-wrap gap-2" aria-label="Resource categories">
                 <Button
-                    class="mt-3"
-                    variant="outline"
-                    @click="
-                        search = '';
-                        category = 'All';
-                        favoritesOnly = false;
-                    "
-                    >Clear filters</Button
+                    v-for="item in categories"
+                    :key="item"
+                    type="button"
+                    size="sm"
+                    :variant="category === item ? 'default' : 'outline'"
+                    @click="category = item"
+                    >{{ item }}</Button
                 >
             </div>
-        </section>
+            <section>
+                <div class="mb-4 flex items-center gap-2">
+                    <BookOpen class="h-6 w-6 text-primary" />
+                    <h2 class="text-2xl font-extrabold">Career Resources</h2>
+                </div>
+                <div
+                    v-if="visibleResources.length"
+                    class="grid gap-5 md:grid-cols-2 xl:grid-cols-3"
+                >
+                    <Card
+                        v-for="resource in visibleResources"
+                        :key="resource.id"
+                        class="overflow-hidden border-slate-200/70 bg-white py-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                    >
+                        <img
+                            :src="resource.image"
+                            :alt="`${resource.title} cover`"
+                            class="h-44 w-full object-cover"
+                            loading="lazy"
+                        />
+                        <CardContent class="space-y-3 p-5">
+                            <div
+                                class="flex items-center justify-between gap-3"
+                            >
+                                <Badge variant="secondary">{{
+                                    resource.category
+                                }}</Badge
+                                ><span
+                                    class="flex items-center gap-1 text-sm text-slate-500"
+                                    ><Clock class="h-3.5 w-3.5" />{{
+                                        resource.readingMinutes
+                                    }}
+                                    min</span
+                                >
+                            </div>
+                            <h3 class="text-lg font-bold">
+                                {{ resource.title }}
+                            </h3>
+                            <p class="text-base leading-relaxed text-slate-600">
+                                {{ resource.description }}
+                            </p>
+                            <div class="flex items-center justify-between">
+                                <Button as-child size="sm"
+                                    ><a
+                                        :href="resource.url"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        >Open / Read</a
+                                    ></Button
+                                ><Button
+                                    type="button"
+                                    size="icon"
+                                    variant="ghost"
+                                    :aria-label="
+                                        resource.favorite
+                                            ? 'Remove favorite'
+                                            : 'Add favorite'
+                                    "
+                                    @click="
+                                        resource.favorite = !resource.favorite
+                                    "
+                                    ><Heart
+                                        class="h-4 w-4"
+                                        :class="
+                                            resource.favorite &&
+                                            'fill-primary text-primary'
+                                        "
+                                /></Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                <div
+                    v-else
+                    class="rounded-2xl border border-dashed p-10 text-center"
+                >
+                    <p class="font-semibold">
+                        No career resources match these filters.
+                    </p>
+                    <Button
+                        class="mt-3"
+                        variant="outline"
+                        @click="
+                            search = '';
+                            category = 'All';
+                            favoritesOnly = false;
+                        "
+                        >Clear filters</Button
+                    >
+                </div>
+            </section>
+        </div>
     </div>
 </template>
 

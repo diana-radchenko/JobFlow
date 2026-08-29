@@ -126,9 +126,11 @@ onUnmounted(() => {
 <template>
     <Head title="Chat" />
     <div
-        class="grid w-full gap-4 p-4 md:p-6 lg:grid-cols-[minmax(280px,30%)_minmax(0,70%)]"
+        class="grid min-h-full w-full gap-4 bg-slate-50/80 p-4 md:p-6 lg:grid-cols-[minmax(280px,30%)_minmax(0,70%)] dark:bg-slate-950"
     >
-        <Card>
+        <Card
+            class="border-slate-200 bg-slate-100/70 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        >
             <CardContent class="space-y-3 pt-6">
                 <h1 class="text-xl font-bold">Chat</h1>
                 <input
@@ -144,9 +146,9 @@ onUnmounted(() => {
                             query: { conversation: conversation.id },
                         }).url
                     "
-                    class="block rounded-xl border p-3 transition-colors hover:bg-accent"
+                    class="block rounded-xl border bg-white p-3 transition-all duration-200 hover:border-primary/25 hover:shadow-sm dark:bg-slate-950"
                     :class="{
-                        'border-primary bg-accent':
+                        'border-primary bg-blue-50 shadow-sm dark:bg-slate-800':
                             selected?.id === conversation.id,
                     }"
                 >
@@ -181,7 +183,9 @@ onUnmounted(() => {
             </CardContent>
         </Card>
 
-        <Card>
+        <Card
+            class="border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        >
             <CardContent
                 v-if="selected"
                 class="flex min-h-[620px] flex-col pt-6"

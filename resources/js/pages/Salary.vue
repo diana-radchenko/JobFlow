@@ -109,283 +109,298 @@ defineOptions({
 <template>
     <Head title="Salary Comparison" />
 
-    <div class="mx-auto w-full max-w-6xl space-y-6 px-5 py-8">
-        <section>
-            <p class="text-sm font-bold tracking-wide text-primary uppercase">
-                JobFlow salary data
-            </p>
-            <h1 class="mt-1 text-3xl font-black text-slate-950 dark:text-white">
-                Salary Insights
-            </h1>
-            <p class="mt-2 max-w-3xl text-slate-600 dark:text-slate-300">
-                Compare a job with similar JobFlow vacancies.
-            </p>
-        </section>
-
-        <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
-            <CardContent class="p-6">
-                <div class="mb-5 flex gap-2">
-                    <Button
-                        type="button"
-                        :variant="
-                            mode === 'application' ? 'default' : 'outline'
-                        "
-                        @click="mode = 'application'"
-                        >Compare My Application</Button
-                    >
-                    <Button
-                        type="button"
-                        :variant="mode === 'manual' ? 'default' : 'outline'"
-                        @click="mode = 'manual'"
-                        >Search Manually</Button
-                    >
-                </div>
-                <form
-                    v-if="mode === 'application'"
-                    class="flex flex-col gap-4 sm:flex-row"
-                    @submit.prevent="compare"
+    <div class="min-h-full bg-slate-50/80 px-5 py-8 dark:bg-slate-950">
+        <div class="mx-auto w-full max-w-6xl space-y-6">
+            <section>
+                <p
+                    class="text-sm font-bold tracking-wide text-primary uppercase"
                 >
-                    <div class="flex-1">
-                        <label
-                            for="salary-application"
-                            class="mb-1.5 block text-sm font-semibold"
-                            >Select vacancy/application</label
-                        >
-                        <select
-                            id="salary-application"
-                            v-model="applicationId"
-                            required
-                            class="salary-select"
-                        >
-                            <option value="" disabled>
-                                Select an application
-                            </option>
-                            <option
-                                v-for="application in applications"
-                                :key="application.id"
-                                :value="String(application.id)"
-                            >
-                                {{ application.work_job?.title }} —
-                                {{ application.work_job?.company }}
-                            </option>
-                        </select>
-                    </div>
-                    <Button type="submit" class="self-end">Compare</Button>
-                </form>
-                <form
-                    v-else
-                    class="grid gap-4 md:grid-cols-[minmax(0,1.4fr)_1fr_1fr_auto]"
-                    @submit.prevent="compare"
-                >
-                    <div>
-                        <label
-                            for="salary-role"
-                            class="mb-1.5 block text-sm font-semibold"
-                            >Role or keyword</label
-                        >
-                        <Input
-                            id="salary-role"
-                            v-model="role"
-                            required
-                            placeholder="e.g. Coding Instructor"
-                        />
-                    </div>
-                    <div>
-                        <label
-                            for="salary-industry"
-                            class="mb-1.5 block text-sm font-semibold"
-                            >Industry</label
-                        >
-                        <select
-                            id="salary-industry"
-                            v-model="industry"
-                            required
-                            class="salary-select"
-                        >
-                            <option value="" disabled>Select industry</option>
-                            <option
-                                v-for="item in industries"
-                                :key="item"
-                                :value="item"
-                            >
-                                {{ item }}
-                            </option>
-                        </select>
-                    </div>
-                    <div>
-                        <label
-                            for="salary-level"
-                            class="mb-1.5 block text-sm font-semibold"
-                            >Position level</label
-                        >
-                        <select
-                            id="salary-level"
-                            v-model="level"
-                            required
-                            class="salary-select"
-                        >
-                            <option value="" disabled>Select level</option>
-                            <option
-                                v-for="item in positionLevels"
-                                :key="item"
-                                :value="item"
-                            >
-                                {{ item }}
-                            </option>
-                        </select>
-                    </div>
-                    <Button type="submit" class="self-end">Compare</Button>
-                </form>
-                <p v-if="mode === 'manual'" class="mt-3 text-sm text-slate-500">
-                    We compare published JobFlow vacancies with the same
-                    industry, level, and a similar core role.
+                    JobFlow salary data
                 </p>
-            </CardContent>
-        </Card>
-
-        <template v-if="comparison">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <p class="font-semibold">
-                    Based on {{ comparison.count }} comparable JobFlow
-                    {{ comparison.count === 1 ? 'vacancy' : 'vacancies' }}.
+                <h1
+                    class="mt-1 text-3xl font-black text-slate-950 dark:text-white"
+                >
+                    Salary Insights
+                </h1>
+                <p class="mt-2 max-w-3xl text-slate-600 dark:text-slate-300">
+                    Compare a job with similar JobFlow vacancies.
                 </p>
-                <div
-                    class="flex rounded-lg border border-slate-200 p-1 dark:border-slate-700"
-                >
-                    <button
-                        v-for="option in [
-                            'weekly',
-                            'monthly',
-                            'annually',
-                        ] as const"
-                        :key="option"
-                        type="button"
-                        class="rounded-md px-3 py-1.5 text-sm font-semibold capitalize"
-                        :class="
-                            frequency === option
-                                ? 'bg-primary text-primary-foreground'
-                                : 'text-slate-600 dark:text-slate-300'
-                        "
-                        @click="frequency = option"
+            </section>
+
+            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
+                <CardContent class="p-6">
+                    <div class="mb-5 flex gap-2">
+                        <Button
+                            type="button"
+                            :variant="
+                                mode === 'application' ? 'default' : 'outline'
+                            "
+                            @click="mode = 'application'"
+                            >Compare My Application</Button
+                        >
+                        <Button
+                            type="button"
+                            :variant="mode === 'manual' ? 'default' : 'outline'"
+                            @click="mode = 'manual'"
+                            >Search Manually</Button
+                        >
+                    </div>
+                    <form
+                        v-if="mode === 'application'"
+                        class="flex flex-col gap-4 sm:flex-row"
+                        @submit.prevent="compare"
                     >
-                        {{ option }}
-                    </button>
-                </div>
-            </div>
-
-            <Card v-if="comparison.count === 0" class="border-dashed">
-                <CardContent
-                    class="py-12 text-center text-slate-600 dark:text-slate-300"
-                >
-                    <BriefcaseBusiness
-                        class="mx-auto mb-3 h-9 w-9 text-slate-400"
-                    />
-                    {{ comparison.message }}
-                </CardContent>
-            </Card>
-
-            <Card
-                v-else-if="!comparison.sufficient"
-                class="border-amber-200 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/20"
-            >
-                <CardContent class="space-y-4 p-6">
-                    <p class="font-semibold text-amber-950 dark:text-amber-100">
-                        {{ comparison.message }}
+                        <div class="flex-1">
+                            <label
+                                for="salary-application"
+                                class="mb-1.5 block text-sm font-semibold"
+                                >Select vacancy/application</label
+                            >
+                            <select
+                                id="salary-application"
+                                v-model="applicationId"
+                                required
+                                class="salary-select"
+                            >
+                                <option value="" disabled>
+                                    Select an application
+                                </option>
+                                <option
+                                    v-for="application in applications"
+                                    :key="application.id"
+                                    :value="String(application.id)"
+                                >
+                                    {{ application.work_job?.title }} —
+                                    {{ application.work_job?.company }}
+                                </option>
+                            </select>
+                        </div>
+                        <Button type="submit" class="self-end">Compare</Button>
+                    </form>
+                    <form
+                        v-else
+                        class="grid gap-4 md:grid-cols-[minmax(0,1.4fr)_1fr_1fr_auto]"
+                        @submit.prevent="compare"
+                    >
+                        <div>
+                            <label
+                                for="salary-role"
+                                class="mb-1.5 block text-sm font-semibold"
+                                >Role or keyword</label
+                            >
+                            <Input
+                                id="salary-role"
+                                v-model="role"
+                                required
+                                placeholder="e.g. Coding Instructor"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                for="salary-industry"
+                                class="mb-1.5 block text-sm font-semibold"
+                                >Industry</label
+                            >
+                            <select
+                                id="salary-industry"
+                                v-model="industry"
+                                required
+                                class="salary-select"
+                            >
+                                <option value="" disabled>
+                                    Select industry
+                                </option>
+                                <option
+                                    v-for="item in industries"
+                                    :key="item"
+                                    :value="item"
+                                >
+                                    {{ item }}
+                                </option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                for="salary-level"
+                                class="mb-1.5 block text-sm font-semibold"
+                                >Position level</label
+                            >
+                            <select
+                                id="salary-level"
+                                v-model="level"
+                                required
+                                class="salary-select"
+                            >
+                                <option value="" disabled>Select level</option>
+                                <option
+                                    v-for="item in positionLevels"
+                                    :key="item"
+                                    :value="item"
+                                >
+                                    {{ item }}
+                                </option>
+                            </select>
+                        </div>
+                        <Button type="submit" class="self-end">Compare</Button>
+                    </form>
+                    <p
+                        v-if="mode === 'manual'"
+                        class="mt-3 text-sm text-slate-500"
+                    >
+                        We compare published JobFlow vacancies with the same
+                        industry, level, and a similar core role.
                     </p>
-                    <div class="text-3xl font-black">
-                        {{ formatSalary(comparison.minimum) }}–{{
-                            formatSalary(comparison.maximum)
-                        }}
-                        <span class="text-sm font-medium text-slate-500">{{
-                            frequencyLabel
-                        }}</span>
-                    </div>
                 </CardContent>
             </Card>
 
-            <div v-else class="grid gap-4 sm:grid-cols-3">
-                <Card
-                    v-for="metric in [
-                        { label: 'Low', value: comparison.minimum },
-                        { label: 'Median', value: comparison.median },
-                        { label: 'High', value: comparison.maximum },
-                    ]"
-                    :key="metric.label"
-                    class="border-slate-200/70 shadow-sm dark:border-slate-800"
-                >
-                    <CardContent class="p-5">
-                        <p class="text-sm font-bold text-slate-500">
-                            {{ metric.label }}
-                        </p>
-                        <p class="mt-2 text-3xl font-black">
-                            {{ formatSalary(metric.value) }}
-                        </p>
-                        <p class="mt-1 text-sm text-slate-500">
-                            {{ frequencyLabel }}
-                        </p>
+            <template v-if="comparison">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <p class="font-semibold">
+                        Based on {{ comparison.count }} comparable JobFlow
+                        {{ comparison.count === 1 ? 'vacancy' : 'vacancies' }}.
+                    </p>
+                    <div
+                        class="flex rounded-lg border border-slate-200 p-1 dark:border-slate-700"
+                    >
+                        <button
+                            v-for="option in [
+                                'weekly',
+                                'monthly',
+                                'annually',
+                            ] as const"
+                            :key="option"
+                            type="button"
+                            class="rounded-md px-3 py-1.5 text-sm font-semibold capitalize"
+                            :class="
+                                frequency === option
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'text-slate-600 dark:text-slate-300'
+                            "
+                            @click="frequency = option"
+                        >
+                            {{ option }}
+                        </button>
+                    </div>
+                </div>
+
+                <Card v-if="comparison.count === 0" class="border-dashed">
+                    <CardContent
+                        class="py-12 text-center text-slate-600 dark:text-slate-300"
+                    >
+                        <BriefcaseBusiness
+                            class="mx-auto mb-3 h-9 w-9 text-slate-400"
+                        />
+                        {{ comparison.message }}
                     </CardContent>
                 </Card>
-            </div>
 
-            <Card
-                v-if="comparison.comparables.length"
-                class="border-slate-200/70 shadow-sm dark:border-slate-800"
-            >
-                <CardContent class="p-6">
-                    <div class="mb-5 flex items-center gap-2">
-                        <BarChart3 class="h-5 w-5 text-primary" />
-                        <h2 class="text-lg font-bold">Comparable vacancies</h2>
-                    </div>
-                    <div
-                        class="divide-y divide-slate-200 dark:divide-slate-800"
-                    >
-                        <article
-                            v-for="vacancy in comparison.comparables"
-                            :key="vacancy.id"
-                            class="py-4 first:pt-0 last:pb-0"
+                <Card
+                    v-else-if="!comparison.sufficient"
+                    class="border-amber-200 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/20"
+                >
+                    <CardContent class="space-y-4 p-6">
+                        <p
+                            class="font-semibold text-amber-950 dark:text-amber-100"
                         >
-                            <div
-                                class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"
+                            {{ comparison.message }}
+                        </p>
+                        <div class="text-3xl font-black">
+                            {{ formatSalary(comparison.minimum) }}–{{
+                                formatSalary(comparison.maximum)
+                            }}
+                            <span class="text-sm font-medium text-slate-500">{{
+                                frequencyLabel
+                            }}</span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div v-else class="grid gap-4 sm:grid-cols-3">
+                    <Card
+                        v-for="metric in [
+                            { label: 'Low', value: comparison.minimum },
+                            { label: 'Median', value: comparison.median },
+                            { label: 'High', value: comparison.maximum },
+                        ]"
+                        :key="metric.label"
+                        class="border-slate-900 bg-slate-950 text-white shadow-md dark:border-slate-700"
+                    >
+                        <CardContent class="p-5">
+                            <p class="text-sm font-bold text-slate-300">
+                                {{ metric.label }}
+                            </p>
+                            <p class="mt-2 text-3xl font-black">
+                                {{ formatSalary(metric.value) }}
+                            </p>
+                            <p class="mt-1 text-sm text-slate-300">
+                                {{ frequencyLabel }}
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <Card
+                    v-if="comparison.comparables.length"
+                    class="border-slate-200/70 shadow-sm dark:border-slate-800"
+                >
+                    <CardContent class="p-6">
+                        <div class="mb-5 flex items-center gap-2">
+                            <BarChart3 class="h-5 w-5 text-primary" />
+                            <h2 class="text-lg font-bold">
+                                Comparable vacancies
+                            </h2>
+                        </div>
+                        <div
+                            class="divide-y divide-slate-200 dark:divide-slate-800"
+                        >
+                            <article
+                                v-for="vacancy in comparison.comparables"
+                                :key="vacancy.id"
+                                class="py-4 first:pt-0 last:pb-0"
                             >
-                                <div>
-                                    <h3 class="text-base font-bold">
-                                        {{ vacancy.title }}
-                                    </h3>
-                                    <p class="text-sm text-slate-500">
-                                        {{ vacancy.company }}
+                                <div
+                                    class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"
+                                >
+                                    <div>
+                                        <h3 class="text-base font-bold">
+                                            {{ vacancy.title }}
+                                        </h3>
+                                        <p class="text-sm text-slate-500">
+                                            {{ vacancy.company }}
+                                        </p>
+                                    </div>
+                                    <p class="font-bold">
+                                        {{
+                                            formatSalary(
+                                                vacancy.annual_min,
+                                                vacancy.currency,
+                                            )
+                                        }}–{{
+                                            formatSalary(
+                                                vacancy.annual_max,
+                                                vacancy.currency,
+                                            )
+                                        }}
                                     </p>
                                 </div>
-                                <p class="font-bold">
-                                    {{
-                                        formatSalary(
-                                            vacancy.annual_min,
-                                            vacancy.currency,
-                                        )
-                                    }}–{{
-                                        formatSalary(
-                                            vacancy.annual_max,
-                                            vacancy.currency,
-                                        )
-                                    }}
-                                </p>
-                            </div>
-                            <div class="mt-3 flex flex-wrap gap-2">
-                                <Badge
-                                    v-for="reason in vacancy.reasons"
-                                    :key="reason"
-                                    variant="secondary"
-                                    class="gap-1"
-                                >
-                                    <CheckCircle2 class="h-3.5 w-3.5" />{{
-                                        reason
-                                    }}
-                                </Badge>
-                            </div>
-                        </article>
-                    </div>
-                </CardContent>
-            </Card>
-        </template>
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <Badge
+                                        v-for="reason in vacancy.reasons"
+                                        :key="reason"
+                                        variant="secondary"
+                                        class="gap-1"
+                                    >
+                                        <CheckCircle2 class="h-3.5 w-3.5" />{{
+                                            reason
+                                        }}
+                                    </Badge>
+                                </div>
+                            </article>
+                        </div>
+                    </CardContent>
+                </Card>
+            </template>
+        </div>
     </div>
 </template>
 
