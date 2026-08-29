@@ -16,7 +16,15 @@ class JobSelectionController extends Controller
 {
     public function jobSelection(JobSelectionRequest $request): Response
     {
-        $query = WorkJob::published();
+        $annualMinimum = "salary_start * CASE LOWER(COALESCE(salary_period, 'annual')) WHEN 'hour' THEN 2080 WHEN 'hourly' THEN 2080 WHEN 'week' THEN 52 WHEN 'weekly' THEN 52 WHEN 'month' THEN 12 WHEN 'monthly' THEN 12 ELSE 1 END";
+        $annualMaximum = "COALESCE(salary_end, salary_start) * CASE LOWER(COALESCE(salary_period, 'annual')) WHEN 'hour' THEN 2080 WHEN 'hourly' THEN 2080 WHEN 'week' THEN 52 WHEN 'weekly' THEN 52 WHEN 'month' THEN 12 WHEN 'monthly' THEN 12 ELSE 1 END";
+        $query = WorkJob::published()
+            ->withExists([
+                'applications as applied' => fn ($query) => $query->where('user_id', auth()->id()),
+                'savedBy as saved' => fn ($query) => $query->where('users.id', auth()->id()),
+            ]);
+        $query->when($request->view === 'saved', fn ($query) => $query->whereHas('savedBy', fn ($saved) => $saved->where('users.id', auth()->id())));
+        $query->when($request->view === 'applied', fn ($query) => $query->whereHas('applications', fn ($applications) => $applications->where('user_id', auth()->id())));
         $query->when($request->keyword, fn ($q, $value) => $q->where(fn ($q) => $q
             ->where('title', 'like', "%{$value}%")
             ->orWhere('description', 'like', "%{$value}%")));
@@ -31,16 +39,23 @@ class JobSelectionController extends Controller
         $query->when($request->employment_type, fn ($q, $value) => $q->where('employment_type', $value));
         $query->when($request->location, fn ($q, $value) => $q->where('location', 'like', "%{$value}%"));
         $query->when($request->workplace_type, fn ($q, $value) => $q->where('workplace_type', $value));
-        $query->when($request->salary_min, fn ($q, $value) => $q->where(fn ($salaryQuery) => $salaryQuery
-            ->where('salary_end', '>=', $value)
-            ->orWhere(fn ($fallback) => $fallback->whereNull('salary_end')->where('salary_start', '>=', $value))));
+        // Query-string numbers are bound as text by SQLite. Cast the bound values
+        // so annualized salary comparisons behave consistently across databases.
+        $query->when($request->salary_min, fn ($q, $value) => $q->whereRaw("{$annualMaximum} >= CAST(? AS REAL)", [$value]));
+        $query->when($request->salary_max, fn ($q, $value) => $q->whereRaw("{$annualMinimum} <= CAST(? AS REAL)", [$value]));
         $query->when($request->date_posted, fn ($q, $days) => $q->where('published_at', '>=', now()->subDays((int) $days)));
 
-        $jobs = $query->orderByDesc('published_at')->get();
+        match ($request->sort) {
+            'salary_high' => $query->orderByRaw("{$annualMaximum} DESC"),
+            'salary_low' => $query->orderByRaw("{$annualMinimum} ASC"),
+            default => $query->orderByDesc('published_at'),
+        };
+
+        $jobs = $query->get();
 
         return Inertia::render('JobSelection', [
             'jobs' => $jobs,
-            'filters' => $request->only(['keyword', 'company', 'industry', 'position_level', 'employment_type', 'location', 'workplace_type', 'salary_min', 'date_posted']),
+            'filters' => $request->only(['keyword', 'company', 'industry', 'position_level', 'employment_type', 'location', 'workplace_type', 'salary_min', 'salary_max', 'date_posted', 'view', 'sort']),
             'filterOptions' => [
                 'industries' => config('jobs.industries'),
                 'positionLevels' => config('jobs.position_levels'),
@@ -62,6 +77,7 @@ class JobSelectionController extends Controller
         return Inertia::render('JobDetail', [
             'job' => $job,
             'userApplication' => $userApplication,
+            'saved' => $job->savedBy()->where('users.id', auth()->id())->exists(),
             'resumes' => auth()->user()->resumes()->select('id', 'title')->orderByDesc('updated_at')->get(),
         ]);
     }
@@ -86,4 +102,5 @@ class JobSelectionController extends Controller
         return redirect()->route('job-selection.show', $job)->with('success', 'Application submitted successfully!');
     }
 }
+
 

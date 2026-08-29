@@ -15,9 +15,30 @@ class ResumeController extends Controller
     public function index(): Response
     {
         $resumes = auth()->user()->resumes()
+            ->with('additionalInformation')
             ->withCount(['skills', 'projects', 'educations', 'workExperiences', 'volunteerExperiences', 'leadershipActivities', 'publications', 'awardHonors', 'languages'])
             ->orderByDesc('updated_at')
-            ->get();
+            ->get()
+            ->each(function (Resume $resume) {
+                $profile = auth()->user()->profile;
+                $hasContactInformation = $profile && collect(['first_name', 'last_name', 'email', 'phone', 'city', 'country'])
+                    ->contains(fn (string $field) => filled($profile->{$field}));
+                $items = [
+                    ['label' => 'Contact information', 'complete' => (bool) $hasContactInformation, 'weight' => 20],
+                    ['label' => 'Professional summary', 'complete' => filled($resume->additionalInformation?->notes), 'weight' => 15],
+                    ['label' => 'Work experience', 'complete' => $resume->work_experiences_count > 0, 'weight' => 20],
+                    ['label' => 'Education', 'complete' => $resume->educations_count > 0, 'weight' => 15],
+                    ['label' => $resume->skills_count.' skills', 'complete' => $resume->skills_count > 0, 'weight' => 15],
+                    ['label' => $resume->projects_count.' projects', 'complete' => $resume->projects_count > 0, 'weight' => 5],
+                    ['label' => 'Certifications', 'complete' => filled($resume->additionalInformation?->certifications), 'weight' => 5],
+                    ['label' => $resume->languages_count.' languages', 'complete' => $resume->languages_count > 0, 'weight' => 3],
+                    ['label' => 'Additional achievements', 'complete' => $resume->award_honors_count + $resume->publications_count + $resume->leadership_activities_count + $resume->volunteer_experiences_count > 0, 'weight' => 2],
+                ];
+
+                $completeness = collect($items)->where('complete', true)->sum('weight');
+                $resume->setAttribute('completeness', $completeness);
+                $resume->setAttribute('completeness_items', $items);
+            });
 
         return Inertia::render('Resumes/Index', [
             'resumes' => $resumes,
@@ -133,4 +154,5 @@ class ResumeController extends Controller
         ]);
     }
 }
+
 

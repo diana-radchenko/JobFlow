@@ -78,8 +78,12 @@ test('dashboard summary uses only the current candidates real applications and i
             ->where('dashboardSummary.applications', 1)
             ->where('dashboardSummary.interviews', 1)
             ->where('dashboardSummary.resumeCompleteness', 13)
+            ->where('dashboardSummary.jobSearchProgress', 55)
             ->has('interviewSessions', 1)
-            ->where('interviewSessions.0.user_id', $candidate->id));
+            ->where('interviewSessions.0.user_id', $candidate->id)
+            ->has('applications', 1)
+            ->where('applications.0.work_job.title', $job->title)
+            ->where('applications.0.status', ApplicationStatus::Applied->value));
 });
 
 test('dashboard chooses the nearest upcoming interview and preserves its calendar timezone date', function () {
@@ -126,13 +130,92 @@ test('dashboard article catalog uses local images and provides a local fallback'
 
     $this->actingAs($user)->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('articles', 4)
+            ->has('articles', 2)
             ->where('articles.0.image', '/articles/flexible-work.svg')
             ->where('articles.0.fallback_image', '/articles/article-fallback.svg')
-            ->where('articles.0.category', 'Career planning')
-            ->where('articles.0.reading_time', '6 min read'));
+            ->where('articles.0.category', 'Future of work')
+            ->where('articles.0.url', 'https://www.weforum.org/publications/the-future-of-jobs-report-2025/')
+            ->where('articles.1.url', 'https://proximus.talent-pool.com/freelance'));
 
     expect(public_path('articles/flexible-work.svg'))->toBeFile()
         ->and(public_path('articles/article-fallback.svg'))->toBeFile();
+});
+
+test('dashboard calculates stable job search progress from real candidate milestones', function () {
+    $candidate = User::factory()->create(['name' => 'Diana Candidate']);
+    $employer = User::factory()->employer()->create();
+    $resume = Resume::create(['user_id' => $candidate->id, 'title' => 'Career Resume']);
+    $job = WorkJob::factory()->for($employer, 'employer')->create([
+        'title' => 'Application Engineer',
+        'company' => 'Flow Systems',
+        'status' => 'published',
+        'published_at' => now(),
+        'salary_start' => 80000,
+        'salary_end' => 95000,
+        'salary_currency' => 'USD',
+        'salary_period' => 'annual',
+    ]);
+    $application = UserWorkJobApplication::create([
+        'user_id' => $candidate->id,
+        'work_job_id' => $job->id,
+        'resume_id' => $resume->id,
+        'status' => ApplicationStatus::Applied,
+        'viewed_at' => now(),
+    ]);
+    $candidate->savedWorkJobs()->attach($job);
+    InterviewSession::create([
+        'user_id' => $candidate->id,
+        'employer_id' => $employer->id,
+        'resume_id' => $resume->id,
+        'work_job_id' => $job->id,
+        'application_id' => $application->id,
+        'type' => 'job_interview',
+        'complexity' => 'standard',
+        'mode' => 'scheduled',
+        'status' => 'scheduled',
+        'scheduled_at' => now()->addDay(),
+        'timezone' => 'UTC',
+    ]);
+
+    $this->actingAs($candidate)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('profileFirstName', 'Diana')
+            ->where('dashboardSummary.jobSearchProgress', 80)
+            ->where('selectedResumeSummary.title', 'Career Resume')
+            ->where('selectedResumeSummary.completeness', 13)
+            ->has('selectedResumeSummary.checklist', 4)
+            ->where('applications.0.work_job.salary_start', '80000.00')
+            ->where('applications.0.work_job.salary_currency', 'USD')
+            ->where('applications.0.status', ApplicationStatus::Applied->value)
+            ->where('jobSearchMilestones', fn ($milestones) => collect($milestones)
+                ->where('complete', true)
+                ->sum('weight') === 80));
+});
+
+test('dashboard derives next steps and recent activity from current candidate data', function () {
+    $candidate = User::factory()->create();
+    $employer = User::factory()->employer()->create();
+    $resume = Resume::create(['user_id' => $candidate->id, 'title' => 'Candidate Resume']);
+    $job = WorkJob::factory()->for($employer, 'employer')->create([
+        'title' => 'Support Engineer',
+        'company' => 'Northstar',
+        'status' => 'published',
+        'published_at' => now(),
+    ]);
+    UserWorkJobApplication::create([
+        'user_id' => $candidate->id,
+        'work_job_id' => $job->id,
+        'resume_id' => $resume->id,
+        'status' => ApplicationStatus::Applied,
+        'viewed_at' => now(),
+    ]);
+
+    $this->actingAs($candidate)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('nextSteps')
+            ->where('nextSteps.0.title', 'Improve your resume')
+            ->has('recentActivity', 2)
+            ->where('recentActivity', fn ($activity) => collect($activity)->pluck('event')->sort()->values()->all() === ['Application submitted', 'Application viewed'])
+            ->where('recentActivity.0.company', 'Northstar'));
 });
 

@@ -4,6 +4,7 @@ use App\Models\Project;
 use App\Models\Resume;
 use App\Models\Skill;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('authenticated user can create a resume', function () {
     $user = User::factory()->create();
@@ -13,6 +14,21 @@ test('authenticated user can create a resume', function () {
         ->assertRedirect();
 
     expect($user->resumes()->where('title', 'Frontend Developer')->exists())->toBeTrue();
+});
+
+test('resume index exposes weighted deterministic completeness and insights from real resume sections', function () {
+    $user = User::factory()->create();
+    $user->profile()->create(['first_name' => 'Ada', 'last_name' => 'Lovelace']);
+    $resume = $user->resumes()->create(['title' => 'Engineering Resume']);
+    $skill = Skill::create(['user_id' => $user->id, 'name' => 'PHP', 'proficiency_level' => 'expert']);
+    $resume->skills()->attach($skill->id, ['order' => 0]);
+
+    $this->actingAs($user)->get(route('resumes.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('resumes.0.completeness', 35)
+            ->where('resumes.0.completeness_items.0.label', 'Contact information')
+            ->where('resumes.0.completeness_items.0.complete', true)
+            ->where('resumes.0.completeness_items.4.complete', true));
 });
 
 test('a new resume starts populated with the user\'s current pool', function () {
@@ -106,3 +122,4 @@ test('a user can manually add a research project to a resume', function () {
 
     expect($user->projects()->where('title', 'Distributed Systems Paper')->where('type', 'research')->exists())->toBeTrue();
 });
+

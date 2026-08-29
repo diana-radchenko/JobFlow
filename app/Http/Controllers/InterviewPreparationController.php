@@ -22,6 +22,13 @@ class InterviewPreparationController extends Controller
             ->where('status', 'completed')
             ->orderBy('created_at', 'desc')
             ->paginate(3);
+        $upcomingInterviews = InterviewSession::with('workJob:id,title,company')
+            ->where('user_id', $request->user()->id)
+            ->where('status', 'scheduled')
+            ->whereNotNull('scheduled_at')
+            ->where('scheduled_at', '>', now())
+            ->orderBy('scheduled_at')
+            ->get();
 
         $resumes = $request->user()->resumes()
             ->orderByDesc('updated_at')
@@ -42,6 +49,8 @@ class InterviewPreparationController extends Controller
             'pastSessions' => Inertia::scroll($pastSessions),
             'resumes' => $resumes,
             'applications' => $applications,
+            'upcomingInterviews' => $upcomingInterviews,
         ]);
     }
 }
+

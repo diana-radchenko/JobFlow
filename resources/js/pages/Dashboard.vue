@@ -2,8 +2,6 @@
 import { Head, router } from '@inertiajs/vue3';
 import {
     Bot,
-    SlidersHorizontal,
-    ArrowDownUp,
     Sparkles,
     Heart,
     ChevronLeft,
@@ -14,6 +12,10 @@ import {
     FileCheck2,
     Target,
     Video,
+    ArrowRight,
+    Activity,
+    CheckCircle2,
+    Circle,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
@@ -28,16 +30,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { stringForHuman } from '@/helpers/strings';
 import type {
     InterviewSession,
@@ -58,6 +50,25 @@ interface DashboardSummary {
     interviews: number;
     resumeCompleteness: number | null;
     recommendedMatches: number;
+    jobSearchProgress: number;
+}
+
+interface ResumeChecklistItem {
+    label: string;
+    complete: boolean;
+}
+
+interface SelectedResumeSummary {
+    title: string;
+    completeness: number;
+    checklist: ResumeChecklistItem[];
+    href: string;
+}
+
+interface JobSearchMilestone {
+    label: string;
+    weight: number;
+    complete: boolean;
 }
 
 interface DashboardArticle {
@@ -88,6 +99,20 @@ interface RecommendationPayload {
     saved: boolean;
 }
 
+interface NextStep {
+    title: string;
+    description: string;
+    href: string;
+    action: string;
+}
+
+interface RecentActivity {
+    event: string;
+    company: string;
+    vacancy: string;
+    occurred_at: string;
+}
+
 const props = defineProps<{
     applications: UserWorkJobApplication[] | null;
     interviewSessions: InterviewSession[] | null;
@@ -96,7 +121,11 @@ const props = defineProps<{
     profileFirstName: string;
     resumes: DashboardResume[];
     selectedResumeId: number | null;
+    selectedResumeSummary: SelectedResumeSummary | null;
+    jobSearchMilestones: JobSearchMilestone[];
     recommendedJobs: RecommendationPayload[];
+    nextSteps: NextStep[];
+    recentActivity: RecentActivity[];
     articles: DashboardArticle[];
 }>();
 
@@ -117,6 +146,14 @@ const visitRequestTracker = () => {
 const prepareForInterview = () => {
     router.visit('/interview-preparation');
 };
+
+const activityTime = (value: string) =>
+    new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    }).format(new Date(value));
 
 defineOptions({
     layout: {
@@ -194,64 +231,29 @@ const tableApplications = computed(() => {
             jobId: app.work_job_id,
             title: app.work_job?.title || 'Unknown Job',
             company: app.work_job?.company || 'Unknown Company',
-            salary: app.work_job?.salary_start
-                ? Number(app.work_job.salary_start).toLocaleString()
-                : '-',
+            salary: formatApplicationSalary(app.work_job),
             status: status.label,
             statusTone: status.tone,
             statusIcon: status.icon,
         };
     });
 
-    return [...realApps];
+    return realApps.slice(0, 5);
 });
 
-const trackerStatusOptions = computed(() =>
-    Array.from(
-        new Set(tableApplications.value.map((app) => app.status)),
-    ).sort(),
-);
+const formatApplicationSalary = (job?: WorkJob | null) => {
+    if (!job?.salary_start && !job?.salary_end) {
+        return 'Not specified';
+    }
 
-const trackerStatusFilter = ref<string[]>([]);
+    const currency = job.salary_currency || 'USD';
+    const range = [job.salary_start, job.salary_end]
+        .filter(Boolean)
+        .map((value) => Number(value).toLocaleString())
+        .join(' – ');
 
-type TrackerSortOption =
-    | 'company-asc'
-    | 'company-desc'
-    | 'title-asc'
-    | 'title-desc'
-    | 'salary-asc'
-    | 'salary-desc'
-    | 'status-asc'
-    | 'status-desc';
-
-const trackerSort = ref<TrackerSortOption>('company-asc');
-
-const trackerSalaryValue = (salary: string) =>
-    Number(salary.replace(/[^0-9.-]/g, '')) || 0;
-
-const filteredSortedApplications = computed(() => {
-    const filtered = trackerStatusFilter.value.length
-        ? tableApplications.value.filter((app) =>
-              trackerStatusFilter.value.includes(app.status),
-          )
-        : tableApplications.value;
-
-    const [key, direction] = trackerSort.value.split('-') as [
-        'company' | 'title' | 'salary' | 'status',
-        'asc' | 'desc',
-    ];
-
-    const sorted = [...filtered].sort((a, b) => {
-        const result =
-            key === 'salary'
-                ? trackerSalaryValue(a.salary) - trackerSalaryValue(b.salary)
-                : a[key].localeCompare(b[key]);
-
-        return direction === 'asc' ? result : -result;
-    });
-
-    return sorted;
-});
+    return `${currency} ${range}${job.salary_period ? ` / ${stringForHuman(job.salary_period)}` : ''}`;
+};
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -296,7 +298,7 @@ const calendarDateForSession = (session: InterviewSession) => {
 };
 
 const interviewDate = (session: InterviewSession) =>
-    new Intl.DateTimeFormat(undefined, {
+    new Intl.DateTimeFormat('en-US', {
         timeZone: session.timezone ?? 'UTC',
         month: 'long',
         day: 'numeric',
@@ -304,7 +306,7 @@ const interviewDate = (session: InterviewSession) =>
     }).format(new Date(session.scheduled_at!));
 
 const interviewTime = (session: InterviewSession) =>
-    new Intl.DateTimeFormat(undefined, {
+    new Intl.DateTimeFormat('en-US', {
         timeZone: session.timezone ?? 'UTC',
         hour: 'numeric',
         minute: '2-digit',
@@ -422,7 +424,7 @@ const yearMonths = computed(() => {
 
         return {
             date,
-            label: date.toLocaleDateString(undefined, { month: 'short' }),
+            label: date.toLocaleDateString('en-US', { month: 'short' }),
             active: today.getFullYear() === year && today.getMonth() === month,
             hasEvent,
         };
@@ -431,7 +433,7 @@ const yearMonths = computed(() => {
 
 const periodLabel = computed(() => {
     if (viewMode.value === 'month') {
-        return monthStart.value.toLocaleDateString(undefined, {
+        return monthStart.value.toLocaleDateString('en-US', {
             month: 'long',
             year: 'numeric',
         });
@@ -443,12 +445,12 @@ const periodLabel = computed(() => {
 
     const start = weekDays.value[0].date;
     const end = weekDays.value[6].date;
-    const startLabel = start.toLocaleDateString(undefined, {
+    const startLabel = start.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
     });
     const endLabel = end.toLocaleDateString(
-        undefined,
+        'en-US',
         start.getMonth() === end.getMonth()
             ? { day: 'numeric', year: 'numeric' }
             : { month: 'short', day: 'numeric', year: 'numeric' },
@@ -543,32 +545,38 @@ const interviewTooltip = (date: Date) =>
         .join('\n\n');
 
 const recommendedJobs = computed(() =>
-    props.recommendedJobs.map(({ job, score, criteria, strong_matches, gaps, applied, saved }) => ({
-        id: job.id,
-        url: jobSelectionShow(job.id).url,
-        company: job.company,
-        logoText: job.company.slice(0, 2).toUpperCase(),
-        title: job.title,
-        salary: job.salary_start
-            ? `$${Number(job.salary_start).toLocaleString()}`
-            : 'Salary not specified',
-        tags: (job.technologies ?? []).map(String).slice(0, 3),
-        recommendationScore: score,
-        criteria,
-        strongMatches: strong_matches,
-        gaps,
-        applied,
-        saved,
-        location: job.location,
-        workplaceType: job.workplace_type,
-    })),
+    props.recommendedJobs.map(
+        ({ job, score, criteria, strong_matches, gaps, applied, saved }) => ({
+            id: job.id,
+            url: jobSelectionShow(job.id).url,
+            company: job.company,
+            logoText: job.company.slice(0, 2).toUpperCase(),
+            title: job.title,
+            salary: job.salary_start
+                ? `$${Number(job.salary_start).toLocaleString()}`
+                : 'Salary not specified',
+            tags: (job.technologies ?? []).map(String).slice(0, 3),
+            recommendationScore: score,
+            criteria,
+            strongMatches: strong_matches,
+            gaps,
+            applied,
+            saved,
+            location: job.location,
+            workplaceType: job.workplace_type,
+        }),
+    ),
 );
 
 type RecommendedJob = (typeof recommendedJobs.value)[number];
 
 const selectRecommendationResume = (event: Event) => {
     const resumeId = Number((event.target as HTMLSelectElement).value);
-    router.get(dashboard().url, { resume_id: resumeId }, { preserveState: true, preserveScroll: true });
+    router.get(
+        dashboard().url,
+        { resume_id: resumeId },
+        { preserveState: true, preserveScroll: true },
+    );
 };
 
 const applyToRecommendedJob = (job: RecommendedJob) => {
@@ -576,7 +584,11 @@ const applyToRecommendedJob = (job: RecommendedJob) => {
         return;
     }
 
-    router.post(`/job-selection/${job.id}/apply`, { resume_id: props.selectedResumeId }, { preserveScroll: true });
+    router.post(
+        `/job-selection/${job.id}/apply`,
+        { resume_id: props.selectedResumeId },
+        { preserveScroll: true },
+    );
 };
 
 const toggleSavedJob = (job: RecommendedJob) => {
@@ -612,7 +624,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
     <Head title="Dashboard" />
 
     <div class="container mx-auto max-w-[1400px] px-5 py-8 font-sans">
-        <div class="mb-6 flex items-center gap-3">
+        <div class="mb-4 flex items-center gap-3">
             <div
                 class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800"
             >
@@ -624,6 +636,53 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 Welcome back, {{ props.profileFirstName }}!
             </h1>
         </div>
+
+        <Card class="mb-6 border-slate-200/70 shadow-sm dark:border-slate-800">
+            <CardContent class="p-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p
+                            class="text-sm font-semibold text-slate-600 dark:text-slate-300"
+                        >
+                            Job Search Progress
+                        </p>
+                        <p class="mt-1 text-2xl font-extrabold">
+                            {{ dashboardSummary.jobSearchProgress }}%
+                        </p>
+                    </div>
+                    <a
+                        href="#next-steps"
+                        class="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline"
+                    >
+                        View next steps <ArrowRight class="h-4 w-4" />
+                    </a>
+                </div>
+                <div
+                    class="mt-4 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+                    role="progressbar"
+                    aria-label="Job search progress"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    :aria-valuenow="dashboardSummary.jobSearchProgress"
+                >
+                    <div
+                        class="h-full rounded-full bg-primary transition-[width]"
+                        :style="{
+                            width: `${dashboardSummary.jobSearchProgress}%`,
+                        }"
+                    ></div>
+                </div>
+                <p class="mt-2 text-xs text-slate-500">
+                    Based on
+                    {{
+                        jobSearchMilestones.filter((item) => item.complete)
+                            .length
+                    }}
+                    of {{ jobSearchMilestones.length }} real job-search
+                    milestones completed.
+                </p>
+            </CardContent>
+        </Card>
 
         <section
             aria-label="Job search summary"
@@ -751,6 +810,189 @@ const useArticleFallback = (event: Event, fallback: string) => {
             </CardContent>
         </Card>
 
+        <Card
+            v-else
+            class="mb-6 border-dashed border-amber-200 shadow-none dark:border-amber-900/60"
+        >
+            <CardContent
+                class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+            >
+                <div class="flex items-center gap-3">
+                    <CalendarDays class="h-8 w-8 text-amber-600" />
+                    <div>
+                        <h2 class="font-bold">No upcoming interviews</h2>
+                        <p class="text-sm text-slate-500">
+                            When an employer schedules an interview, it will
+                            appear here automatically.
+                        </p>
+                    </div>
+                </div>
+                <Button variant="outline" @click="prepareForInterview"
+                    ><Sparkles class="mr-2 h-4 w-4" />Practice with AI</Button
+                >
+            </CardContent>
+        </Card>
+
+        <section class="mb-6 grid gap-6 lg:grid-cols-3">
+            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
+                <CardContent id="next-steps" class="scroll-mt-6 p-5">
+                    <h2 class="mb-4 text-lg font-bold">Your Next Steps</h2>
+                    <div class="space-y-3">
+                        <button
+                            v-for="step in nextSteps"
+                            :key="step.title"
+                            type="button"
+                            class="flex w-full items-center justify-between gap-4 rounded-xl border p-3 text-left transition hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-slate-900"
+                            @click="router.visit(step.href)"
+                        >
+                            <span
+                                ><strong class="block text-sm">{{
+                                    step.title
+                                }}</strong
+                                ><span class="text-xs text-slate-500">{{
+                                    step.description
+                                }}</span></span
+                            >
+                            <span
+                                class="flex shrink-0 items-center gap-1 text-xs font-bold text-primary"
+                                >{{ step.action
+                                }}<ArrowRight class="h-3.5 w-3.5"
+                            /></span>
+                        </button>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
+                <CardContent class="p-5">
+                    <div class="mb-4 flex items-center gap-2">
+                        <FileCheck2 class="h-5 w-5 text-emerald-600" />
+                        <h2 class="text-lg font-bold">Resume Status</h2>
+                    </div>
+                    <div v-if="selectedResumeSummary">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="font-bold">
+                                    {{ selectedResumeSummary.title }}
+                                </p>
+                                <p class="mt-1 text-sm text-slate-500">
+                                    Resume Completeness:
+                                    <strong
+                                        >{{
+                                            selectedResumeSummary.completeness
+                                        }}%</strong
+                                    >
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-4 space-y-2">
+                            <div
+                                v-for="item in selectedResumeSummary.checklist"
+                                :key="item.label"
+                                class="flex items-center gap-2 text-sm"
+                            >
+                                <CheckCircle2
+                                    v-if="item.complete"
+                                    class="h-4 w-4 text-emerald-600"
+                                />
+                                <Circle v-else class="h-4 w-4 text-amber-600" />
+                                <span
+                                    :class="!item.complete && 'font-semibold'"
+                                >
+                                    {{
+                                        item.complete
+                                            ? item.label
+                                            : item.label.replace(
+                                                  ' added',
+                                                  ' — add this',
+                                              )
+                                    }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                @click="
+                                    router.visit(selectedResumeSummary.href)
+                                "
+                                >Open Resume</Button
+                            >
+                            <Button
+                                size="sm"
+                                @click="
+                                    router.visit(selectedResumeSummary.href)
+                                "
+                                >Improve Resume</Button
+                            >
+                        </div>
+                    </div>
+                    <div
+                        v-else
+                        class="rounded-xl border border-dashed p-4 text-center"
+                    >
+                        <p class="font-semibold">No resume yet</p>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Create a resume to track completeness and unlock job
+                            matching.
+                        </p>
+                        <Button
+                            class="mt-3"
+                            size="sm"
+                            @click="router.visit('/resumes')"
+                        >
+                            Create Resume
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card class="border-slate-200/70 shadow-sm dark:border-slate-800">
+                <CardContent class="p-5">
+                    <div class="mb-4 flex items-center gap-2">
+                        <Activity class="h-5 w-5 text-primary" />
+                        <h2 class="text-lg font-bold">Recent Activity</h2>
+                    </div>
+                    <div
+                        v-if="recentActivity.length"
+                        class="divide-y dark:divide-slate-800"
+                    >
+                        <div
+                            v-for="item in recentActivity"
+                            :key="`${item.event}-${item.occurred_at}`"
+                            class="py-3 first:pt-0 last:pb-0"
+                        >
+                            <div class="flex items-start justify-between gap-3">
+                                <strong class="text-sm">{{ item.event }}</strong
+                                ><time
+                                    class="shrink-0 text-xs text-slate-500"
+                                    >{{ activityTime(item.occurred_at) }}</time
+                                >
+                            </div>
+                            <p class="mt-1 text-xs text-slate-500">
+                                {{ item.company }} · {{ item.vacancy }}
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        v-else
+                        class="rounded-xl border border-dashed p-5 text-center"
+                    >
+                        <p class="font-semibold">No activity yet</p>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Applications and employer updates will appear here.
+                        </p>
+                        <Button
+                            class="mt-3"
+                            size="sm"
+                            variant="outline"
+                            @click="router.visit('/job-selection')"
+                            >Browse Jobs</Button
+                        >
+                    </div>
+                </CardContent>
+            </Card>
+        </section>
+
         <div
             class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)]"
         >
@@ -763,6 +1005,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 </h2>
 
                 <Card
+                    v-if="scheduledInterviews.length"
                     class="overflow-hidden rounded-[24px] border-0 bg-slate-50 shadow-sm dark:bg-slate-900"
                 >
                     <CardContent class="p-0">
@@ -1004,122 +1247,41 @@ const useArticleFallback = (event: Event, fallback: string) => {
                         </div>
                     </CardContent>
                 </Card>
+                <Card v-else class="rounded-[24px] border-dashed shadow-none">
+                    <CardContent class="p-6 text-center">
+                        <CalendarDays
+                            class="mx-auto mb-3 h-8 w-8 text-slate-400"
+                        />
+                        <p class="font-semibold">Your calendar is clear</p>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Upcoming employer interviews will be added
+                            automatically.
+                        </p>
+                    </CardContent>
+                </Card>
             </div>
 
             <!-- Right Column -->
             <div class="space-y-6">
                 <!-- Application Tracker -->
                 <div>
-                    <div class="mt-2 mb-4 flex items-center justify-between">
+                    <div
+                        class="mt-2 mb-4 flex items-center justify-between gap-4"
+                    >
+                        <div>
+                            <h2
+                                class="text-xl font-bold text-slate-900 dark:text-slate-100"
+                            >
+                                Application Tracker
+                            </h2>
+                        </div>
                         <button
                             type="button"
+                            class="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline"
                             @click="visitRequestTracker"
-                            class="cursor-pointer rounded-lg px-2 py-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
                         >
-                            <h2
-                                class="text-xl font-bold text-slate-900 hover:text-primary dark:text-slate-100"
-                            >
-                                Application Tracker (Update)
-                            </h2>
+                            View all applications <ArrowRight class="h-4 w-4" />
                         </button>
-                        <div class="flex gap-2">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger as-child>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        class="h-9 w-9 rounded-full border-0 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground"
-                                    >
-                                        <SlidersHorizontal class="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel
-                                        >Filter by status</DropdownMenuLabel
-                                    >
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuCheckboxItem
-                                        v-for="status in trackerStatusOptions"
-                                        :key="status"
-                                        :checked="
-                                            trackerStatusFilter.includes(status)
-                                        "
-                                        @update:checked="
-                                            (checked: boolean) => {
-                                                trackerStatusFilter = checked
-                                                    ? [
-                                                          ...trackerStatusFilter,
-                                                          status,
-                                                      ]
-                                                    : trackerStatusFilter.filter(
-                                                          (s) => s !== status,
-                                                      );
-                                            }
-                                        "
-                                    >
-                                        {{ status }}
-                                    </DropdownMenuCheckboxItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger as-child>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        class="h-9 w-9 rounded-full border-0 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground"
-                                    >
-                                        <ArrowDownUp class="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel
-                                        >Sort by</DropdownMenuLabel
-                                    >
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuRadioGroup
-                                        v-model="trackerSort"
-                                    >
-                                        <DropdownMenuRadioItem
-                                            value="company-asc"
-                                            >Company
-                                            (A-Z)</DropdownMenuRadioItem
-                                        >
-                                        <DropdownMenuRadioItem
-                                            value="company-desc"
-                                            >Company
-                                            (Z-A)</DropdownMenuRadioItem
-                                        >
-                                        <DropdownMenuRadioItem value="title-asc"
-                                            >Job Title
-                                            (A-Z)</DropdownMenuRadioItem
-                                        >
-                                        <DropdownMenuRadioItem
-                                            value="title-desc"
-                                            >Job Title
-                                            (Z-A)</DropdownMenuRadioItem
-                                        >
-                                        <DropdownMenuRadioItem
-                                            value="salary-desc"
-                                            >Salary
-                                            (High-Low)</DropdownMenuRadioItem
-                                        >
-                                        <DropdownMenuRadioItem
-                                            value="salary-asc"
-                                            >Salary
-                                            (Low-High)</DropdownMenuRadioItem
-                                        >
-                                        <DropdownMenuRadioItem
-                                            value="status-asc"
-                                            >Status (A-Z)</DropdownMenuRadioItem
-                                        >
-                                        <DropdownMenuRadioItem
-                                            value="status-desc"
-                                            >Status (Z-A)</DropdownMenuRadioItem
-                                        >
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
                     </div>
 
                     <Card
@@ -1142,7 +1304,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                         <th
                                             class="px-6 py-4 font-bold whitespace-nowrap text-slate-900 dark:text-slate-100"
                                         >
-                                            Salary (USD)
+                                            Salary
                                         </th>
                                         <th
                                             class="px-6 py-4 text-right font-bold whitespace-nowrap text-slate-900 dark:text-slate-100"
@@ -1161,7 +1323,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                     class="divide-y divide-white dark:divide-slate-800"
                                 >
                                     <tr
-                                        v-for="app in filteredSortedApplications"
+                                        v-for="app in tableApplications"
                                         :key="app.id"
                                         @click="visitJob(app)"
                                         :class="
@@ -1210,6 +1372,33 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                             </div>
                                         </td>
                                     </tr>
+                                    <tr v-if="tableApplications.length === 0">
+                                        <td
+                                            colspan="4"
+                                            class="px-6 py-8 text-center"
+                                        >
+                                            <p class="font-semibold">
+                                                No applications yet
+                                            </p>
+                                            <p
+                                                class="mt-1 text-sm text-slate-500"
+                                            >
+                                                Applications you submit will
+                                                appear here.
+                                            </p>
+                                            <Button
+                                                class="mt-3"
+                                                size="sm"
+                                                variant="outline"
+                                                @click="
+                                                    router.visit(
+                                                        '/job-selection',
+                                                    )
+                                                "
+                                                >Browse Jobs</Button
+                                            >
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1220,9 +1409,15 @@ const useArticleFallback = (event: Event, fallback: string) => {
                 <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                     <!-- AI Recommended Jobs -->
                     <div>
-                        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                        <div
+                            class="mb-4 flex flex-wrap items-center justify-between gap-3"
+                        >
                             <div class="flex items-center gap-2">
-                                <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">AI-Recommended Jobs for You</h2>
+                                <h2
+                                    class="text-lg font-bold text-slate-900 dark:text-slate-100"
+                                >
+                                    AI-Recommended Jobs for You
+                                </h2>
                                 <Sparkles class="h-5 w-5 text-primary" />
                             </div>
                             <select
@@ -1232,18 +1427,37 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                 class="rounded-lg border bg-background px-3 py-2 text-sm font-semibold"
                                 @change="selectRecommendationResume"
                             >
-                                <option v-for="resume in resumes" :key="resume.id" :value="resume.id">{{ resume.title }}</option>
+                                <option
+                                    v-for="resume in resumes"
+                                    :key="resume.id"
+                                    :value="resume.id"
+                                >
+                                    {{ resume.title }}
+                                </option>
                             </select>
                         </div>
                         <div class="space-y-4">
-                            <p
+                            <div
                                 v-if="recommendedJobs.length === 0"
-                                class="rounded-2xl border border-dashed p-5 text-sm text-slate-500"
+                                class="rounded-2xl border border-dashed p-5 text-center text-sm text-slate-500"
                             >
-                                No published employer vacancies are available
-                                yet. Recommendations will appear here when
-                                employers publish matching jobs.
-                            </p>
+                                <p
+                                    class="font-semibold text-slate-700 dark:text-slate-200"
+                                >
+                                    No matching jobs yet
+                                </p>
+                                <p class="mt-1">
+                                    Complete or update your resume to improve
+                                    your job recommendations.
+                                </p>
+                                <Button
+                                    class="mt-3"
+                                    size="sm"
+                                    variant="outline"
+                                    @click="router.visit('/resumes')"
+                                    >Update Resume</Button
+                                >
+                            </div>
                             <Card
                                 v-for="job in recommendedJobs"
                                 :key="job.id"
@@ -1263,41 +1477,125 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                             >
                                                 {{ job.title }}
                                             </a>
-                                            <p class="mt-1 text-sm font-medium text-slate-500">{{ job.company }}</p>
+                                            <p
+                                                class="mt-1 text-sm font-medium text-slate-500"
+                                            >
+                                                {{ job.company }}
+                                            </p>
                                         </div>
-                                        <Button variant="ghost" size="icon" :title="job.saved ? 'Remove saved job' : 'Save job'" @click="toggleSavedJob(job)">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            :title="
+                                                job.saved
+                                                    ? 'Remove saved job'
+                                                    : 'Save job'
+                                            "
+                                            @click="toggleSavedJob(job)"
+                                        >
                                             <Heart class="h-4 w-4" />
                                         </Button>
                                     </div>
 
-                                    <div class="mb-4 flex flex-wrap gap-2 text-xs">
-                                        <Badge>{{ job.recommendationScore }}% match</Badge>
-                                        <Badge variant="outline">{{ job.salary }}</Badge>
-                                        <Badge v-if="job.location" variant="outline">{{ job.location }}</Badge>
-                                        <Badge v-if="job.workplaceType" variant="outline">{{ job.workplaceType }}</Badge>
+                                    <div
+                                        class="mb-4 flex flex-wrap gap-2 text-xs"
+                                    >
+                                        <Badge
+                                            >{{ job.recommendationScore }}%
+                                            match</Badge
+                                        >
+                                        <Badge variant="outline">{{
+                                            job.salary
+                                        }}</Badge>
+                                        <Badge
+                                            v-if="job.location"
+                                            variant="outline"
+                                            >{{ job.location }}</Badge
+                                        >
+                                        <Badge
+                                            v-if="job.workplaceType"
+                                            variant="outline"
+                                            >{{ job.workplaceType }}</Badge
+                                        >
                                     </div>
 
-                                    <div v-if="job.strongMatches.length" class="mb-3 text-xs text-emerald-700 dark:text-emerald-300">
-                                        <p v-for="match in job.strongMatches.slice(0, 2)" :key="match">✓ {{ match }}</p>
+                                    <div
+                                        v-if="job.strongMatches.length"
+                                        class="mb-3 text-xs text-emerald-700 dark:text-emerald-300"
+                                    >
+                                        <p
+                                            v-for="match in job.strongMatches.slice(
+                                                0,
+                                                2,
+                                            )"
+                                            :key="match"
+                                        >
+                                            ✓ {{ match }}
+                                        </p>
                                     </div>
-                                    <div v-if="job.gaps.length" class="mb-4 text-xs text-amber-700 dark:text-amber-300">
-                                        <p v-for="gap in job.gaps.slice(0, 1)" :key="gap">△ {{ gap }}</p>
+                                    <div
+                                        v-if="job.gaps.length"
+                                        class="mb-4 text-xs text-amber-700 dark:text-amber-300"
+                                    >
+                                        <p
+                                            v-for="gap in job.gaps.slice(0, 1)"
+                                            :key="gap"
+                                        >
+                                            △ {{ gap }}
+                                        </p>
                                     </div>
 
                                     <div class="flex flex-wrap gap-2">
-                                        <Button variant="outline" size="sm" @click="showRecommendationExplanation(job)">Why this matches</Button>
-                                        <Button variant="outline" size="sm" @click="router.visit(job.url)">View vacancy</Button>
-                                        <Button size="sm" :disabled="job.applied || !selectedResumeId" @click="applyToRecommendedJob(job)">
-                                            {{ job.applied ? 'Applied' : 'Apply' }}
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            @click="
+                                                showRecommendationExplanation(
+                                                    job,
+                                                )
+                                            "
+                                            >Why this matches</Button
+                                        >
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            @click="router.visit(job.url)"
+                                            >View vacancy</Button
+                                        >
+                                        <Button
+                                            size="sm"
+                                            :disabled="
+                                                job.applied || !selectedResumeId
+                                            "
+                                            @click="applyToRecommendedJob(job)"
+                                        >
+                                            {{
+                                                job.applied
+                                                    ? 'Applied'
+                                                    : 'Apply'
+                                            }}
                                         </Button>
-                                        <Button variant="ghost" size="sm" @click="toggleSavedJob(job)">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            @click="toggleSavedJob(job)"
+                                        >
                                             {{ job.saved ? 'Saved' : 'Save' }}
                                         </Button>
                                     </div>
 
-                                    <div class="mt-4 rounded-xl border border-slate-100 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-950">
-                                        <div v-for="criterion in job.criteria" :key="criterion.label" class="flex justify-between gap-3 py-1">
-                                            <span>{{ criterion.label }}</span><strong>{{ criterion.score }}%</strong>
+                                    <div
+                                        class="mt-4 rounded-xl border border-slate-100 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-950"
+                                    >
+                                        <div
+                                            v-for="criterion in job.criteria"
+                                            :key="criterion.label"
+                                            class="flex justify-between gap-3 py-1"
+                                        >
+                                            <span>{{ criterion.label }}</span
+                                            ><strong
+                                                >{{ criterion.score }}%</strong
+                                            >
                                         </div>
                                     </div>
                                 </CardContent>
@@ -1380,25 +1678,53 @@ const useArticleFallback = (event: Event, fallback: string) => {
         >
             <DialogContent class="sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>{{ recommendationsJob?.recommendationScore }}% Overall Match</DialogTitle>
+                    <DialogTitle
+                        >{{ recommendationsJob?.recommendationScore }}% Overall
+                        Match</DialogTitle
+                    >
                     <DialogDescription>
-                        Calculated from the selected resume and real vacancy fields.
+                        Calculated from the selected resume and real vacancy
+                        fields.
                     </DialogDescription>
                 </DialogHeader>
                 <div class="max-h-[60vh] space-y-4 overflow-y-auto">
-                    <div v-for="criterion in recommendationsJob?.criteria" :key="criterion.label" class="rounded-lg border p-3">
-                        <div class="flex justify-between gap-3 text-sm font-bold">
-                            <span>{{ criterion.label }}</span><span>{{ criterion.score }}%</span>
+                    <div
+                        v-for="criterion in recommendationsJob?.criteria"
+                        :key="criterion.label"
+                        class="rounded-lg border p-3"
+                    >
+                        <div
+                            class="flex justify-between gap-3 text-sm font-bold"
+                        >
+                            <span>{{ criterion.label }}</span
+                            ><span>{{ criterion.score }}%</span>
                         </div>
-                        <p v-if="criterion.matches?.length" class="mt-1 text-xs text-muted-foreground">{{ criterion.matches.join(', ') }}</p>
+                        <p
+                            v-if="criterion.matches?.length"
+                            class="mt-1 text-xs text-muted-foreground"
+                        >
+                            {{ criterion.matches.join(', ') }}
+                        </p>
                     </div>
                     <div v-if="recommendationsJob?.strongMatches.length">
                         <h4 class="mb-1 text-sm font-bold">Strong matches</h4>
-                        <p v-for="item in recommendationsJob.strongMatches" :key="item" class="text-sm text-emerald-700">✓ {{ item }}</p>
+                        <p
+                            v-for="item in recommendationsJob.strongMatches"
+                            :key="item"
+                            class="text-sm text-emerald-700"
+                        >
+                            ✓ {{ item }}
+                        </p>
                     </div>
                     <div v-if="recommendationsJob?.gaps.length">
                         <h4 class="mb-1 text-sm font-bold">Potential gaps</h4>
-                        <p v-for="item in recommendationsJob.gaps" :key="item" class="text-sm text-amber-700">△ {{ item }}</p>
+                        <p
+                            v-for="item in recommendationsJob.gaps"
+                            :key="item"
+                            class="text-sm text-amber-700"
+                        >
+                            △ {{ item }}
+                        </p>
                     </div>
                 </div>
                 <DialogFooter>
@@ -1410,3 +1736,4 @@ const useArticleFallback = (event: Event, fallback: string) => {
         </Dialog>
     </div>
 </template>
+

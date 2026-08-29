@@ -1,7 +1,9 @@
 <?php
 
+use App\Enums\ApplicationStatus;
 use App\Models\Resume;
 use App\Models\User;
+use App\Models\UserWorkJobApplication;
 use App\Models\WorkJob;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -121,6 +123,47 @@ test('unpublished and platform vacancies are excluded', function () {
         ->assertInertia(fn (Assert $page) => $page->has('jobs', 1)->where('jobs.0.id', $published->id));
 });
 
+test('saved and applied views use the existing candidate relationships', function () {
+    $candidate = User::factory()->create();
+    $resume = Resume::create(['user_id' => $candidate->id, 'title' => 'Primary Resume']);
+    $saved = selectableJob(['title' => 'Saved Role']);
+    $applied = selectableJob(['title' => 'Applied Role']);
+    selectableJob(['title' => 'Other Role']);
+    $candidate->savedWorkJobs()->attach($saved->id);
+    UserWorkJobApplication::create([
+        'user_id' => $candidate->id,
+        'work_job_id' => $applied->id,
+        'resume_id' => $resume->id,
+        'status' => ApplicationStatus::Applied,
+    ]);
+
+    $this->actingAs($candidate)->get(route('job-selection', ['view' => 'saved']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('jobs', 1)
+            ->where('jobs.0.id', $saved->id)
+            ->where('jobs.0.saved', true));
+
+    $this->actingAs($candidate)->get(route('job-selection', ['view' => 'applied']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('jobs', 1)
+            ->where('jobs.0.id', $applied->id)
+            ->where('jobs.0.applied', true));
+});
+
+test('annual salary range normalizes hourly and monthly vacancies before filtering', function () {
+    $candidate = User::factory()->create();
+    $hourly = selectableJob(['title' => 'Hourly Role', 'salary_start' => 25, 'salary_end' => 30, 'salary_period' => 'hourly']);
+    $monthly = selectableJob(['title' => 'Monthly Role', 'salary_start' => 9000, 'salary_end' => 10000, 'salary_period' => 'monthly']);
+
+    $this->actingAs($candidate)->get(route('job-selection', ['salary_min' => 50000, 'salary_max' => 70000]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('jobs', fn ($jobs) => collect($jobs)->pluck('id')->all() === [$hourly->id]));
+
+    $this->actingAs($candidate)->get(route('job-selection', ['sort' => 'salary_high']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('jobs', fn ($jobs) => collect($jobs)->pluck('id')->take(2)->all() === [$monthly->id, $hourly->id]));
+});
+
 test('a candidate can apply to a job with one of their resumes', function () {
     $user = User::factory()->create();
     $resume = Resume::create(['user_id' => $user->id, 'title' => 'My Resume']);
@@ -152,3 +195,4 @@ test('a candidate cannot apply with another user\'s resume', function () {
         ->post(route('job-selection.apply', $job), ['resume_id' => $otherResume->id])
         ->assertSessionHasErrors('resume_id');
 });
+
