@@ -331,7 +331,7 @@ const formatDate = (date: string) =>
 
                 <Card
                     v-if="selectedResume"
-                    class="h-fit border-blue-100 bg-blue-50/50 shadow-sm lg:sticky lg:top-6 dark:border-slate-800 dark:bg-slate-900"
+                    class="h-fit border-[#0B315B] bg-[#061E3A] text-white shadow-sm lg:sticky lg:top-6"
                 >
                     <CardHeader>
                         <CardTitle class="text-xl font-bold"
@@ -347,15 +347,15 @@ const formatDate = (date: string) =>
                                 class="flex items-center justify-between font-bold"
                             >
                                 <span>Resume Completeness</span>
-                                <span class="text-xl text-primary"
+                                <span class="text-xl text-sky-200"
                                     >{{ selectedResume.completeness }}%</span
                                 >
                             </div>
                             <div
-                                class="mt-2 h-2 overflow-hidden rounded-full bg-muted"
+                                class="mt-2 h-2 overflow-hidden rounded-full bg-white/15"
                             >
                                 <div
-                                    class="h-full rounded-full bg-primary"
+                                    class="h-full rounded-full bg-blue-400"
                                     :style="{
                                         width: `${selectedResume.completeness}%`,
                                     }"
