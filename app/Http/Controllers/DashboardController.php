@@ -67,10 +67,10 @@ class DashboardController extends Controller
 
     /**
      * @param  Collection<int, UserWorkJobApplication>  $applications
-     * @param  array<int, mixed>  $recommendedJobs
+     * @param  Collection<int, mixed>  $recommendedJobs
      * @return array<int, array{title: string, description: string, href: string, action: string}>
      */
-    private function nextSteps(?Resume $resume, Collection $applications, ?InterviewSession $nextInterview, array $recommendedJobs): array
+    private function nextSteps(?Resume $resume, Collection $applications, ?InterviewSession $nextInterview, Collection $recommendedJobs): array
     {
         $steps = collect();
         $completeness = $this->resumeCompleteness($resume);
@@ -85,7 +85,7 @@ class DashboardController extends Controller
             $steps->push(['title' => 'Prepare for your upcoming interview', 'description' => $nextInterview->workJob?->title ?? 'Scheduled employer interview', 'href' => route('interview-preparation'), 'action' => 'Practice with AI']);
         }
 
-        if ($recommendedJobs !== []) {
+        if ($recommendedJobs->isNotEmpty()) {
             $steps->push(['title' => 'Review matching jobs', 'description' => count($recommendedJobs).' published vacancies match your resume.', 'href' => route('job-selection'), 'action' => 'Browse Matches']);
         } elseif ($applications->isEmpty()) {
             $steps->push(['title' => 'Start your job search', 'description' => 'Browse real vacancies published by employers.', 'href' => route('job-selection'), 'action' => 'Browse Jobs']);
