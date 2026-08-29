@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { BookOpen, Clock, Heart, Search } from 'lucide-vue-next';
+import { ArrowUpRight, BookOpen, Clock, Heart, Search } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,8 @@ const resources = ref([
         category: 'Labor Market' as Category,
         source: 'World Economic Forum',
         readingMinutes: 20,
-        image: '/articles/flexible-work.svg',
+        brand: 'WEF',
+        brandClass: 'bg-[#0B315B] text-white',
         url: 'https://www.weforum.org/publications/the-future-of-jobs-report-2025/',
         favorite: false,
     },
@@ -35,7 +36,8 @@ const resources = ref([
         category: 'Job Search' as Category,
         source: 'AARP',
         readingMinutes: 12,
-        image: '/articles/career-pivot.svg',
+        brand: 'AARP',
+        brandClass: 'bg-red-50 text-red-800',
         url: 'https://www.aarp.org/work/job-search/in-demand-job-fields-workers-over-50/',
         favorite: false,
     },
@@ -47,7 +49,8 @@ const resources = ref([
         category: 'Job Search' as Category,
         source: 'Proximus',
         readingMinutes: 5,
-        image: '/articles/freelance-career.svg',
+        brand: 'PROXIMUS',
+        brandClass: 'bg-blue-50 text-[#0B315B]',
         url: 'https://proximus.talent-pool.com/freelance',
         favorite: false,
     },
@@ -59,7 +62,8 @@ const resources = ref([
         category: 'Career Skills' as Category,
         source: 'Daniel Goleman',
         readingMinutes: 7,
-        image: '/articles/graduate-internship.svg',
+        brand: 'EI',
+        brandClass: 'bg-amber-50 text-amber-900',
         url: 'https://danielgolemanemotionalintelligence.com/iq-or-ei-you-need-both/',
         favorite: false,
     },
@@ -71,7 +75,8 @@ const resources = ref([
         category: 'AI & Hiring' as Category,
         source: 'Harvard Business Review',
         readingMinutes: 6,
-        image: '/articles/flexible-work.svg',
+        brand: 'HBR',
+        brandClass: 'bg-slate-950 text-white',
         url: 'https://hbr.org/2025/02/how-to-get-hired-when-ai-does-the-screening',
         favorite: false,
     },
@@ -83,7 +88,8 @@ const resources = ref([
         category: 'Career Skills' as Category,
         source: 'LinkedIn',
         readingMinutes: 5,
-        image: '/articles/career-pivot.svg',
+        brand: 'in',
+        brandClass: 'bg-[#0A66C2] text-white',
         url: 'https://www.linkedin.com/business/talent/blog/learning-and-development/skills-on-the-rise',
         favorite: false,
     },
@@ -201,16 +207,19 @@ defineOptions({
                         :key="resource.id"
                         class="overflow-hidden border-slate-200/70 bg-white py-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
                     >
-                        <img
-                            :src="resource.image"
-                            :alt="`${resource.title} cover`"
-                            class="h-44 w-full object-cover"
-                            loading="lazy"
-                            @error="
-                                ($event.currentTarget as HTMLImageElement).src =
-                                    '/articles/article-fallback.svg'
-                            "
-                        />
+                        <div
+                            class="flex h-44 flex-col items-center justify-center border-b border-black/5 px-6 text-center"
+                            :class="resource.brandClass"
+                            :aria-label="`${resource.source} article`"
+                        >
+                            <span class="text-3xl font-black tracking-tight">{{
+                                resource.brand
+                            }}</span>
+                            <span
+                                class="mt-2 text-xs font-bold tracking-[0.18em] uppercase opacity-75"
+                                >{{ resource.source }}</span
+                            >
+                        </div>
                         <CardContent class="space-y-3 p-5">
                             <div
                                 class="flex items-center justify-between gap-3"
@@ -241,8 +250,8 @@ defineOptions({
                                         :href="resource.url"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        >Open / Read</a
-                                    ></Button
+                                        >Read article<ArrowUpRight
+                                            class="ml-1.5 h-4 w-4" /></a></Button
                                 ><Button
                                     type="button"
                                     size="icon"
@@ -297,4 +306,3 @@ defineOptions({
     padding: 0.5rem 0.75rem;
 }
 </style>
-

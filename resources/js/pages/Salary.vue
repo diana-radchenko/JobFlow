@@ -253,6 +253,52 @@ defineOptions({
                 </CardContent>
             </Card>
 
+            <Card
+                v-if="!comparison"
+                class="border-blue-100 bg-blue-50/60 shadow-none dark:border-blue-950 dark:bg-blue-950/20"
+            >
+                <CardContent
+                    class="grid gap-5 p-5 md:grid-cols-[auto_1fr] md:items-start"
+                >
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-primary shadow-sm dark:bg-slate-900"
+                    >
+                        <BarChart3 class="h-5 w-5" />
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-slate-900 dark:text-white">
+                            How salary comparison works
+                        </h2>
+                        <ol
+                            class="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-3 dark:text-slate-300"
+                        >
+                            <li>
+                                <strong class="text-slate-900 dark:text-white"
+                                    >1.</strong
+                                >
+                                Choose an application or describe your role.
+                            </li>
+                            <li>
+                                <strong class="text-slate-900 dark:text-white"
+                                    >2.</strong
+                                >
+                                We find comparable published vacancies.
+                            </li>
+                            <li>
+                                <strong class="text-slate-900 dark:text-white"
+                                    >3.</strong
+                                >
+                                Review the real low, median, and high range.
+                            </li>
+                        </ol>
+                        <p class="mt-3 text-sm font-medium text-slate-500">
+                            Your market salary range will appear here after you
+                            compare.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+
             <template v-if="comparison">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <p class="font-semibold">
@@ -437,4 +483,3 @@ defineOptions({
     padding: 0.5rem 0.75rem;
 }
 </style>
-
