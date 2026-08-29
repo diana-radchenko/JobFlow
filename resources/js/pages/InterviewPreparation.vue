@@ -504,7 +504,7 @@ defineOptions({
                                     {{
                                         new Date(
                                             interview.scheduled_at,
-                                        ).toLocaleString([], {
+                                        ).toLocaleString('en-US', {
                                             timeZone: interview.timezone,
                                             dateStyle: 'medium',
                                             timeStyle: 'short',
@@ -574,7 +574,11 @@ defineOptions({
                                         {{
                                             new Date(
                                                 session.created_at,
-                                            ).toLocaleDateString()
+                                            ).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric',
+                                            })
                                         }}
                                     </div>
                                     <Link

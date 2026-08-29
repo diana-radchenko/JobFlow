@@ -64,8 +64,14 @@ const formatTime = (value?: string | null) => {
     const today = new Date();
 
     return date.toDateString() === today.toDateString()
-        ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-        : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        ? date.toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+          })
+        : date.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+          });
 };
 
 const form = useForm({ body: '' });
@@ -248,9 +254,16 @@ onUnmounted(() => {
                             </p>
                             <p class="mt-1 text-xs text-muted-foreground">
                                 {{
-                                    new Date(
-                                        message.created_at,
-                                    ).toLocaleString()
+                                    new Date(message.created_at).toLocaleString(
+                                        'en-US',
+                                        {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric',
+                                            hour: 'numeric',
+                                            minute: '2-digit',
+                                        },
+                                    )
                                 }}
                             </p>
                         </div>

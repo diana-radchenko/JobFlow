@@ -20,3 +20,23 @@ test('application tracker uses clearer visible terminology without changing its 
         ->and(route('request-tracker'))->toEndWith('/request-tracker');
 });
 
+test('candidate date displays use the English locale', function () {
+    foreach ([
+        resource_path('js/pages/Dashboard.vue'),
+        resource_path('js/pages/InterviewPreparation.vue'),
+        resource_path('js/pages/RequestTracker.vue'),
+        resource_path('js/pages/Resumes/Index.vue'),
+        resource_path('js/pages/Chat/Index.vue'),
+    ] as $path) {
+        $source = file_get_contents($path);
+
+        expect($source)
+            ->not->toContain('Intl.DateTimeFormat(undefined')
+            ->not->toContain('toLocaleDateString(undefined')
+            ->not->toContain('toLocaleDateString([]')
+            ->not->toContain('toLocaleDateString()')
+            ->not->toContain('toLocaleString([]')
+            ->not->toContain('toLocaleString()');
+    }
+});
+

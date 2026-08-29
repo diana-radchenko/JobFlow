@@ -298,7 +298,7 @@ const calendarDateForSession = (session: InterviewSession) => {
 };
 
 const interviewDate = (session: InterviewSession) =>
-    new Intl.DateTimeFormat(undefined, {
+    new Intl.DateTimeFormat('en-US', {
         timeZone: session.timezone ?? 'UTC',
         month: 'long',
         day: 'numeric',
@@ -306,7 +306,7 @@ const interviewDate = (session: InterviewSession) =>
     }).format(new Date(session.scheduled_at!));
 
 const interviewTime = (session: InterviewSession) =>
-    new Intl.DateTimeFormat(undefined, {
+    new Intl.DateTimeFormat('en-US', {
         timeZone: session.timezone ?? 'UTC',
         hour: 'numeric',
         minute: '2-digit',
@@ -424,7 +424,7 @@ const yearMonths = computed(() => {
 
         return {
             date,
-            label: date.toLocaleDateString(undefined, { month: 'short' }),
+            label: date.toLocaleDateString('en-US', { month: 'short' }),
             active: today.getFullYear() === year && today.getMonth() === month,
             hasEvent,
         };
@@ -433,7 +433,7 @@ const yearMonths = computed(() => {
 
 const periodLabel = computed(() => {
     if (viewMode.value === 'month') {
-        return monthStart.value.toLocaleDateString(undefined, {
+        return monthStart.value.toLocaleDateString('en-US', {
             month: 'long',
             year: 'numeric',
         });
@@ -445,12 +445,12 @@ const periodLabel = computed(() => {
 
     const start = weekDays.value[0].date;
     const end = weekDays.value[6].date;
-    const startLabel = start.toLocaleDateString(undefined, {
+    const startLabel = start.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
     });
     const endLabel = end.toLocaleDateString(
-        undefined,
+        'en-US',
         start.getMonth() === end.getMonth()
             ? { day: 'numeric', year: 'numeric' }
             : { month: 'short', day: 'numeric', year: 'numeric' },
