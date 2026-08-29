@@ -35,8 +35,11 @@ test('candidate date displays use the English locale', function () {
             ->not->toContain('toLocaleDateString(undefined')
             ->not->toContain('toLocaleDateString([]')
             ->not->toContain('toLocaleDateString()')
+            ->not->toContain('toLocaleTimeString(undefined')
+            ->not->toContain('toLocaleTimeString([]')
+            ->not->toContain('toLocaleTimeString()')
             ->not->toContain('toLocaleString([]')
-            ->not->toContain('toLocaleString()');
+            ->not->toContain('toLocaleString(undefined');
     }
 });
 
