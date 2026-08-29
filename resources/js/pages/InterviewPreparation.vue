@@ -10,12 +10,7 @@ import {
     CheckCircle2,
     Loader2,
 } from 'lucide-vue-next';
-import { ref } from 'vue';
-import {
-    store as interviewSessionStore,
-    show as interviewSessionShow,
-    complete as interviewSessionComplete,
-} from '@/actions/App/Http/Controllers/InterviewSessionController';
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -28,11 +23,17 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { stringForHuman } from '@/helpers/strings';
+import {
+    store as interviewSessionStore,
+    show as interviewSessionShow,
+    complete as interviewSessionComplete,
+} from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { interviewPreparation } from '@/routes';
 
 const props = defineProps<{
     activeSession?: {
         id: number;
+        work_job_id: number;
         type: string;
         complexity: string;
         created_at: string;
@@ -51,6 +52,13 @@ const props = defineProps<{
         work_job_id: number;
         work_job: { id: number; title: string; company: string } | null;
     }[];
+    upcomingInterviews: {
+        id: number;
+        scheduled_at: string;
+        timezone: string;
+        interview_format: string | null;
+        work_job: { title: string; company: string } | null;
+    }[];
 }>();
 
 const interviewType = ref('resume-based');
@@ -59,6 +67,14 @@ const resumeId = ref<string>(
     props.resumes.length > 0 ? String(props.resumes[0].id) : '',
 );
 const workJobId = ref<string>('none');
+const selectedResume = computed(() =>
+    props.resumes.find((resume) => String(resume.id) === resumeId.value),
+);
+const selectedApplication = computed(() =>
+    props.applications.find(
+        (application) => String(application.work_job_id) === workJobId.value,
+    ),
+);
 
 const interviewTypes = [
     { id: 'behavioral', label: 'General Behavioral Questions' },
@@ -153,9 +169,23 @@ defineOptions({
                 </div>
                 <Sparkles class="h-6 w-6 text-primary" />
             </div>
+            <nav class="mt-6 flex gap-2" aria-label="Interview Center sections">
+                <Button as-child size="sm"
+                    ><a href="#prepare">Prepare</a></Button
+                >
+                <Button as-child size="sm" variant="outline"
+                    ><a href="#upcoming">Upcoming</a></Button
+                >
+                <Button as-child size="sm" variant="outline"
+                    ><a href="#history">History</a></Button
+                >
+            </nav>
         </div>
 
-        <div class="grid grid-cols-1 gap-8 lg:grid-cols-[350px_1fr]">
+        <div
+            id="prepare"
+            class="grid scroll-mt-6 grid-cols-1 gap-8 lg:grid-cols-[350px_1fr]"
+        >
             <!-- Left Column: Settings -->
             <div class="space-y-6">
                 <!-- Active Session Card -->
@@ -226,7 +256,7 @@ defineOptions({
                             <h3
                                 class="mb-3 text-lg leading-tight font-bold text-slate-900 dark:text-slate-100"
                             >
-                                Which resume should the AI use?
+                                1. Interview Context — Resume
                             </h3>
                             <Select
                                 v-model="resumeId"
@@ -260,7 +290,7 @@ defineOptions({
                             <h3
                                 class="mb-3 text-lg leading-tight font-bold text-slate-900 dark:text-slate-100"
                             >
-                                Which job application is this for?
+                                Interview Context — Job/Application
                             </h3>
                             <Select
                                 v-model="workJobId"
@@ -298,7 +328,7 @@ defineOptions({
                         <h3
                             class="mb-6 text-lg leading-tight font-bold text-slate-900 dark:text-slate-100"
                         >
-                            Choosing the type of interview (by vacancy)
+                            2. Interview Type
                         </h3>
 
                         <RadioGroup
@@ -336,7 +366,7 @@ defineOptions({
                         <h3
                             class="mb-6 text-lg leading-tight font-bold text-slate-900 dark:text-slate-100"
                         >
-                            Choosing the complexity of the questions
+                            3. Difficulty
                         </h3>
 
                         <RadioGroup
@@ -397,14 +427,44 @@ defineOptions({
                                 <h4
                                     class="mb-1 text-lg font-bold text-slate-900 dark:text-slate-100"
                                 >
-                                    Live AI Interview
+                                    AI Interview
                                 </h4>
                                 <p
                                     class="mx-auto max-w-sm text-xs leading-relaxed text-slate-600 dark:text-slate-400"
                                 >
-                                    The AI asks questions, you respond with your
-                                    voice, and the system analyzes your tone,
-                                    pauses, and confidence in real time.
+                                    <strong class="block">{{
+                                        selectedApplication?.work_job?.title ||
+                                        'General interview'
+                                    }}</strong>
+                                    <span class="block">{{
+                                        selectedApplication?.work_job
+                                            ?.company || 'No vacancy selected'
+                                    }}</span>
+                                    <span class="mt-2 block"
+                                        >Resume:
+                                        {{
+                                            selectedResume?.title ||
+                                            'Not selected'
+                                        }}</span
+                                    >
+                                    <span class="block"
+                                        >Type:
+                                        {{
+                                            interviewTypes.find(
+                                                (item) =>
+                                                    item.id === interviewType,
+                                            )?.label
+                                        }}</span
+                                    >
+                                    <span class="block"
+                                        >Difficulty:
+                                        {{
+                                            complexities.find(
+                                                (item) =>
+                                                    item.id === complexity,
+                                            )?.label
+                                        }}</span
+                                    >
                                 </p>
                             </div>
 
@@ -422,10 +482,69 @@ defineOptions({
                     </CardContent>
                 </Card>
 
+                <Card
+                    id="upcoming"
+                    class="w-full max-w-md scroll-mt-6 rounded-[24px]"
+                >
+                    <CardContent class="p-6">
+                        <h3 class="mb-4 text-lg font-bold">
+                            Upcoming Interviews
+                        </h3>
+                        <div v-if="upcomingInterviews.length" class="space-y-3">
+                            <article
+                                v-for="interview in upcomingInterviews"
+                                :key="interview.id"
+                                class="rounded-xl border p-3"
+                            >
+                                <strong>{{ interview.work_job?.title }}</strong>
+                                <p class="text-sm text-slate-500">
+                                    {{ interview.work_job?.company }}
+                                </p>
+                                <p class="mt-2 text-sm">
+                                    {{
+                                        new Date(
+                                            interview.scheduled_at,
+                                        ).toLocaleString([], {
+                                            timeZone: interview.timezone,
+                                            dateStyle: 'medium',
+                                            timeStyle: 'short',
+                                        })
+                                    }}
+                                    · {{ interview.timezone }}
+                                </p>
+                                <p
+                                    v-if="interview.interview_format"
+                                    class="text-sm"
+                                >
+                                    {{
+                                        stringForHuman(
+                                            interview.interview_format,
+                                        )
+                                    }}
+                                </p>
+                                <Button
+                                    size="sm"
+                                    class="mt-3"
+                                    @click="
+                                        workJobId = String(
+                                            interview.work_job_id,
+                                        )
+                                    "
+                                    >Prepare for this interview</Button
+                                >
+                            </article>
+                        </div>
+                        <p v-else class="text-sm text-slate-500">
+                            No upcoming employer interviews.
+                        </p>
+                    </CardContent>
+                </Card>
+
                 <!-- Past Sessions -->
                 <Card
+                    id="history"
                     v-if="pastSessions.data && pastSessions.data.length > 0"
-                    class="w-full max-w-md rounded-[24px] border-0 bg-slate-100/50 shadow-none dark:bg-slate-900/50"
+                    class="w-full max-w-md scroll-mt-6 rounded-[24px] border-0 bg-slate-100/50 shadow-none dark:bg-slate-900/50"
                 >
                     <CardContent class="p-6">
                         <div class="mb-4 flex items-center gap-3">
@@ -487,3 +606,4 @@ defineOptions({
         </div>
     </div>
 </template>
+

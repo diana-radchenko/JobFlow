@@ -25,6 +25,7 @@ const props = defineProps<{
     job: WorkJob;
     userApplication: UserWorkJobApplication | null;
     resumes: { id: number; title: string }[];
+    saved: boolean;
 }>();
 
 marked.setOptions({ gfm: true, breaks: true });
@@ -33,6 +34,39 @@ marked.setOptions({ gfm: true, breaks: true });
 const descriptionHtml = DOMPurify.sanitize(
     marked.parse(props.job.description, { async: false }) as string,
 );
+const sectionHtml = (value?: string | null) =>
+    value
+        ? DOMPurify.sanitize(marked.parse(value, { async: false }) as string)
+        : '';
+
+const salary = () => {
+    if (props.job.salary_start === null && props.job.salary_end === null) {
+        return 'Salary not specified';
+    }
+
+    const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: props.job.salary_currency || 'USD',
+        maximumFractionDigits: 0,
+    });
+    const values = [props.job.salary_start, props.job.salary_end]
+        .filter((value) => value !== null)
+        .map((value) => formatter.format(Number(value)));
+
+    return `${values.join('–')}${props.job.salary_period ? ` / ${stringForHuman(props.job.salary_period)}` : ''}`;
+};
+
+const toggleSaved = () => {
+    if (props.saved) {
+        router.delete(`/saved-jobs/${props.job.id}`, { preserveScroll: true });
+    } else {
+        router.post(
+            `/saved-jobs/${props.job.id}`,
+            {},
+            { preserveScroll: true },
+        );
+    }
+};
 
 const isLoading = ref(false);
 const resumeId = ref<string>(
@@ -134,21 +168,74 @@ defineOptions({
                             <span class="text-lg">{{ job.location }}</span>
                         </div>
 
+                        <div class="mb-3 flex flex-wrap gap-2">
+                            <Badge
+                                v-if="job.workplace_type"
+                                variant="secondary"
+                                >{{ job.workplace_type }}</Badge
+                            >
+                            <Badge v-if="job.industry" variant="outline">{{
+                                job.industry
+                            }}</Badge>
+                            <Badge
+                                v-if="job.position_level"
+                                variant="outline"
+                                >{{ job.position_level }}</Badge
+                            >
+                            <Badge
+                                v-if="job.employment_type"
+                                variant="outline"
+                                >{{ job.employment_type }}</Badge
+                            >
+                        </div>
+
                         <div
                             class="mb-6 text-lg font-medium text-stone-600 dark:text-stone-300"
                         >
-                            from ${{
-                                Number(job.salary_start).toLocaleString()
-                            }}/month
+                            {{ salary() }}
                         </div>
                     </div>
 
                     <!-- Heart Icon -->
                     <button
+                        type="button"
+                        :aria-label="
+                            saved ? 'Remove saved vacancy' : 'Save vacancy'
+                        "
                         class="ml-4 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blueish/60 transition-colors hover:bg-blueish dark:bg-stone-800 dark:hover:bg-stone-700"
+                        @click="toggleSaved"
                     >
-                        <Heart class="h-6 w-6 text-stone-400" />
+                        <Heart
+                            class="h-6 w-6"
+                            :class="
+                                saved
+                                    ? 'fill-primary text-primary'
+                                    : 'text-stone-400'
+                            "
+                        />
                     </button>
+                </div>
+
+                <div v-if="job.responsibilities" class="mb-8">
+                    <h2 class="mb-3 text-lg font-semibold">Responsibilities</h2>
+                    <div
+                        class="markdown-body text-stone-600 dark:text-stone-300"
+                        v-html="sectionHtml(job.responsibilities)"
+                    />
+                </div>
+                <div v-if="job.requirements" class="mb-8">
+                    <h2 class="mb-3 text-lg font-semibold">Requirements</h2>
+                    <div
+                        class="markdown-body text-stone-600 dark:text-stone-300"
+                        v-html="sectionHtml(job.requirements)"
+                    />
+                </div>
+                <div v-if="job.benefits" class="mb-8">
+                    <h2 class="mb-3 text-lg font-semibold">Benefits</h2>
+                    <div
+                        class="markdown-body text-stone-600 dark:text-stone-300"
+                        v-html="sectionHtml(job.benefits)"
+                    />
                 </div>
 
                 <!-- Technologies -->
@@ -207,6 +294,15 @@ defineOptions({
                             :class="`flex-1 rounded-lg px-8 py-6 text-base font-semibold tracking-wide ${getApplicationStatusColor(userApplication.status)}`"
                         >
                             {{ stringForHuman(userApplication.status) }}
+                        </Button>
+                        <Button
+                            as-child
+                            variant="outline"
+                            class="rounded-lg px-8 py-6"
+                        >
+                            <Link href="/request-tracker"
+                                >Track Application</Link
+                            >
                         </Button>
                     </template>
                     <template v-else>
@@ -276,3 +372,4 @@ defineOptions({
         </div>
     </div>
 </template>
+

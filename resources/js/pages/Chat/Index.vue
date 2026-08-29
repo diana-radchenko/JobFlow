@@ -119,7 +119,9 @@ onUnmounted(() => {
 
 <template>
     <Head title="Chat" />
-    <div class="mx-auto grid max-w-6xl gap-4 p-6 lg:grid-cols-[340px_1fr]">
+    <div
+        class="grid w-full gap-4 p-4 md:p-6 lg:grid-cols-[minmax(280px,30%)_minmax(0,70%)]"
+    >
         <Card>
             <CardContent class="space-y-3 pt-6">
                 <h1 class="text-xl font-bold">Chat</h1>
@@ -188,28 +190,51 @@ onUnmounted(() => {
                             {{ selected.work_job.title }}
                         </p>
                     </div>
-                    <Link
-                        v-if="isEmployer"
-                        :href="
-                            employerApplications.show([
-                                selected.work_job_id,
-                                selected.application_id,
-                            ]).url
-                        "
-                        class="text-sm font-semibold text-primary hover:underline"
-                        >View Application</Link
-                    >
-                    <Link
-                        v-else
-                        :href="jobSelectionShow(selected.work_job_id).url"
-                        class="text-sm font-semibold text-primary hover:underline"
-                        >View Vacancy</Link
-                    >
+                    <div class="flex flex-wrap justify-end gap-3">
+                        <Link
+                            :href="jobSelectionShow(selected.work_job_id).url"
+                            class="text-sm font-semibold text-primary hover:underline"
+                            >View Vacancy</Link
+                        >
+                        <Link
+                            v-if="isEmployer"
+                            :href="
+                                employerApplications.show([
+                                    selected.work_job_id,
+                                    selected.application_id,
+                                ]).url
+                            "
+                            class="text-sm font-semibold text-primary hover:underline"
+                            >View Application</Link
+                        >
+                        <Link
+                            v-else
+                            href="/request-tracker"
+                            class="text-sm font-semibold text-primary hover:underline"
+                            >View Application</Link
+                        >
+                    </div>
                 </div>
                 <div
                     ref="history"
                     class="flex-1 space-y-3 overflow-y-auto py-4"
                 >
+                    <div
+                        v-if="selected.messages?.length === 0"
+                        class="flex h-full items-center justify-center text-center"
+                    >
+                        <div>
+                            <h3 class="font-bold">Start the conversation</h3>
+                            <p class="mt-2 text-sm text-muted-foreground">
+                                You and {{ selected.work_job.company }} haven't
+                                exchanged any messages yet.
+                            </p>
+                            <p class="mt-1 text-sm text-muted-foreground">
+                                Ask a question about the position, interview, or
+                                application process.
+                            </p>
+                        </div>
+                    </div>
                     <template
                         v-for="message in selected.messages"
                         :key="message.id"

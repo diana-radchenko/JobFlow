@@ -26,6 +26,7 @@ class JobSelectionRequest extends FormRequest
         return [
             'location' => ['nullable', 'string', 'max:255'],
             'salary_min' => ['nullable', 'numeric', 'min:0'],
+            'salary_max' => ['nullable', 'numeric', 'min:0', 'gte:salary_min'],
             'keyword' => ['nullable', 'string', 'max:255'],
             'industry' => ['nullable', Rule::in(config('jobs.industries'))],
             'position_level' => ['nullable', Rule::in(config('jobs.position_levels'))],
@@ -34,6 +35,7 @@ class JobSelectionRequest extends FormRequest
             'workplace_type' => ['nullable', Rule::in(config('jobs.workplace_types'))],
             'date_posted' => ['nullable', Rule::in(['1', '7', '30'])],
             'view' => ['nullable', Rule::in(['all', 'saved', 'applied'])],
+            'sort' => ['nullable', Rule::in(['newest', 'salary_high', 'salary_low'])],
         ];
     }
 }

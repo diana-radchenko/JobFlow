@@ -25,8 +25,10 @@ type Filters = {
     location?: string;
     workplace_type?: string;
     salary_min?: string;
+    salary_max?: string;
     date_posted?: string;
     view?: 'all' | 'saved' | 'applied';
+    sort?: 'newest' | 'salary_high' | 'salary_low';
 };
 
 const props = defineProps<{
@@ -48,10 +50,12 @@ const employmentType = ref(props.filters?.employment_type || '');
 const location = ref(props.filters?.location || '');
 const workplaceType = ref(props.filters?.workplace_type || '');
 const salaryMin = ref(props.filters?.salary_min || '');
+const salaryMax = ref(props.filters?.salary_max || '');
 const datePosted = ref(props.filters?.date_posted || '');
 const activeView = ref<'all' | 'saved' | 'applied'>(
     props.filters?.view || 'all',
 );
+const sort = ref(props.filters?.sort || 'newest');
 
 const filterValues = () => ({
     keyword: keyword.value || undefined,
@@ -62,8 +66,10 @@ const filterValues = () => ({
     location: location.value || undefined,
     workplace_type: workplaceType.value || undefined,
     salary_min: salaryMin.value || undefined,
+    salary_max: salaryMax.value || undefined,
     date_posted: datePosted.value || undefined,
     view: activeView.value === 'all' ? undefined : activeView.value,
+    sort: sort.value === 'newest' ? undefined : sort.value,
 });
 
 watchDebounced(
@@ -76,8 +82,10 @@ watchDebounced(
         location,
         workplaceType,
         salaryMin,
+        salaryMax,
         datePosted,
         activeView,
+        sort,
     ],
     () =>
         router.get(jobSelectionRoute.url(), filterValues(), {
@@ -98,6 +106,7 @@ const clearFilters = () => {
     location.value = '';
     workplaceType.value = '';
     salaryMin.value = '';
+    salaryMax.value = '';
     datePosted.value = '';
 };
 
@@ -235,8 +244,15 @@ defineOptions({
                     v-model="salaryMin"
                     type="number"
                     min="0"
-                    aria-label="Minimum salary"
-                    placeholder="Minimum salary"
+                    aria-label="Minimum annual salary"
+                    placeholder="Minimum annual salary"
+                />
+                <Input
+                    v-model="salaryMax"
+                    type="number"
+                    min="0"
+                    aria-label="Maximum annual salary"
+                    placeholder="Maximum annual salary"
                 />
                 <select
                     v-model="datePosted"
@@ -252,17 +268,34 @@ defineOptions({
         </aside>
 
         <main class="min-w-0 flex-1 space-y-5">
-            <div class="flex flex-wrap gap-2" aria-label="Vacancy views">
-                <Button
-                    v-for="view in ['all', 'saved', 'applied'] as const"
-                    :key="view"
-                    type="button"
-                    :variant="activeView === view ? 'default' : 'outline'"
-                    class="capitalize"
-                    @click="activeView = view"
-                >
-                    {{ view === 'all' ? 'All Jobs' : view }}
-                </Button>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap gap-2" aria-label="Vacancy views">
+                    <Button
+                        v-for="view in ['all', 'saved', 'applied'] as const"
+                        :key="view"
+                        type="button"
+                        :variant="activeView === view ? 'default' : 'outline'"
+                        class="capitalize"
+                        @click="activeView = view"
+                    >
+                        {{ view === 'all' ? 'All Jobs' : view }}
+                    </Button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <strong class="text-sm"
+                        >{{ jobs.length }} jobs found</strong
+                    >
+                    <label for="job-sort" class="sr-only">Sort by</label>
+                    <select
+                        id="job-sort"
+                        v-model="sort"
+                        class="filter-select w-auto"
+                    >
+                        <option value="newest">Newest</option>
+                        <option value="salary_high">Salary: High to Low</option>
+                        <option value="salary_low">Salary: Low to High</option>
+                    </select>
+                </div>
             </div>
             <div
                 v-if="jobs.length === 0"

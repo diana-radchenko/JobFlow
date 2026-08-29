@@ -92,7 +92,7 @@ const candidateNavItems = computed<NavItem[]>(() => [
         isActive: isCurrentUrl(jobSelectionRoute()),
     },
     {
-        title: 'Request Tracker',
+        title: 'Application Tracker',
         href: requestTrackerUrl,
         icon: ClipboardList,
         isActive: isCurrentUrl(requestTrackerUrl),
