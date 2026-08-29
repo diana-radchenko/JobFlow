@@ -77,19 +77,44 @@ const selectedApplication = computed(() =>
 );
 
 const interviewTypes = [
-    { id: 'behavioral', label: 'General Behavioral Questions' },
-    { id: 'technical', label: 'Technical Interview' },
-    { id: 'case-study', label: 'Case Study & Problem Solving' },
+    {
+        id: 'behavioral',
+        label: 'Behavioral',
+        description: 'Practice experience, motivation, and teamwork questions.',
+    },
+    {
+        id: 'technical',
+        label: 'Technical',
+        description: 'Focus on role-specific knowledge and practical skills.',
+    },
+    {
+        id: 'case-study',
+        label: 'Case Study / Problem Solving',
+        description: 'Work through structured scenarios and explain decisions.',
+    },
     {
         id: 'resume-based',
-        label: 'AI-generated questions based on your resume & job description',
+        label: 'AI Personalized',
+        description: 'Questions tailored to your resume and selected vacancy.',
     },
 ];
 
 const complexities = [
-    { id: 'beginner', label: 'Beginner' },
-    { id: 'intermediate', label: 'Intermediate' },
-    { id: 'advanced', label: 'Advanced' },
+    {
+        id: 'beginner',
+        label: 'Beginner',
+        description: 'Foundational questions with a supportive pace.',
+    },
+    {
+        id: 'intermediate',
+        label: 'Intermediate',
+        description: 'Balanced questions that test applied experience.',
+    },
+    {
+        id: 'advanced',
+        label: 'Advanced',
+        description: 'Challenging scenarios with deeper follow-up questions.',
+    },
 ];
 
 const form = useForm({
@@ -188,7 +213,7 @@ defineOptions({
 
             <div
                 id="prepare"
-                class="grid scroll-mt-6 grid-cols-1 gap-8 lg:grid-cols-[350px_1fr]"
+                class="grid scroll-mt-6 grid-cols-1 gap-8 lg:grid-cols-[minmax(360px,0.95fr)_minmax(380px,1.05fr)]"
             >
                 <!-- Left Column: Settings -->
                 <div class="space-y-6">
@@ -344,29 +369,60 @@ defineOptions({
 
                             <RadioGroup
                                 v-model="interviewType"
-                                class="space-y-4"
+                                class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
                                 :disabled="!!activeSession"
                             >
-                                <div
+                                <Label
                                     v-for="type in interviewTypes"
                                     :key="type.id"
-                                    class="flex items-start gap-3"
+                                    :for="type.id"
+                                    class="relative flex min-h-32 cursor-pointer flex-col rounded-2xl border bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-sm dark:bg-slate-950"
+                                    :class="[
+                                        interviewType === type.id
+                                            ? type.id === 'resume-based'
+                                                ? 'border-indigo-500 bg-indigo-50/80 ring-2 ring-indigo-500/20 dark:bg-indigo-950/30'
+                                                : 'border-primary bg-primary/5 ring-2 ring-primary/15'
+                                            : 'border-slate-200 dark:border-slate-800',
+                                        {
+                                            'pointer-events-none opacity-50':
+                                                !!activeSession,
+                                        },
+                                    ]"
                                 >
                                     <RadioGroupItem
                                         :id="type.id"
                                         :value="type.id"
-                                        class="mt-1"
+                                        class="sr-only"
                                     />
-                                    <Label
-                                        :for="type.id"
-                                        class="cursor-pointer text-[15px] leading-snug font-medium text-slate-700 dark:text-slate-300"
-                                        :class="{
-                                            'opacity-50': !!activeSession,
-                                        }"
+                                    <div
+                                        class="flex items-start justify-between gap-3"
                                     >
-                                        {{ type.label }}
-                                    </Label>
-                                </div>
+                                        <span
+                                            class="font-bold text-slate-900 dark:text-white"
+                                            >{{ type.label }}</span
+                                        >
+                                        <CheckCircle2
+                                            v-if="interviewType === type.id"
+                                            class="h-5 w-5 shrink-0"
+                                            :class="
+                                                type.id === 'resume-based'
+                                                    ? 'text-indigo-600'
+                                                    : 'text-primary'
+                                            "
+                                        />
+                                    </div>
+                                    <p
+                                        class="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400"
+                                    >
+                                        {{ type.description }}
+                                    </p>
+                                    <span
+                                        v-if="type.id === 'resume-based'"
+                                        class="mt-auto pt-3 text-xs font-bold tracking-wide text-indigo-600 uppercase dark:text-indigo-300"
+                                    >
+                                        AI tailored
+                                    </span>
+                                </Label>
                             </RadioGroup>
                         </CardContent>
                     </Card>
@@ -384,35 +440,54 @@ defineOptions({
 
                             <RadioGroup
                                 v-model="complexity"
-                                class="space-y-4"
+                                class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3"
                                 :disabled="!!activeSession"
                             >
-                                <div
+                                <Label
                                     v-for="level in complexities"
                                     :key="level.id"
-                                    class="flex items-center gap-3"
+                                    :for="level.id"
+                                    class="relative flex min-h-32 cursor-pointer flex-col rounded-2xl border bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-sm dark:bg-slate-950"
+                                    :class="[
+                                        complexity === level.id
+                                            ? 'border-primary bg-primary/5 ring-2 ring-primary/15'
+                                            : 'border-slate-200 dark:border-slate-800',
+                                        {
+                                            'pointer-events-none opacity-50':
+                                                !!activeSession,
+                                        },
+                                    ]"
                                 >
                                     <RadioGroupItem
                                         :id="level.id"
                                         :value="level.id"
+                                        class="sr-only"
                                     />
-                                    <Label
-                                        :for="level.id"
-                                        class="cursor-pointer text-[15px] font-medium text-slate-700 dark:text-slate-300"
-                                        :class="{
-                                            'opacity-50': !!activeSession,
-                                        }"
+                                    <div
+                                        class="flex items-start justify-between gap-2"
                                     >
-                                        {{ level.label }}
-                                    </Label>
-                                </div>
+                                        <span
+                                            class="font-bold text-slate-900 dark:text-white"
+                                            >{{ level.label }}</span
+                                        >
+                                        <CheckCircle2
+                                            v-if="complexity === level.id"
+                                            class="h-5 w-5 shrink-0 text-primary"
+                                        />
+                                    </div>
+                                    <p
+                                        class="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400"
+                                    >
+                                        {{ level.description }}
+                                    </p>
+                                </Label>
                             </RadioGroup>
                         </CardContent>
                     </Card>
                 </div>
 
                 <!-- Right Column: Live Interview + Past Sessions -->
-                <div class="space-y-6">
+                <div class="w-full max-w-xl space-y-6 lg:justify-self-start">
                     <Card
                         class="self-start overflow-hidden rounded-[24px] border border-[#0B315B] bg-[#061E3A] py-0 text-white shadow-sm"
                     >
@@ -424,7 +499,7 @@ defineOptions({
                                     !!activeSession ||
                                     !resumeId
                                 "
-                                class="group relative flex w-full max-w-md flex-col items-center justify-center gap-3 overflow-hidden rounded-[24px] border border-white/10 bg-transparent p-6 text-center transition-all hover:border-blue-300/40 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+                                class="group relative flex w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-[24px] border border-white/10 bg-transparent p-6 text-center transition-all hover:border-blue-300/40 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <div
                                     class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,theme(colors.primary.DEFAULT/8%),transparent_70%)] opacity-0 transition-opacity group-hover:opacity-100"
@@ -503,7 +578,7 @@ defineOptions({
 
                     <Card
                         id="upcoming"
-                        class="w-full max-w-md scroll-mt-6 rounded-[24px] border-slate-200 bg-white shadow-sm"
+                        class="w-full scroll-mt-6 rounded-[24px] border-slate-200 bg-white shadow-sm"
                     >
                         <CardContent class="p-6">
                             <h3 class="mb-4 text-lg font-bold">
@@ -643,4 +718,3 @@ defineOptions({
         </div>
     </div>
 </template>
-
