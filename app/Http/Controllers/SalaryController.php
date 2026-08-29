@@ -22,6 +22,7 @@ class SalaryController extends Controller
             : null;
 
         return Inertia::render('Salary', [
+            'resumes' => $request->user()->resumes()->latest('updated_at')->get(['id', 'title']),
             'industries' => config('jobs.industries'),
             'positionLevels' => ['Junior', 'Middle', 'Manager'],
             'filters' => $filters,

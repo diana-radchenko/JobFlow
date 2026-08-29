@@ -31,6 +31,7 @@ type Comparison = {
 };
 
 const props = defineProps<{
+    resumes: { id: number; title: string }[];
     industries: string[];
     positionLevels: string[];
     filters: {
