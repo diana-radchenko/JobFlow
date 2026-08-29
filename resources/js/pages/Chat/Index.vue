@@ -287,6 +287,9 @@ onUnmounted(() => {
                             after you apply for a vacancy.</template
                         >
                     </p>
+                    <Button v-if="!isEmployer" as-child class="mt-4"
+                        ><a href="/job-selection">Browse Jobs</a></Button
+                    >
                 </div>
             </CardContent>
         </Card>

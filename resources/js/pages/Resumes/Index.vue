@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { Copy, FileText, Pencil, Plus, Sparkles, Trash2 } from 'lucide-vue-next';
+import {
+    CheckCircle2,
+    Circle,
+    Copy,
+    FileText,
+    Pencil,
+    Plus,
+    Sparkles,
+    Trash2,
+} from 'lucide-vue-next';
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +42,8 @@ interface ResumeSummary {
     projects_count: number;
     educations_count: number;
     work_experiences_count: number;
+    strength: number;
+    strength_items: { label: string; complete: boolean }[];
 }
 
 defineProps<{
@@ -89,21 +100,21 @@ const formatDate = (date: string) =>
     <Head title="My Resumes" />
 
     <div class="mx-auto max-w-4xl space-y-6 p-6">
-            <div>
-                <h1 class="text-2xl font-semibold">My Resumes</h1>
-                <p class="text-sm text-foreground/60">
-                    Keep separate resumes to highlight different skills and
-                    experience for different job applications.
-                </p>
-            </div>
-            <Button
-                v-if="!showCreateForm"
-                type="button"
-                @click="showCreateForm = true"
-            >
-                <Plus class="mr-2 h-4 w-4" />
-                New Resume
-            </Button>
+        <div>
+            <h1 class="text-2xl font-semibold">My Resumes</h1>
+            <p class="text-sm text-foreground/60">
+                Keep separate resumes to highlight different skills and
+                experience for different job applications.
+            </p>
+        </div>
+        <Button
+            v-if="!showCreateForm"
+            type="button"
+            @click="showCreateForm = true"
+        >
+            <Plus class="mr-2 h-4 w-4" />
+            New Resume
+        </Button>
 
         <Card v-if="showCreateForm">
             <CardContent class="pt-6">
@@ -142,12 +153,18 @@ const formatDate = (date: string) =>
             </CardContent>
         </Card>
 
-        <div v-if="resumes.length === 0 && !showCreateForm" class="py-12 text-center">
+        <div
+            v-if="resumes.length === 0 && !showCreateForm"
+            class="py-12 text-center"
+        >
             <FileText class="mx-auto mb-3 h-10 w-10 text-foreground/30" />
             <p class="text-foreground/60">
-                You don't have any resumes yet. Create your first one to get
-                started.
+                Create your first resume to apply for jobs and receive tailored
+                recommendations.
             </p>
+            <Button class="mt-4" @click="showCreateForm = true"
+                ><Plus class="mr-2 h-4 w-4" />Create Resume</Button
+            >
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
@@ -158,11 +175,7 @@ const formatDate = (date: string) =>
                         @submit.prevent="submitRename(resume)"
                         class="flex gap-2"
                     >
-                        <Input
-                            v-model="renameForm.title"
-                            autofocus
-                            required
-                        />
+                        <Input v-model="renameForm.title" autofocus required />
                         <Button
                             type="submit"
                             size="sm"
@@ -187,8 +200,42 @@ const formatDate = (date: string) =>
                     </template>
                 </CardHeader>
                 <CardContent class="space-y-4">
-                    <div class="flex flex-wrap gap-4 text-xs text-foreground/60">
-                        <span>{{ resume.work_experiences_count }} experience</span>
+                    <div class="rounded-xl bg-muted/60 p-4">
+                        <div class="mb-3 flex items-center justify-between">
+                            <strong>Resume Strength</strong
+                            ><span class="text-lg font-black text-primary"
+                                >{{ resume.strength }}%</span
+                            >
+                        </div>
+                        <div class="grid gap-2 text-xs sm:grid-cols-2">
+                            <span
+                                v-for="item in resume.strength_items"
+                                :key="item.label"
+                                class="flex items-center gap-2"
+                                :class="
+                                    item.complete
+                                        ? 'text-emerald-700 dark:text-emerald-300'
+                                        : 'text-foreground/55'
+                                "
+                            >
+                                <CheckCircle2
+                                    v-if="item.complete"
+                                    class="h-4 w-4"
+                                /><Circle v-else class="h-4 w-4" />{{
+                                    item.label
+                                }}
+                            </span>
+                        </div>
+                    </div>
+                    <div
+                        class="flex flex-wrap gap-4 text-xs text-foreground/60"
+                    >
+                        <span
+                            >{{
+                                resume.work_experiences_count
+                            }}
+                            experience</span
+                        >
                         <span>{{ resume.educations_count }} education</span>
                         <span>{{ resume.skills_count }} skills</span>
                         <span>{{ resume.projects_count }} projects</span>
@@ -235,3 +282,4 @@ const formatDate = (date: string) =>
         </div>
     </div>
 </template>
+

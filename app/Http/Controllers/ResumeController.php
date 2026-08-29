@@ -15,9 +15,23 @@ class ResumeController extends Controller
     public function index(): Response
     {
         $resumes = auth()->user()->resumes()
+            ->with('additionalInformation')
             ->withCount(['skills', 'projects', 'educations', 'workExperiences', 'volunteerExperiences', 'leadershipActivities', 'publications', 'awardHonors', 'languages'])
             ->orderByDesc('updated_at')
-            ->get();
+            ->get()
+            ->each(function (Resume $resume) {
+                $items = [
+                    ['label' => 'Contact information', 'complete' => auth()->user()->profile !== null],
+                    ['label' => 'Education', 'complete' => $resume->educations_count > 0],
+                    ['label' => 'Work experience', 'complete' => $resume->work_experiences_count > 0],
+                    ['label' => 'Skills', 'complete' => $resume->skills_count > 0],
+                    ['label' => 'Summary', 'complete' => filled($resume->additionalInformation?->notes)],
+                    ['label' => 'Achievements', 'complete' => $resume->projects_count + $resume->award_honors_count + $resume->publications_count > 0],
+                ];
+
+                $resume->setAttribute('strength', (int) round(collect($items)->where('complete', true)->count() / count($items) * 100));
+                $resume->setAttribute('strength_items', $items);
+            });
 
         return Inertia::render('Resumes/Index', [
             'resumes' => $resumes,
@@ -133,4 +147,5 @@ class ResumeController extends Controller
         ]);
     }
 }
+
 

@@ -33,6 +33,8 @@ class JobSelectionRequest extends FormRequest
             'employment_type' => ['nullable', Rule::in(config('jobs.employment_types'))],
             'workplace_type' => ['nullable', Rule::in(config('jobs.workplace_types'))],
             'date_posted' => ['nullable', Rule::in(['1', '7', '30'])],
+            'view' => ['nullable', Rule::in(['all', 'saved', 'applied'])],
         ];
     }
 }
+

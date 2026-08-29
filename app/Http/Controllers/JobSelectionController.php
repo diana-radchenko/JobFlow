@@ -16,7 +16,13 @@ class JobSelectionController extends Controller
 {
     public function jobSelection(JobSelectionRequest $request): Response
     {
-        $query = WorkJob::published();
+        $query = WorkJob::published()
+            ->withExists([
+                'applications as applied' => fn ($query) => $query->where('user_id', auth()->id()),
+                'savedBy as saved' => fn ($query) => $query->where('users.id', auth()->id()),
+            ]);
+        $query->when($request->view === 'saved', fn ($query) => $query->whereHas('savedBy', fn ($saved) => $saved->where('users.id', auth()->id())));
+        $query->when($request->view === 'applied', fn ($query) => $query->whereHas('applications', fn ($applications) => $applications->where('user_id', auth()->id())));
         $query->when($request->keyword, fn ($q, $value) => $q->where(fn ($q) => $q
             ->where('title', 'like', "%{$value}%")
             ->orWhere('description', 'like', "%{$value}%")));
@@ -40,7 +46,7 @@ class JobSelectionController extends Controller
 
         return Inertia::render('JobSelection', [
             'jobs' => $jobs,
-            'filters' => $request->only(['keyword', 'company', 'industry', 'position_level', 'employment_type', 'location', 'workplace_type', 'salary_min', 'date_posted']),
+            'filters' => $request->only(['keyword', 'company', 'industry', 'position_level', 'employment_type', 'location', 'workplace_type', 'salary_min', 'date_posted', 'view']),
             'filterOptions' => [
                 'industries' => config('jobs.industries'),
                 'positionLevels' => config('jobs.position_levels'),
@@ -86,4 +92,5 @@ class JobSelectionController extends Controller
         return redirect()->route('job-selection.show', $job)->with('success', 'Application submitted successfully!');
     }
 }
+
 

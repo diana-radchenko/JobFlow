@@ -136,3 +136,30 @@ test('dashboard article catalog uses local images and provides a local fallback'
         ->and(public_path('articles/article-fallback.svg'))->toBeFile();
 });
 
+test('dashboard derives next steps and recent activity from current candidate data', function () {
+    $candidate = User::factory()->create();
+    $employer = User::factory()->employer()->create();
+    $resume = Resume::create(['user_id' => $candidate->id, 'title' => 'Candidate Resume']);
+    $job = WorkJob::factory()->for($employer, 'employer')->create([
+        'title' => 'Support Engineer',
+        'company' => 'Northstar',
+        'status' => 'published',
+        'published_at' => now(),
+    ]);
+    UserWorkJobApplication::create([
+        'user_id' => $candidate->id,
+        'work_job_id' => $job->id,
+        'resume_id' => $resume->id,
+        'status' => ApplicationStatus::Applied,
+        'viewed_at' => now(),
+    ]);
+
+    $this->actingAs($candidate)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('nextSteps')
+            ->where('nextSteps.0.title', 'Improve your resume')
+            ->has('recentActivity', 2)
+            ->where('recentActivity.0.event', 'Application viewed')
+            ->where('recentActivity.0.company', 'Northstar'));
+});
+
