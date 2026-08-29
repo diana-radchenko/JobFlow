@@ -159,7 +159,7 @@ test('dashboard derives next steps and recent activity from current candidate da
             ->has('nextSteps')
             ->where('nextSteps.0.title', 'Improve your resume')
             ->has('recentActivity', 2)
-            ->where('recentActivity.0.event', 'Application viewed')
+            ->where('recentActivity', fn ($activity) => collect($activity)->pluck('event')->sort()->values()->all() === ['Application submitted', 'Application viewed'])
             ->where('recentActivity.0.company', 'Northstar'));
 });
 

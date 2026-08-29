@@ -67,12 +67,13 @@ class DashboardController extends Controller
 
     /**
      * @param  Collection<int, UserWorkJobApplication>  $applications
-     * @param  Collection<int, mixed>  $recommendedJobs
+     * @param  Collection<int, mixed>|array<int, mixed>  $recommendedJobs
      * @return array<int, array{title: string, description: string, href: string, action: string}>
      */
-    private function nextSteps(?Resume $resume, Collection $applications, ?InterviewSession $nextInterview, Collection $recommendedJobs): array
+    private function nextSteps(?Resume $resume, Collection $applications, ?InterviewSession $nextInterview, Collection|array $recommendedJobs): array
     {
         $steps = collect();
+        $recommendedJobs = collect($recommendedJobs);
         $completeness = $this->resumeCompleteness($resume);
 
         if (! $resume) {
