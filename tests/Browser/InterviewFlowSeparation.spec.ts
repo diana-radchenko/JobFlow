@@ -100,7 +100,8 @@ function persistUpcomingInterview(email: string): void {
 
 test('candidate can prepare, recover, complete an AI interview, and manage history', async ({
     page,
-}) => {
+}, testInfo) => {
+    test.setTimeout(60000);
     await page.goto('/register?type=candidate');
     await page.getByLabel('Email address').fill(candidateEmail);
     await page.getByLabel('Password', { exact: true }).fill(password);
@@ -137,9 +138,8 @@ test('candidate can prepare, recover, complete an AI interview, and manage histo
         .getByRole('option', { name: /Future Platform Engineer/ })
         .click();
     const upcomingInterview = page
-        .getByText('Future Platform Engineer', { exact: true })
-        .locator('..')
-        .locator('..');
+        .getByTestId(/^upcoming-interview-/)
+        .filter({ hasText: 'Future Platform Engineer' });
     await upcomingInterview.getByRole('button', { name: 'Prepare' }).click();
     await expect(page.getByTestId('interview-job-select')).toContainText(
         'Future Platform Engineer',
@@ -149,16 +149,39 @@ test('candidate can prepare, recover, complete an AI interview, and manage histo
     await page.getByTestId('interview-difficulty-select').click();
     await page.getByRole('option', { name: 'Intermediate' }).click();
     await page.getByTestId('interview-mode-voice').click();
-    await expect(page.getByTestId('interview-mode-voice')).toHaveClass(
-        /bg-white/,
+    await expect(page.getByTestId('interview-mode-voice')).toHaveAttribute(
+        'aria-pressed',
+        'true',
     );
     await page.getByTestId('interview-mode-text').click();
+    await expect(page.getByTestId('interview-mode-text')).toHaveAttribute(
+        'aria-pressed',
+        'true',
+    );
     await expect(
         page.getByRole('button', { name: 'Prepare with AI' }),
     ).toBeVisible();
     await expect(
         page.getByRole('button', { name: 'Start AI Interview' }),
     ).toBeVisible();
+    await page.setViewportSize({ width: 1536, height: 1024 });
+    await page.screenshot({
+        path: testInfo.outputPath('interview-center-desktop.png'),
+        fullPage: true,
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(
+        await page.evaluate(
+            () =>
+                document.documentElement.scrollWidth <=
+                document.documentElement.clientWidth,
+        ),
+    ).toBe(true);
+    await page.screenshot({
+        path: testInfo.outputPath('interview-center-mobile.png'),
+        fullPage: true,
+    });
+    await page.setViewportSize({ width: 1536, height: 1024 });
 
     await page.route('**/interview-prep/guidance', async (route) => {
         await route.fulfill({

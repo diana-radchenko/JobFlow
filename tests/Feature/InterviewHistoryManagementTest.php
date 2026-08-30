@@ -11,14 +11,17 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 function createCompletedAiInterview(User $user, array $attributes = []): InterviewSession
 {
-    return InterviewSession::create([
+    $session = new InterviewSession([
         'user_id' => $user->id,
         'type' => 'technical',
         'complexity' => 'intermediate',
         'mode' => 'text',
         'status' => 'completed',
-        ...$attributes,
     ]);
+
+    $session->forceFill($attributes)->save();
+
+    return $session;
 }
 
 test('candidate can delete only their own completed ai interview and its private conversation', function () {

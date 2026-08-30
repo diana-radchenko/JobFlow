@@ -25,6 +25,7 @@ class InterviewPreparationController extends Controller
             ->whereIn('mode', ['text', 'live'])
             ->whereNull('application_id')
             ->latest()
+            ->orderByDesc('id')
             ->paginate(5);
         $upcomingInterviews = InterviewSession::with('workJob:id,title,company')
             ->where('user_id', $request->user()->id)

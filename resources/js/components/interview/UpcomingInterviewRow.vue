@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight, CalendarClock, Video } from 'lucide-vue-next';
+import { CalendarClock, CalendarDays, Video } from 'lucide-vue-next';
 import { stringForHuman } from '@/helpers/strings';
 import type { UpcomingInterview } from '@/types/interview-center';
 
@@ -35,35 +35,44 @@ function formatDateTime(interview: UpcomingInterview): string {
 <template>
     <article
         :data-test="`upcoming-interview-${interview.id}`"
-        class="rounded-2xl border border-[#E7ECF3] bg-white p-4 transition hover:border-[#C7D7EA] hover:shadow-[0_8px_24px_rgba(7,31,73,0.08)]"
+        class="flex flex-wrap items-center gap-3 border-b border-[#EDF0F7] py-5 last:border-b-0"
     >
-        <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-                <h4 class="truncate font-semibold text-[#14213D]">
-                    {{ interview.work_job?.title || 'Scheduled interview' }}
-                </h4>
-                <p class="mt-0.5 truncate text-sm text-[#667085]">
-                    {{ interview.work_job?.company || 'Employer interview' }}
-                </p>
-            </div>
-            <span
-                v-if="interview.interview_format"
-                class="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#EEF3FA] px-2.5 py-1 text-[11px] font-semibold text-[#0A2E48]"
+        <span
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F8F6FF] to-[#EEECFF] text-[#6759FF] shadow-[0_4px_12px_rgba(112,71,235,0.06)]"
+        >
+            <CalendarDays class="h-5 w-5" />
+        </span>
+        <div class="min-w-0 flex-1 basis-36">
+            <h4 class="truncate text-[13px] font-semibold text-[#14213D]">
+                {{ interview.work_job?.title || 'Scheduled interview' }}
+            </h4>
+            <p class="mt-1 truncate text-xs text-[#52658B]">
+                {{ interview.work_job?.company || 'Employer interview' }}
+            </p>
+            <p
+                class="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-[#52658B]"
             >
-                <Video class="h-3 w-3" />
-                {{ stringForHuman(interview.interview_format) }}
-            </span>
+                <CalendarClock class="h-3.5 w-3.5" />
+                {{ formatDateTime(interview) }}
+                <span
+                    v-if="interview.interview_format"
+                    class="inline-flex items-center gap-1"
+                >
+                    ·
+                    <Video
+                        v-if="interview.interview_format === 'video'"
+                        class="ml-1 h-3 w-3"
+                    />
+                    {{ stringForHuman(interview.interview_format) }}
+                </span>
+            </p>
         </div>
-        <p class="mt-3 flex items-center gap-1.5 text-xs text-[#667085]">
-            <CalendarClock class="h-3.5 w-3.5" />
-            {{ formatDateTime(interview) }}
-        </p>
         <button
             type="button"
-            class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#0B2F66] transition hover:text-[#3157D5] focus-visible:ring-2 focus-visible:ring-[#4F6FEF]/30 focus-visible:outline-none"
+            class="ml-auto inline-flex h-9 items-center justify-center rounded-lg border border-[#E3E8F2] bg-white px-4 text-[11px] font-semibold text-[#0B2F66] transition hover:border-[#4F6FEF] hover:text-[#3157D5] focus-visible:ring-2 focus-visible:ring-[#4F6FEF]/30 focus-visible:outline-none"
             @click="$emit('prepare', interview)"
         >
-            Prepare <ArrowRight class="h-3.5 w-3.5" />
+            Prepare
         </button>
     </article>
 </template>

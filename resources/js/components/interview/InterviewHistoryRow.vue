@@ -1,11 +1,28 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { CalendarDays, Trash2 } from 'lucide-vue-next';
+import { computed } from 'vue';
 import { stringForHuman } from '@/helpers/strings';
 import type { InterviewHistorySession } from '@/types/interview-center';
 import { results as interviewSessionResults } from '@/actions/App/Http/Controllers/InterviewSessionController';
 
-defineProps<{ session: InterviewHistorySession }>();
+const props = defineProps<{ session: InterviewHistorySession }>();
+
+const typeBadge = computed(() => {
+    if (props.session.type === 'resume-based') {
+        return { label: 'AI', color: 'bg-violet-50 text-violet-600' };
+    }
+
+    if (props.session.type === 'technical') {
+        return { label: 'T', color: 'bg-blue-50 text-blue-600' };
+    }
+
+    if (props.session.type === 'behavioral') {
+        return { label: 'B', color: 'bg-emerald-50 text-emerald-600' };
+    }
+
+    return { label: 'C', color: 'bg-amber-50 text-amber-600' };
+});
 
 defineEmits<{
     delete: [session: InterviewHistorySession];
@@ -27,37 +44,44 @@ function formatDate(value: string): string {
 <template>
     <article
         :data-test="`interview-history-${session.id}`"
-        class="group grid gap-4 rounded-2xl border border-[#E7ECF3] bg-white p-4 transition hover:border-[#CBD5E1] hover:shadow-[0_8px_24px_rgba(7,31,73,0.08)] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+        class="group flex flex-wrap items-center gap-3 border-b border-[#EDF0F7] py-5 last:border-b-0"
     >
-        <div class="min-w-0">
+        <span
+            :class="typeBadge.color"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-semibold ring-1 ring-white/60 ring-inset"
+        >
+            {{ typeBadge.label }}
+        </span>
+        <div class="min-w-0 flex-1 basis-36">
             <div class="flex flex-wrap items-center gap-2">
-                <h4 class="font-semibold text-[#14213D]">
+                <h4 class="text-xs leading-5 font-semibold text-[#14213D]">
                     {{ interviewTypeLabel(session.type) }}
                     <span class="font-normal text-[#667085]">·</span>
                     {{ stringForHuman(session.complexity) }}
                 </h4>
-                <span
-                    class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700"
-                >
-                    Completed
-                </span>
             </div>
-            <p class="mt-1 truncate text-sm text-[#667085]">
+            <p class="mt-0.5 truncate text-xs text-[#52658B]">
                 {{ session.resume?.title || 'General resume context' }}
                 <template v-if="session.work_job">
                     · {{ session.work_job.title }}
                 </template>
             </p>
-            <p class="mt-2 flex items-center gap-1.5 text-xs text-[#667085]">
+            <p
+                class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[11px] text-[#52658B]"
+            >
                 <CalendarDays class="h-3.5 w-3.5" />
                 {{ formatDate(session.created_at) }}
+                <span
+                    class="rounded-md border border-emerald-100 bg-emerald-50/70 px-2 py-0.5 text-[10px] font-medium text-emerald-700"
+                    >Completed</span
+                >
             </p>
         </div>
 
-        <div class="flex items-center gap-2 sm:justify-end">
+        <div class="ml-auto flex items-center gap-2">
             <Link
                 :href="interviewSessionResults.url(session.id)"
-                class="inline-flex h-9 items-center justify-center rounded-lg border border-[#D7DEE8] bg-white px-3 text-xs font-semibold text-[#0A2E48] transition hover:border-[#0A2E48] hover:bg-[#F5F7FB]"
+                class="inline-flex h-9 items-center justify-center rounded-lg border border-[#E3E8F2] bg-white px-3 text-[11px] font-semibold text-[#0A2E48] transition hover:border-[#0A2E48] hover:bg-[#F5F7FB]"
             >
                 View Results
             </Link>
@@ -65,7 +89,7 @@ function formatDate(value: string): string {
                 type="button"
                 :aria-label="`Delete interview ${session.id}`"
                 title="Delete interview"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-100 bg-red-50 text-red-600 transition hover:border-red-200 hover:bg-red-100 focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:outline-none"
+                class="inline-flex h-9 w-8 items-center justify-center rounded-lg border border-red-100 bg-red-50/40 text-red-500 transition hover:border-red-200 hover:bg-red-100 focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:outline-none"
                 @click.stop="$emit('delete', session)"
             >
                 <Trash2 class="h-4 w-4" />

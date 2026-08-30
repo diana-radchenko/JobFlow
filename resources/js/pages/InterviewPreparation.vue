@@ -2,19 +2,17 @@
 import { Head, InfiniteScroll, Link, router, useForm } from '@inertiajs/vue3';
 import {
     ArrowRight,
+    BrainCircuit,
     BriefcaseBusiness,
     CheckCircle2,
-    ChevronRight,
     FileText,
     HelpCircle,
-    History,
-    Info,
     Loader2,
     MessageSquareText,
     Mic,
     PlayCircle,
     Sparkles,
-    Target,
+    Signal,
 } from 'lucide-vue-next';
 import { computed, nextTick, ref } from 'vue';
 import InterviewHistoryRow from '@/components/interview/InterviewHistoryRow.vue';
@@ -266,33 +264,60 @@ defineOptions({
 <template>
     <Head title="Interview Center" />
 
-    <div class="jobflow-page font-sans dark:bg-slate-950">
+    <div class="jobflow-page interview-center font-sans dark:bg-slate-950">
         <div class="jobflow-page-frame">
-            <header class="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                    <p
-                        class="text-[11px] font-semibold tracking-[0.16em] text-[#3157D5] uppercase"
+            <header
+                class="relative flex min-h-24 flex-wrap items-start justify-between gap-4 md:min-h-28"
+            >
+                <div class="relative z-10 pt-3">
+                    <h1
+                        class="flex items-center gap-3 text-[28px] leading-tight font-bold tracking-tight text-[#07162F] md:text-[34px] dark:text-white"
                     >
-                        AI-powered practice
-                    </p>
-                    <h1 class="jobflow-page-title mt-1 dark:text-white">
                         Interview Center
+                        <Sparkles class="h-7 w-7 text-[#7A6CFF]" />
                     </h1>
-                    <p class="mt-2 text-sm text-[#667085] dark:text-slate-400">
+                    <p
+                        class="mt-3 text-sm text-[#52658B] md:text-base dark:text-slate-400"
+                    >
                         Practice smarter. Interview better. Get hired.
                     </p>
                 </div>
+                <div
+                    aria-hidden="true"
+                    class="pointer-events-none absolute -top-3 right-44 hidden h-36 w-44 lg:block"
+                >
+                    <div
+                        class="absolute right-2 bottom-0 h-12 w-36 rounded-[50%] bg-violet-200/45 blur-xl"
+                    />
+                    <div
+                        class="absolute top-0 right-3 h-24 w-24 rotate-12 rounded-2xl border border-blue-100/70 bg-blue-100/40"
+                    />
+                    <div
+                        class="absolute top-2 right-7 h-24 w-24 rotate-6 rounded-2xl border border-white bg-gradient-to-br from-blue-100/70 to-violet-100/40"
+                    />
+                    <div
+                        class="absolute top-4 right-12 flex h-24 w-24 items-center justify-center rounded-2xl border border-white/90 bg-gradient-to-br from-white/80 to-blue-100/60 shadow-[0_10px_28px_rgba(128,147,240,0.12)]"
+                    >
+                        <Mic
+                            class="h-12 w-12 text-white drop-shadow-[0_2px_5px_rgba(92,155,255,0.85)]"
+                            :stroke-width="1.5"
+                        />
+                    </div>
+                    <div
+                        class="absolute right-8 bottom-0 h-7 w-32 rounded-[50%] border border-white bg-white/55 shadow-[0_8px_16px_rgba(154,121,242,0.15)]"
+                    />
+                </div>
                 <button
                     type="button"
-                    class="inline-flex h-9 items-center gap-2 rounded-lg border border-[#D7DEE8] bg-white px-3 text-xs font-semibold text-[#0A2E48] transition hover:border-[#0A2E48] hover:bg-[#F5F7FB]"
+                    class="relative z-10 inline-flex h-10 items-center gap-2 rounded-lg border border-[#E3E8F2] bg-white px-4 text-xs font-semibold text-[#0A2E48] shadow-[0_3px_8px_rgba(7,31,73,0.04)] transition hover:border-[#6759FF] hover:bg-[#F5F7FB]"
                     @click="howItWorksOpen = true"
                 >
-                    <HelpCircle class="h-4 w-4" /> How it works
+                    <HelpCircle class="h-4 w-4 text-[#4C42DE]" /> How it works
                 </button>
             </header>
 
             <nav
-                class="flex w-full gap-1 border-b border-[#E2E8F0]"
+                class="flex w-full gap-2"
                 aria-label="Interview Center sections"
                 role="tablist"
             >
@@ -302,11 +327,11 @@ defineOptions({
                     type="button"
                     role="tab"
                     :data-test="'interview-tab-' + tab"
-                    class="relative px-4 py-3 text-sm font-semibold capitalize transition"
+                    class="min-w-24 rounded-lg border px-5 py-2.5 text-sm font-semibold capitalize transition"
                     :class="
                         activeTab === tab
-                            ? 'text-[#0B2F66] after:absolute after:right-0 after:bottom-[-1px] after:left-0 after:h-0.5 after:bg-[#3157D5]'
-                            : 'text-[#667085] hover:text-[#14213D]'
+                            ? 'border-[#03162E] bg-[#03162E] text-white shadow-sm'
+                            : 'border-[#E7ECF3] bg-white text-[#14213D] hover:border-[#A9B8D5]'
                     "
                     :aria-selected="activeTab === tab"
                     @click="activeTab = tab"
@@ -317,7 +342,7 @@ defineOptions({
 
             <div
                 v-if="activeTab === 'prepare'"
-                class="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.72fr)]"
+                class="grid gap-5 xl:grid-cols-[minmax(0,1.42fr)_minmax(340px,1fr)]"
             >
                 <main class="min-w-0 space-y-5">
                     <section
@@ -327,18 +352,14 @@ defineOptions({
                     >
                         <div class="flex items-start justify-between gap-4">
                             <div>
-                                <h2 class="jobflow-section-title">
-                                    Set up your interview
+                                <h2
+                                    class="flex items-center gap-3 text-base font-semibold text-[#07162F]"
+                                >
+                                    <Sparkles
+                                        class="h-6 w-6 text-[#7A6CFF] drop-shadow-[0_2px_4px_rgba(122,108,255,0.25)]"
+                                    />
+                                    Setup your interview
                                 </h2>
-                                <p class="mt-1 text-sm text-[#667085]">
-                                    Choose your context, then prepare or start a
-                                    realistic AI interview.
-                                </p>
-                            </div>
-                            <div
-                                class="hidden h-10 w-10 items-center justify-center rounded-xl bg-[#EEF3FA] text-[#0B2F66] sm:flex"
-                            >
-                                <Target class="h-5 w-5" />
                             </div>
                         </div>
 
@@ -411,13 +432,12 @@ defineOptions({
                             </div>
                         </div>
 
-                        <div class="mt-6 grid gap-5 md:grid-cols-2">
+                        <div class="mt-8 grid gap-6 md:grid-cols-2">
                             <div class="space-y-2">
                                 <label
                                     for="interview-resume"
                                     class="flex items-center gap-2 text-sm font-semibold text-[#14213D]"
                                 >
-                                    <FileText class="h-4 w-4 text-[#3157D5]" />
                                     Resume
                                 </label>
                                 <Select
@@ -427,8 +447,11 @@ defineOptions({
                                     <SelectTrigger
                                         id="interview-resume"
                                         data-test="interview-resume-select"
-                                        class="w-full"
+                                        class="h-11 w-full border-[#E3E8F2] bg-white text-xs shadow-[0_2px_6px_rgba(7,31,73,0.025)]"
                                     >
+                                        <FileText
+                                            class="h-4 w-4 shrink-0 text-[#52658B]"
+                                        />
                                         <SelectValue
                                             placeholder="Select a resume"
                                         />
@@ -457,9 +480,6 @@ defineOptions({
                                     for="interview-job"
                                     class="flex items-center gap-2 text-sm font-semibold text-[#14213D]"
                                 >
-                                    <BriefcaseBusiness
-                                        class="h-4 w-4 text-[#3157D5]"
-                                    />
                                     Job / Application
                                 </label>
                                 <Select
@@ -469,8 +489,11 @@ defineOptions({
                                     <SelectTrigger
                                         id="interview-job"
                                         data-test="interview-job-select"
-                                        class="w-full"
+                                        class="h-11 w-full border-[#E3E8F2] bg-white text-xs shadow-[0_2px_6px_rgba(7,31,73,0.025)]"
                                     >
+                                        <BriefcaseBusiness
+                                            class="h-4 w-4 shrink-0 text-[#52658B]"
+                                        />
                                         <SelectValue
                                             placeholder="General Interview"
                                         />
@@ -495,7 +518,7 @@ defineOptions({
                         </div>
 
                         <div
-                            class="mt-5 grid gap-5 border-t border-[#E7ECF3] pt-5 md:grid-cols-2 xl:grid-cols-[1.1fr_0.9fr_1fr]"
+                            class="mt-7 grid gap-5 md:grid-cols-[1.08fr_1fr_1.05fr]"
                         >
                             <div class="space-y-2">
                                 <label
@@ -511,8 +534,14 @@ defineOptions({
                                     <SelectTrigger
                                         id="interview-type"
                                         data-test="interview-type-select"
-                                        class="w-full"
+                                        class="h-11 w-full border-[#E3E8F2] bg-white text-xs"
+                                        :title="
+                                            selectedInterviewType?.description
+                                        "
                                     >
+                                        <Sparkles
+                                            class="h-4 w-4 shrink-0 text-[#52658B]"
+                                        />
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -525,11 +554,6 @@ defineOptions({
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <p
-                                    class="text-xs leading-relaxed text-[#667085]"
-                                >
-                                    {{ selectedInterviewType?.description }}
-                                </p>
                             </div>
 
                             <div class="space-y-2">
@@ -546,8 +570,12 @@ defineOptions({
                                     <SelectTrigger
                                         id="interview-difficulty"
                                         data-test="interview-difficulty-select"
-                                        class="w-full"
+                                        class="h-11 w-full border-[#E3E8F2] bg-white text-xs"
+                                        :title="selectedComplexity?.description"
                                     >
+                                        <Signal
+                                            class="h-4 w-4 shrink-0 text-[#52658B]"
+                                        />
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -560,11 +588,6 @@ defineOptions({
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <p
-                                    class="text-xs leading-relaxed text-[#667085]"
-                                >
-                                    {{ selectedComplexity?.description }}
-                                </p>
                             </div>
 
                             <fieldset
@@ -574,85 +597,86 @@ defineOptions({
                                 <legend
                                     class="text-sm font-semibold text-[#14213D]"
                                 >
-                                    Interview Mode
+                                    Mode
                                 </legend>
-                                <div
-                                    class="grid grid-cols-2 rounded-xl border border-[#D7DEE8] bg-[#F5F7FB] p-1"
-                                >
+                                <div class="grid grid-cols-2 gap-2">
                                     <button
                                         type="button"
                                         data-test="interview-mode-text"
                                         :aria-pressed="interviewMode === 'text'"
-                                        class="rounded-lg px-3 py-2 text-xs font-semibold transition"
+                                        class="flex h-11 items-center justify-center gap-2 rounded-lg border px-2 text-xs font-medium transition"
                                         :class="
                                             interviewMode === 'text'
-                                                ? 'bg-white text-[#0B2F66] shadow-sm'
-                                                : 'text-[#667085] hover:text-[#14213D]'
+                                                ? 'border-[#7663FF] bg-white text-[#6759FF] shadow-[0_0_0_1px_rgba(118,99,255,0.06)]'
+                                                : 'border-[#E3E8F2] bg-white text-[#52658B] hover:border-[#A9B8D5]'
                                         "
                                         @click="interviewMode = 'text'"
                                     >
+                                        <MessageSquareText class="h-4 w-4" />
                                         Text
                                     </button>
                                     <button
                                         type="button"
                                         data-test="interview-mode-voice"
                                         :aria-pressed="interviewMode === 'live'"
-                                        class="rounded-lg px-3 py-2 text-xs font-semibold transition"
+                                        class="flex h-11 items-center justify-center gap-2 rounded-lg border px-2 text-xs font-medium transition"
                                         :class="
                                             interviewMode === 'live'
-                                                ? 'bg-white text-[#0B2F66] shadow-sm'
-                                                : 'text-[#667085] hover:text-[#14213D]'
+                                                ? 'border-[#7663FF] bg-white text-[#6759FF] shadow-[0_0_0_1px_rgba(118,99,255,0.06)]'
+                                                : 'border-[#E3E8F2] bg-white text-[#52658B] hover:border-[#A9B8D5]'
                                         "
                                         @click="interviewMode = 'live'"
                                     >
-                                        Voice
+                                        <Mic class="h-4 w-4" /> Voice
                                     </button>
                                 </div>
-                                <p
-                                    class="text-xs leading-relaxed text-[#667085]"
-                                >
-                                    {{
-                                        interviewMode === 'text'
-                                            ? 'Type your answers at your own pace.'
-                                            : 'Practice speaking your answers aloud.'
-                                    }}
-                                </p>
                             </fieldset>
                         </div>
 
-                        <div class="mt-6 grid gap-4 sm:grid-cols-2">
+                        <div class="mt-9 grid gap-4 sm:grid-cols-2">
                             <button
                                 type="button"
                                 data-test="prepare-with-ai"
-                                class="group rounded-2xl border border-[#DCE5F2] bg-gradient-to-br from-white to-[#F1EEFF] p-5 text-left transition hover:-translate-y-0.5 hover:border-[#B9C7E5] hover:shadow-[0_12px_30px_rgba(49,87,213,0.10)] disabled:pointer-events-none disabled:opacity-50"
+                                class="group relative flex min-h-48 items-center gap-4 overflow-hidden rounded-xl border border-[#DBDAFF] bg-gradient-to-br from-[#F7F7FF] via-white to-[#F1F2FF] p-5 text-left shadow-[0_5px_15px_rgba(112,71,235,0.06)] transition hover:-translate-y-0.5 hover:border-[#ABA1FF] hover:shadow-[0_12px_30px_rgba(112,71,235,0.12)] disabled:pointer-events-none disabled:opacity-50"
                                 :disabled="!!activeSession || !resumeId"
                                 @click="prepareWithAi"
                             >
                                 <span
-                                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#7047EB] shadow-sm"
+                                    class="absolute -bottom-5 -left-5 h-32 w-32 rounded-full bg-blue-200/35 blur-2xl"
+                                    aria-hidden="true"
+                                />
+                                <span
+                                    class="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] border border-white bg-gradient-to-br from-violet-200 via-violet-100 to-sky-200 text-[#8657E8] shadow-[0_8px_18px_rgba(132,87,230,0.20),inset_0_1px_3px_white]"
                                 >
-                                    <Sparkles class="h-5 w-5" />
+                                    <BrainCircuit
+                                        class="h-9 w-9 drop-shadow-[0_1px_2px_white]"
+                                        :stroke-width="1.4"
+                                    />
+                                </span>
+                                <span class="relative min-w-0 flex-1">
+                                    <span
+                                        class="block text-base font-semibold text-[#07162F]"
+                                        >Prepare with AI</span
+                                    >
+                                    <span
+                                        class="mt-3 block text-xs leading-6 text-[#263D63]"
+                                        >Get personalized tips, likely questions
+                                        and expert guidance.</span
+                                    >
                                 </span>
                                 <span
-                                    class="mt-4 flex items-center justify-between gap-3 text-base font-semibold text-[#14213D]"
+                                    class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#A596FF] to-[#6759FF] text-white shadow-[0_5px_12px_rgba(112,71,235,0.2)]"
                                 >
-                                    Prepare with AI
                                     <ArrowRight
                                         class="h-4 w-4 transition group-hover:translate-x-0.5"
                                     />
-                                </span>
-                                <span
-                                    class="mt-1 block text-sm leading-relaxed text-[#667085]"
-                                >
-                                    Get personalized tips, likely questions and
-                                    expert guidance.
                                 </span>
                             </button>
 
                             <button
                                 type="button"
                                 data-test="start-ai-interview"
-                                class="group relative overflow-hidden rounded-2xl bg-[#051C2E] p-5 text-left text-white shadow-[0_14px_34px_rgba(5,28,46,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0A2E48] disabled:pointer-events-none disabled:opacity-50"
+                                class="group relative flex min-h-48 items-center gap-4 overflow-hidden rounded-xl border border-[#25365C] bg-gradient-to-br from-[#102044] via-[#03162E] to-[#001225] p-5 text-left text-white shadow-[0_6px_18px_rgba(28,35,79,0.12),inset_0_1px_10px_rgba(133,151,227,0.18)] transition hover:-translate-y-0.5 hover:border-[#7663FF] disabled:pointer-events-none disabled:opacity-50"
                                 :disabled="
                                     form.processing ||
                                     !!activeSession ||
@@ -661,43 +685,49 @@ defineOptions({
                                 @click="startAiInterview"
                             >
                                 <span
-                                    class="absolute -top-16 -right-16 h-36 w-36 rounded-full bg-[#4F6FEF]/20 blur-3xl"
+                                    class="absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-[#7545FC]/20 blur-3xl"
                                 />
                                 <span
-                                    class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white ring-1 ring-white/15"
+                                    class="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[#5856FC] bg-[#051B42] text-[#6981FF] shadow-[0_0_14px_rgba(105,73,255,0.3),inset_0_-4px_10px_rgba(115,41,242,0.3)]"
                                 >
                                     <Loader2
                                         v-if="form.processing"
-                                        class="h-5 w-5 animate-spin"
+                                        class="h-7 w-7 animate-spin"
                                     />
-                                    <Mic v-else class="h-5 w-5" />
+                                    <Mic
+                                        v-else
+                                        class="h-8 w-8 drop-shadow-[0_0_5px_rgba(70,161,255,0.8)]"
+                                        :stroke-width="1.6"
+                                    />
+                                </span>
+                                <span class="relative min-w-0 flex-1">
+                                    <span class="block text-base font-semibold">
+                                        {{
+                                            form.processing
+                                                ? 'Starting...'
+                                                : 'Start AI Interview'
+                                        }}
+                                    </span>
+                                    <span
+                                        class="mt-3 block text-xs leading-6 text-slate-200"
+                                        >Practice real interview questions and
+                                        get feedback.</span
+                                    >
                                 </span>
                                 <span
-                                    class="relative mt-4 flex items-center justify-between gap-3 text-base font-semibold"
+                                    class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#25456F] text-[#9CCEFF]"
                                 >
-                                    {{
-                                        form.processing
-                                            ? 'Starting...'
-                                            : 'Start AI Interview'
-                                    }}
-                                    <ChevronRight
-                                        v-if="!form.processing"
+                                    <ArrowRight
                                         class="h-4 w-4 transition group-hover:translate-x-0.5"
                                     />
-                                </span>
-                                <span
-                                    class="relative mt-1 block text-sm leading-relaxed text-slate-300"
-                                >
-                                    Practice real interview questions and get
-                                    feedback.
                                 </span>
                             </button>
                         </div>
 
                         <div
-                            class="mt-4 flex items-center gap-2 rounded-xl bg-[#F5F7FB] px-4 py-3 text-xs text-[#667085]"
+                            class="mt-8 flex items-center gap-3 rounded-lg border border-[#E8ECF7] bg-[#F7F8FE] px-4 py-3 text-xs text-[#52658B]"
                         >
-                            <Info class="h-4 w-4 shrink-0 text-[#3157D5]" />
+                            <Sparkles class="h-4 w-4 shrink-0 text-[#6759FF]" />
                             AI tailors everything to your resume, role and
                             goals.
                         </div>
@@ -706,13 +736,10 @@ defineOptions({
 
                 <aside class="min-w-0 space-y-5">
                     <section class="jobflow-surface p-5">
-                        <div class="flex items-center justify-between gap-3">
+                        <div
+                            class="flex items-center justify-between gap-3 border-b border-[#EDF0F7] pb-3"
+                        >
                             <div class="flex items-center gap-2">
-                                <span
-                                    class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF3FA] text-[#0B2F66]"
-                                >
-                                    <BriefcaseBusiness class="h-4 w-4" />
-                                </span>
                                 <h2
                                     class="text-base font-semibold text-[#14213D]"
                                 >
@@ -727,10 +754,7 @@ defineOptions({
                                 View all
                             </button>
                         </div>
-                        <div
-                            v-if="upcomingPreview.length"
-                            class="mt-4 space-y-3"
-                        >
+                        <div v-if="upcomingPreview.length" class="mt-0">
                             <UpcomingInterviewRow
                                 v-for="interview in upcomingPreview"
                                 :key="interview.id"
@@ -751,13 +775,10 @@ defineOptions({
                     </section>
 
                     <section class="jobflow-surface p-5">
-                        <div class="flex items-center justify-between gap-3">
+                        <div
+                            class="flex items-center justify-between gap-3 border-b border-[#EDF0F7] pb-3"
+                        >
                             <div class="flex items-center gap-2">
-                                <span
-                                    class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F1EEFF] text-[#7047EB]"
-                                >
-                                    <History class="h-4 w-4" />
-                                </span>
                                 <h2
                                     class="text-base font-semibold text-[#14213D]"
                                 >
@@ -772,10 +793,7 @@ defineOptions({
                                 View all history
                             </button>
                         </div>
-                        <div
-                            v-if="recentSessions.length"
-                            class="mt-4 space-y-3"
-                        >
+                        <div v-if="recentSessions.length" class="mt-0">
                             <InterviewHistoryRow
                                 v-for="session in recentSessions"
                                 :key="session.id"
