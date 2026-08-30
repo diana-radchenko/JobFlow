@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import DOMPurify from 'dompurify';
 import { BadgeCheck, MapPin, Heart, ChevronLeft } from 'lucide-vue-next';
-import { marked } from 'marked';
 import { ref } from 'vue';
+import MarkdownContent from '@/components/MarkdownContent.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,17 +26,6 @@ const props = defineProps<{
     resumes: { id: number; title: string }[];
     saved: boolean;
 }>();
-
-marked.setOptions({ gfm: true, breaks: true });
-
-/** Job descriptions are authored as Markdown; render as sanitized HTML. */
-const descriptionHtml = DOMPurify.sanitize(
-    marked.parse(props.job.description, { async: false }) as string,
-);
-const sectionHtml = (value?: string | null) =>
-    value
-        ? DOMPurify.sanitize(marked.parse(value, { async: false }) as string)
-        : '';
 
 const salary = () => {
     if (props.job.salary_start === null && props.job.salary_end === null) {
@@ -220,23 +208,23 @@ defineOptions({
 
                 <div v-if="job.responsibilities" class="mb-8">
                     <h2 class="mb-3 text-lg font-semibold">Responsibilities</h2>
-                    <div
-                        class="markdown-body text-stone-600 dark:text-stone-300"
-                        v-html="sectionHtml(job.responsibilities)"
+                    <MarkdownContent
+                        :source="job.responsibilities"
+                        class="text-stone-600 dark:text-stone-300"
                     />
                 </div>
                 <div v-if="job.requirements" class="mb-8">
                     <h2 class="mb-3 text-lg font-semibold">Requirements</h2>
-                    <div
-                        class="markdown-body text-stone-600 dark:text-stone-300"
-                        v-html="sectionHtml(job.requirements)"
+                    <MarkdownContent
+                        :source="job.requirements"
+                        class="text-stone-600 dark:text-stone-300"
                     />
                 </div>
                 <div v-if="job.benefits" class="mb-8">
                     <h2 class="mb-3 text-lg font-semibold">Benefits</h2>
-                    <div
-                        class="markdown-body text-stone-600 dark:text-stone-300"
-                        v-html="sectionHtml(job.benefits)"
+                    <MarkdownContent
+                        :source="job.benefits"
+                        class="text-stone-600 dark:text-stone-300"
                     />
                 </div>
 
@@ -266,9 +254,9 @@ defineOptions({
                     >
                         Job Description
                     </h2>
-                    <div
-                        class="markdown-body max-w-none text-stone-600 dark:text-stone-300"
-                        v-html="descriptionHtml"
+                    <MarkdownContent
+                        :source="job.description"
+                        class="max-w-none text-stone-600 dark:text-stone-300"
                     />
                 </div>
 

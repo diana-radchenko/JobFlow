@@ -1,10 +1,10 @@
 <?php
 
-use App\Models\User;
+use App\Enums\ApplicationStatus;
 use App\Models\Resume;
+use App\Models\User;
 use App\Models\UserWorkJobApplication;
 use App\Models\WorkJob;
-use App\Enums\ApplicationStatus;
 
 beforeEach(function () {
     $this->employer = User::factory()->employer()->create();
@@ -62,6 +62,92 @@ test('an employer can post a job', function () {
 
     expect($job->user_id)->toBe($this->employer->id)
         ->and($job->technologies)->toBe(['PHP', 'Laravel']);
+});
+
+test('vacancy markdown survives draft save edit publish and resave unchanged', function () {
+    $markdown = [
+        'description' => "## Overview\n\nBuild **safe** products.\n\n- Design the API\n- Review changes\n\n<script>window.__vacancyMarkdownXss = true</script>",
+        'responsibilities' => "## Responsibilities\n\n- Own **delivery**\n- Support the team",
+        'requirements' => "## Schedule\n\n- Monday to Friday\n- **Flexible** start time",
+        'benefits' => "## Benefits\n\n- Learning budget\n- **Remote** equipment",
+    ];
+    $payload = [
+        'title' => 'Markdown Vacancy',
+        'company' => 'Acme',
+        'location' => 'Remote',
+        'contacts' => 'careers@acme.test',
+        'technologies' => ['Laravel', 'Vue'],
+        ...$markdown,
+    ];
+
+    $this->actingAs($this->employer)
+        ->post(route('employer.jobs.store'), [...$payload, 'status' => 'draft'])
+        ->assertSessionHasNoErrors();
+
+    $job = WorkJob::query()->where('title', 'Markdown Vacancy')->firstOrFail();
+
+    expect($job->status)->toBe('draft')
+        ->and($job->description)->toBe($markdown['description'])
+        ->and($job->responsibilities)->toBe($markdown['responsibilities'])
+        ->and($job->requirements)->toBe($markdown['requirements'])
+        ->and($job->benefits)->toBe($markdown['benefits']);
+
+    $this->actingAs($this->employer)
+        ->get(route('employer.jobs.edit', $job))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Employer/Jobs/Form')
+            ->where('job.description', $markdown['description'])
+            ->where('job.responsibilities', $markdown['responsibilities'])
+            ->where('job.requirements', $markdown['requirements'])
+            ->where('job.benefits', $markdown['benefits']));
+
+    $this->actingAs($this->employer)
+        ->put(route('employer.jobs.update', $job), [...$payload, 'status' => 'published'])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('employer.jobs.show', $job));
+
+    $job->refresh();
+
+    expect($job->status)->toBe('published')
+        ->and($job->published_at)->not->toBeNull()
+        ->and($job->description)->toBe($markdown['description'])
+        ->and($job->responsibilities)->toBe($markdown['responsibilities'])
+        ->and($job->requirements)->toBe($markdown['requirements'])
+        ->and($job->benefits)->toBe($markdown['benefits']);
+
+    $this->actingAs($this->employer)
+        ->get(route('employer.jobs.show', $job))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Employer/Jobs/Show')
+            ->where('job.description', $markdown['description'])
+            ->where('job.responsibilities', $markdown['responsibilities'])
+            ->where('job.requirements', $markdown['requirements'])
+            ->where('job.benefits', $markdown['benefits']));
+
+    $candidate = User::factory()->create();
+
+    $this->actingAs($candidate)
+        ->get(route('job-selection.show', $job))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('JobDetail')
+            ->where('job.description', $markdown['description'])
+            ->where('job.responsibilities', $markdown['responsibilities'])
+            ->where('job.requirements', $markdown['requirements'])
+            ->where('job.benefits', $markdown['benefits']));
+
+    $this->actingAs($this->employer)
+        ->put(route('employer.jobs.update', $job), [...$payload, 'status' => 'published'])
+        ->assertSessionHasNoErrors();
+
+    $job->refresh();
+
+    expect($job->description)->toBe($markdown['description'])
+        ->and($job->responsibilities)->toBe($markdown['responsibilities'])
+        ->and($job->requirements)->toBe($markdown['requirements'])
+        ->and($job->benefits)->toBe($markdown['benefits']);
 });
 
 test('posting a job without technologies stores an empty list', function () {
@@ -178,4 +264,3 @@ test('an employer cannot touch an unowned platform job', function () {
     $this->actingAs($this->employer)->get(route('employer.jobs.show', $job))->assertForbidden();
     $this->actingAs($this->employer)->delete(route('employer.jobs.destroy', $job))->assertForbidden();
 });
-
