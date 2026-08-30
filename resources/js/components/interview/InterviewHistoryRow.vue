@@ -2,9 +2,9 @@
 import { Link } from '@inertiajs/vue3';
 import { CalendarDays, Trash2 } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { results as interviewSessionResults } from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { stringForHuman } from '@/helpers/strings';
 import type { InterviewHistorySession } from '@/types/interview-center';
-import { results as interviewSessionResults } from '@/actions/App/Http/Controllers/InterviewSessionController';
 
 const props = defineProps<{ session: InterviewHistorySession }>();
 
@@ -54,7 +54,7 @@ function formatDate(value: string): string {
         </span>
         <div class="min-w-0 flex-1 basis-36">
             <div class="flex flex-wrap items-center gap-2">
-                <h4 class="text-xs leading-5 font-semibold text-[#14213D]">
+                <h4 class="text-[14px] leading-5 font-semibold text-[#14213D]">
                     {{ interviewTypeLabel(session.type) }}
                     <span class="font-normal text-[#667085]">·</span>
                     {{ stringForHuman(session.complexity) }}
@@ -67,12 +67,12 @@ function formatDate(value: string): string {
                 </template>
             </p>
             <p
-                class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[11px] text-[#52658B]"
+                class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] text-[#52658B]"
             >
                 <CalendarDays class="h-3.5 w-3.5" />
                 {{ formatDate(session.created_at) }}
                 <span
-                    class="rounded-md border border-emerald-100 bg-emerald-50/70 px-2 py-0.5 text-[10px] font-medium text-emerald-700"
+                    class="rounded-md border border-emerald-100 bg-emerald-50/70 px-2 py-0.5 text-[12px] font-medium text-emerald-700"
                     >Completed</span
                 >
             </p>
@@ -81,7 +81,7 @@ function formatDate(value: string): string {
         <div class="ml-auto flex items-center gap-2">
             <Link
                 :href="interviewSessionResults.url(session.id)"
-                class="inline-flex h-9 items-center justify-center rounded-lg border border-[#E3E8F2] bg-white px-3 text-[11px] font-semibold text-[#0A2E48] transition hover:border-[#0A2E48] hover:bg-[#F5F7FB]"
+                class="inline-flex h-9 items-center justify-center rounded-lg border border-[#E3E8F2] bg-white px-3 text-sm font-semibold text-[#0A2E48] transition hover:border-[#0A2E48] hover:bg-[#F5F7FB]"
             >
                 View Results
             </Link>

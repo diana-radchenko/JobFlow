@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '../../css/interview-readability.css';
 import { Head, InfiniteScroll, Link, router, useForm } from '@inertiajs/vue3';
 import {
     ArrowRight,
@@ -11,10 +12,17 @@ import {
     MessageSquareText,
     Mic,
     PlayCircle,
-    Sparkles,
     Signal,
+    Sparkles,
 } from 'lucide-vue-next';
 import { computed, nextTick, ref } from 'vue';
+import { show as interviewPrepShow } from '@/actions/App/Http/Controllers/InterviewPrepController';
+import {
+    complete as interviewSessionComplete,
+    destroy as interviewSessionDestroy,
+    show as interviewSessionShow,
+    store as interviewSessionStore,
+} from '@/actions/App/Http/Controllers/InterviewSessionController';
 import InterviewHistoryRow from '@/components/interview/InterviewHistoryRow.vue';
 import UpcomingInterviewRow from '@/components/interview/UpcomingInterviewRow.vue';
 import { Button } from '@/components/ui/button';
@@ -33,18 +41,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { interviewPreparation } from '@/routes';
 import type {
     InterviewHistorySession,
     UpcomingInterview,
 } from '@/types/interview-center';
-import { show as interviewPrepShow } from '@/actions/App/Http/Controllers/InterviewPrepController';
-import {
-    complete as interviewSessionComplete,
-    destroy as interviewSessionDestroy,
-    show as interviewSessionShow,
-    store as interviewSessionStore,
-} from '@/actions/App/Http/Controllers/InterviewSessionController';
-import { interviewPreparation } from '@/routes';
 
 type InterviewTab = 'prepare' | 'upcoming' | 'history';
 const tabs: InterviewTab[] = ['prepare', 'upcoming', 'history'];
@@ -139,6 +140,11 @@ const visiblePastSessions = computed(() =>
         (session) => !deletedSessionIds.value.includes(session.id),
     ),
 );
+const activeSessionForMode = computed(() =>
+    props.activeSession?.mode === interviewMode.value
+        ? props.activeSession
+        : null,
+);
 const recentSessions = computed(() => visiblePastSessions.value.slice(0, 3));
 const upcomingPreview = computed(() => props.upcomingInterviews.slice(0, 3));
 
@@ -169,7 +175,7 @@ function selectedContext() {
 }
 
 function prepareWithAi() {
-    if (!resumeId.value || props.activeSession) {
+    if (!resumeId.value || activeSessionForMode.value) {
         return;
     }
 
@@ -177,7 +183,7 @@ function prepareWithAi() {
 }
 
 function startAiInterview(): void {
-    if (props.activeSession) {
+    if (activeSessionForMode.value) {
         alert(
             'You already have an active AI interview. Please finish it first.',
         );
@@ -264,7 +270,7 @@ defineOptions({
 <template>
     <Head title="Interview Center" />
 
-    <div class="jobflow-page interview-center font-sans dark:bg-slate-950">
+    <div class="jobflow-page interview-center interview-readability font-sans dark:bg-slate-950">
         <div class="jobflow-page-frame">
             <header
                 class="relative flex min-h-24 flex-wrap items-start justify-between gap-4 md:min-h-28"
@@ -442,7 +448,7 @@ defineOptions({
                                 </label>
                                 <Select
                                     v-model="resumeId"
-                                    :disabled="!!activeSession"
+                                    :disabled="!!activeSessionForMode"
                                 >
                                     <SelectTrigger
                                         id="interview-resume"
@@ -484,7 +490,7 @@ defineOptions({
                                 </label>
                                 <Select
                                     v-model="workJobId"
-                                    :disabled="!!activeSession"
+                                    :disabled="!!activeSessionForMode"
                                 >
                                     <SelectTrigger
                                         id="interview-job"
@@ -529,7 +535,7 @@ defineOptions({
                                 </label>
                                 <Select
                                     v-model="interviewType"
-                                    :disabled="!!activeSession"
+                                    :disabled="!!activeSessionForMode"
                                 >
                                     <SelectTrigger
                                         id="interview-type"
@@ -565,7 +571,7 @@ defineOptions({
                                 </label>
                                 <Select
                                     v-model="complexity"
-                                    :disabled="!!activeSession"
+                                    :disabled="!!activeSessionForMode"
                                 >
                                     <SelectTrigger
                                         id="interview-difficulty"
@@ -590,10 +596,7 @@ defineOptions({
                                 </Select>
                             </div>
 
-                            <fieldset
-                                class="space-y-2"
-                                :disabled="!!activeSession"
-                            >
+                            <fieldset class="space-y-2">
                                 <legend
                                     class="text-sm font-semibold text-[#14213D]"
                                 >
@@ -638,7 +641,7 @@ defineOptions({
                                 type="button"
                                 data-test="prepare-with-ai"
                                 class="group relative flex min-h-48 items-center gap-4 overflow-hidden rounded-xl border border-[#DBDAFF] bg-gradient-to-br from-[#F7F7FF] via-white to-[#F1F2FF] p-5 text-left shadow-[0_5px_15px_rgba(112,71,235,0.06)] transition hover:-translate-y-0.5 hover:border-[#ABA1FF] hover:shadow-[0_12px_30px_rgba(112,71,235,0.12)] disabled:pointer-events-none disabled:opacity-50"
-                                :disabled="!!activeSession || !resumeId"
+                                :disabled="!!activeSessionForMode || !resumeId"
                                 @click="prepareWithAi"
                             >
                                 <span
@@ -679,7 +682,7 @@ defineOptions({
                                 class="group relative flex min-h-48 items-center gap-4 overflow-hidden rounded-xl border border-[#25365C] bg-gradient-to-br from-[#102044] via-[#03162E] to-[#001225] p-5 text-left text-white shadow-[0_6px_18px_rgba(28,35,79,0.12),inset_0_1px_10px_rgba(133,151,227,0.18)] transition hover:-translate-y-0.5 hover:border-[#7663FF] disabled:pointer-events-none disabled:opacity-50"
                                 :disabled="
                                     form.processing ||
-                                    !!activeSession ||
+                                    !!activeSessionForMode ||
                                     !resumeId
                                 "
                                 @click="startAiInterview"

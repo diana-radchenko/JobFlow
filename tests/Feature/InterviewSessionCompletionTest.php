@@ -7,6 +7,8 @@ use Illuminate\Support\Str;
 use Laravel\Ai\Audio;
 use Laravel\Ai\Prompts\AgentPrompt;
 use Laravel\Ai\Prompts\AudioPrompt;
+use Laravel\Ai\Responses\AudioResponse;
+use Laravel\Ai\Responses\Data\Meta;
 
 test('completing an interview prompts ai for a final evaluation', function () {
     InterviewAgent::fake();
@@ -64,7 +66,7 @@ test('completing an interview without conversation still requests final evaluati
 });
 
 test('generating interview audio returns speech content for the session owner', function () {
-    Audio::fake();
+    Audio::fake([new AudioResponse(base64_encode('fake-audio-content'), new Meta('openai', 'gpt-4o-mini-tts'), 'audio/mpeg')]);
 
     /** @var User $user */
     $user = User::factory()->create();

@@ -1,15 +1,21 @@
 <script setup lang="ts">
+import '../../../css/interview-readability.css';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import DOMPurify from 'dompurify';
-import { ArrowRight, Loader2, Sparkles } from 'lucide-vue-next';
+import { ArrowRight, Loader2, Mic, Sparkles } from 'lucide-vue-next';
 import { marked } from 'marked';
 import { computed, ref } from 'vue';
+import {
+    audio as interviewPrepAudio,
+    guidance as interviewPrepGuidance,
+    transcribe as interviewPrepTranscribe,
+} from '@/actions/App/Http/Controllers/InterviewPrepController';
+import { store as interviewSessionStore } from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { useInterviewVoice } from '@/composables/useInterviewVoice';
 import { stringForHuman } from '@/helpers/strings';
-import { guidance as interviewPrepGuidance } from '@/actions/App/Http/Controllers/InterviewPrepController';
-import { store as interviewSessionStore } from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { interviewPreparation } from '@/routes';
 
 const props = defineProps<{
@@ -39,6 +45,49 @@ const startForm = useForm({
     resume_id: props.context.resume_id,
     work_job_id: props.context.work_job_id ?? '',
 });
+const voice = useInterviewVoice({
+    csrfToken: () => page.props.csrf_token,
+    transcribeUrl: () => interviewPrepTranscribe.url(),
+    audioUrl: () => interviewPrepAudio.url(),
+    context: () => ({ ...props.context }),
+    onTranscript: async (text) => {
+        practiceAnswer.value = text;
+        await prepare();
+    },
+});
+const {
+    isListening,
+    isStartingListening,
+    isTranscribing,
+    isPreparingAudio,
+    isSpeaking,
+    canReplay,
+} = voice;
+const voiceBusy = computed(
+    () =>
+        isListening.value ||
+        isStartingListening.value ||
+        isTranscribing.value ||
+        isPreparingAudio.value,
+);
+const voiceStatus = computed(() =>
+    state.value === 'preparing' ? 'Thinking' : voice.status.value,
+);
+async function toggleRecording() {
+    if (isListening.value) {
+        voice.stopRecording();
+    } else {
+        await voice.startRecording();
+    }
+}
+function readGuidance() {
+    // Speak plain coaching text, never HTML or Markdown syntax.
+    const document = new DOMParser().parseFromString(
+        guidanceHtml.value,
+        'text/html',
+    );
+    void voice.speak(document.body.textContent || '');
+}
 
 const guidanceHtml = computed(() =>
     DOMPurify.sanitize(
@@ -53,23 +102,32 @@ async function prepare(): Promise<void> {
 
     state.value = 'preparing';
     errorMessage.value = '';
+    voice.stopAudio();
 
     try {
-        const response = await fetch(interviewPrepGuidance.url(), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': page.props.csrf_token as string,
+        const response = await voice.request(
+            interviewPrepGuidance.url(),
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...props.context,
+                    practice_answer: practiceAnswer.value.trim() || null,
+                }),
             },
-            body: JSON.stringify({
-                ...props.context,
-                practice_answer: practiceAnswer.value.trim() || null,
-            }),
-        });
+            65_000,
+        );
         const data = await response.json();
 
         if (!response.ok) {
             throw new Error(data.message || 'Preparation failed.');
+        }
+
+        if (typeof data.guidance !== 'string' || !data.guidance.trim()) {
+            throw new Error(
+                'No preparation guidance was received. Please try again.',
+            );
         }
 
         guidance.value = data.guidance;
@@ -84,6 +142,8 @@ async function prepare(): Promise<void> {
 }
 
 function startAiInterview(): void {
+    voice.stopRecording(false);
+    voice.stopAudio();
     startForm.post(interviewSessionStore.url());
 }
 
@@ -100,7 +160,7 @@ defineOptions({
 <template>
     <Head title="AI Interview Prep" />
 
-    <div class="jobflow-page mx-auto max-w-5xl font-sans">
+    <div class="jobflow-page interview-readability mx-auto max-w-5xl font-sans">
         <div class="mb-7">
             <p class="mb-2 text-sm font-semibold text-[#7047EB]">
                 AI Interview Prep
@@ -153,14 +213,68 @@ defineOptions({
                         Optionally paste a practice answer for targeted
                         coaching.
                     </p>
+                    <div
+                        v-if="context.mode === 'live'"
+                        class="mt-4 space-y-3 rounded-xl border border-slate-200 p-4"
+                    >
+                        <p class="text-sm font-semibold" role="status">
+                            {{ voiceStatus }}
+                        </p>
+                        <p class="text-sm text-slate-600">
+                            Speak your practice answer in English. Stop
+                            recording to receive coaching, not a score. Maximum
+                            90 seconds.
+                        </p>
+                        <Button
+                            variant="outline"
+                            :disabled="
+                                state === 'preparing' ||
+                                isStartingListening ||
+                                isTranscribing ||
+                                isPreparingAudio
+                            "
+                            :aria-pressed="isListening"
+                            @click="toggleRecording"
+                        >
+                            <Mic class="mr-2 h-4 w-4" />{{
+                                isListening
+                                    ? 'Stop recording and get coaching'
+                                    : 'Start recording'
+                            }}
+                        </Button>
+                        <p
+                            v-if="voice.error.value"
+                            role="alert"
+                            class="text-sm text-red-700"
+                        >
+                            {{ voice.error.value }}
+                        </p>
+                        <Button
+                            v-if="voice.retryAction.value"
+                            variant="outline"
+                            :disabled="voiceBusy || state === 'preparing'"
+                            @click="voice.retryAction.value?.()"
+                            >Try Again</Button
+                        >
+                    </div>
+                    <label
+                        for="prep-practice-answer"
+                        class="mt-5 block text-sm font-medium"
+                        >{{
+                            context.mode === 'live'
+                                ? 'Transcript / text fallback'
+                                : 'Practice answer'
+                        }}</label
+                    >
                     <Textarea
+                        id="prep-practice-answer"
                         v-model="practiceAnswer"
                         class="mt-5 min-h-44"
                         placeholder="Paste a practice answer, or leave blank for a preparation plan..."
                     />
                     <Button
                         class="mt-4 w-full gap-2"
-                        :disabled="state === 'preparing'"
+                        :disabled="state === 'preparing' || voiceBusy"
                         @click="prepare"
                     >
                         <Loader2
@@ -173,7 +287,11 @@ defineOptions({
                     <Button
                         variant="outline"
                         class="mt-3 w-full gap-2"
-                        :disabled="startForm.processing"
+                        :disabled="
+                            startForm.processing ||
+                            state === 'preparing' ||
+                            voiceBusy
+                        "
                         @click="startAiInterview"
                     >
                         Start AI Interview <ArrowRight class="h-4 w-4" />
@@ -186,6 +304,34 @@ defineOptions({
                     <h2 class="text-lg font-bold text-slate-900">
                         Your preparation guide
                     </h2>
+                    <div
+                        v-if="context.mode === 'live' && guidance"
+                        class="mt-3 flex flex-wrap items-center gap-2"
+                    >
+                        <Button
+                            variant="outline"
+                            :disabled="voiceBusy || state === 'preparing'"
+                            @click="readGuidance"
+                            >Read guide aloud</Button
+                        >
+                        <Button
+                            v-if="canReplay"
+                            variant="outline"
+                            :disabled="voiceBusy"
+                            @click="voice.replay"
+                            >Play audio</Button
+                        >
+                        <Button
+                            v-if="isSpeaking"
+                            variant="outline"
+                            @click="voice.stopAudio"
+                            >Stop audio</Button
+                        >
+                        <p class="text-xs text-slate-500">
+                            AI-generated voice · text guidance always remains
+                            available.
+                        </p>
+                    </div>
                     <div
                         v-if="state === 'preparing'"
                         class="mt-12 flex flex-col items-center gap-3 text-slate-500"

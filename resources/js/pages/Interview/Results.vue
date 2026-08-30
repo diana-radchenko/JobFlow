@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '../../../css/interview-readability.css';
 import { Head, Link } from '@inertiajs/vue3';
 import DOMPurify from 'dompurify';
 import { ArrowLeft, RotateCcw } from 'lucide-vue-next';
@@ -39,7 +40,7 @@ defineOptions({
 
 <template>
     <Head title="Interview Results" />
-    <div class="jobflow-page mx-auto max-w-4xl font-sans">
+    <div class="jobflow-page interview-readability mx-auto max-w-4xl font-sans">
         <div class="mb-7">
             <p class="mb-2 text-sm font-semibold text-emerald-700">
                 AI Interview Completed
