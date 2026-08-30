@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { InfiniteScroll } from '@inertiajs/vue3';
 import {
     Mic,
@@ -11,11 +11,6 @@ import {
     Loader2,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import {
-    store as interviewSessionStore,
-    show as interviewSessionShow,
-    complete as interviewSessionComplete,
-} from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -28,6 +23,12 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { stringForHuman } from '@/helpers/strings';
+import { show as interviewPrepShow } from '@/actions/App/Http/Controllers/InterviewPrepController';
+import {
+    store as interviewSessionStore,
+    show as interviewSessionShow,
+    complete as interviewSessionComplete,
+} from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { interviewPreparation } from '@/routes';
 
 const props = defineProps<{
@@ -54,6 +55,7 @@ const props = defineProps<{
     }[];
     upcomingInterviews: {
         id: number;
+        work_job_id: number;
         scheduled_at: string;
         timezone: string;
         interview_format: string | null;
@@ -67,6 +69,7 @@ const resumeId = ref<string>(
     props.resumes.length > 0 ? String(props.resumes[0].id) : '',
 );
 const workJobId = ref<string>('none');
+const mockMode = ref<'text' | 'live'>('text');
 const selectedResume = computed(() =>
     props.resumes.find((resume) => String(resume.id) === resumeId.value),
 );
@@ -134,7 +137,25 @@ function handleCompleteInterviewSubmit() {
     isCompletingInterview.value = true;
 }
 
-function startInterview() {
+function selectedContext() {
+    return {
+        type: interviewType.value,
+        complexity: complexity.value,
+        mode: mockMode.value,
+        resume_id: resumeId.value,
+        work_job_id: workJobId.value === 'none' ? undefined : workJobId.value,
+    };
+}
+
+function prepareWithAi() {
+    if (!resumeId.value || props.activeSession) {
+        return;
+    }
+
+    router.visit(interviewPrepShow.url({ query: selectedContext() }));
+}
+
+function startMockInterview() {
     if (props.activeSession) {
         alert(
             'You already have an active interview session. Please finish it first.',
@@ -151,7 +172,7 @@ function startInterview() {
 
     form.type = interviewType.value;
     form.complexity = complexity.value;
-    form.mode = 'live';
+    form.mode = mockMode.value;
     form.resume_id = resumeId.value;
     form.work_job_id = workJobId.value === 'none' ? '' : workJobId.value;
     form.post(interviewSessionStore.url());
@@ -161,7 +182,7 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'Interview Preparing',
+                title: 'Interview',
                 href: interviewPreparation(),
             },
         ],
@@ -170,7 +191,7 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Interview Preparation" />
+    <Head title="Interview Center" />
 
     <div class="jobflow-page font-sans">
         <div class="mx-auto max-w-[1400px]">
@@ -178,17 +199,17 @@ defineOptions({
                 <h1
                     class="mb-3 text-[13px] font-semibold text-[#7047EB] dark:text-violet-300"
                 >
-                    Interview Preparation with AI
+                    Interview Center
                 </h1>
 
                 <div class="flex items-start justify-between">
                     <div>
                         <h2 class="jobflow-page-title mb-2 dark:text-slate-100">
-                            Get Ready for Your Interview with AI
+                            Prepare and practice with confidence
                         </h2>
                         <p class="text-sm text-slate-600 dark:text-slate-400">
-                            Practice real interview questions, get AI feedback,
-                            and boost your confidence!
+                            Prepare with AI before the interview, then run a
+                            focused mock interview and review results afterward.
                         </p>
                     </div>
                     <Sparkles class="h-6 w-6 text-primary" />
@@ -489,88 +510,118 @@ defineOptions({
                     <Card
                         class="self-start overflow-hidden rounded-[20px] border border-[#051C2E] bg-[#051C2E] py-0 text-white shadow-md"
                     >
-                        <CardContent class="flex flex-col items-start p-0">
-                            <button
-                                @click="startInterview"
+                        <CardContent
+                            class="flex w-full flex-col items-center p-6 text-center"
+                        >
+                            <div
+                                class="flex h-14 w-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-sm"
+                            >
+                                <Mic class="h-6 w-6" />
+                            </div>
+
+                            <div class="mt-3">
+                                <h4 class="mb-1 text-lg font-bold text-white">
+                                    Choose your next step
+                                </h4>
+                                <p
+                                    class="mx-auto max-w-sm text-sm leading-relaxed text-slate-300"
+                                >
+                                    <strong class="block">{{
+                                        selectedApplication?.work_job?.title ||
+                                        'General interview'
+                                    }}</strong>
+                                    <span class="block">{{
+                                        selectedApplication?.work_job
+                                            ?.company || 'No vacancy selected'
+                                    }}</span>
+                                    <span class="mt-2 block"
+                                        >Resume:
+                                        {{
+                                            selectedResume?.title ||
+                                            'Not selected'
+                                        }}</span
+                                    >
+                                    <span class="block"
+                                        >Type:
+                                        {{
+                                            interviewTypes.find(
+                                                (item) =>
+                                                    item.id === interviewType,
+                                            )?.label
+                                        }}</span
+                                    >
+                                    <span class="block"
+                                        >Difficulty:
+                                        {{
+                                            complexities.find(
+                                                (item) =>
+                                                    item.id === complexity,
+                                            )?.label
+                                        }}</span
+                                    >
+                                </p>
+                            </div>
+
+                            <div
+                                class="mt-5 grid w-full grid-cols-2 gap-2 rounded-xl border border-white/15 p-1"
+                            >
+                                <button
+                                    type="button"
+                                    class="rounded-lg px-3 py-2 text-sm font-semibold transition"
+                                    :class="
+                                        mockMode === 'text'
+                                            ? 'bg-white text-[#061E3A]'
+                                            : 'text-slate-300 hover:bg-white/10'
+                                    "
+                                    @click="mockMode = 'text'"
+                                >
+                                    Text
+                                </button>
+                                <button
+                                    type="button"
+                                    class="rounded-lg px-3 py-2 text-sm font-semibold transition"
+                                    :class="
+                                        mockMode === 'live'
+                                            ? 'bg-white text-[#061E3A]'
+                                            : 'text-slate-300 hover:bg-white/10'
+                                    "
+                                    @click="mockMode = 'live'"
+                                >
+                                    Voice
+                                </button>
+                            </div>
+
+                            <Button
+                                variant="secondary"
+                                class="mt-4 w-full gap-2"
+                                :disabled="!!activeSession || !resumeId"
+                                @click="prepareWithAi"
+                            >
+                                <Sparkles class="h-4 w-4" /> Prepare with AI
+                            </Button>
+                            <Button
+                                class="mt-3 w-full gap-2 bg-blue-500 text-white hover:bg-blue-600"
                                 :disabled="
                                     form.processing ||
                                     !!activeSession ||
                                     !resumeId
                                 "
-                                class="group relative flex w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-[24px] border border-white/10 bg-transparent p-6 text-center transition-all hover:border-blue-300/40 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+                                @click="startMockInterview"
                             >
-                                <div
-                                    class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,theme(colors.primary.DEFAULT/8%),transparent_70%)] opacity-0 transition-opacity group-hover:opacity-100"
+                                <Loader2
+                                    v-if="form.processing"
+                                    class="h-4 w-4 animate-spin"
                                 />
-
-                                <div
-                                    class="flex h-14 w-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-sm transition-transform duration-300 group-hover:scale-105"
-                                >
-                                    <Loader2
-                                        v-if="form.processing"
-                                        class="h-6 w-6 animate-spin"
-                                    />
-                                    <Mic v-else class="h-6 w-6" />
-                                </div>
-
-                                <div>
-                                    <h4
-                                        class="mb-1 text-lg font-bold text-white"
-                                    >
-                                        Interview Ready
-                                    </h4>
-                                    <p
-                                        class="mx-auto max-w-sm text-sm leading-relaxed text-slate-300"
-                                    >
-                                        <strong class="block">{{
-                                            selectedApplication?.work_job
-                                                ?.title || 'General interview'
-                                        }}</strong>
-                                        <span class="block">{{
-                                            selectedApplication?.work_job
-                                                ?.company ||
-                                            'No vacancy selected'
-                                        }}</span>
-                                        <span class="mt-2 block"
-                                            >Resume:
-                                            {{
-                                                selectedResume?.title ||
-                                                'Not selected'
-                                            }}</span
-                                        >
-                                        <span class="block"
-                                            >Type:
-                                            {{
-                                                interviewTypes.find(
-                                                    (item) =>
-                                                        item.id ===
-                                                        interviewType,
-                                                )?.label
-                                            }}</span
-                                        >
-                                        <span class="block"
-                                            >Difficulty:
-                                            {{
-                                                complexities.find(
-                                                    (item) =>
-                                                        item.id === complexity,
-                                                )?.label
-                                            }}</span
-                                        >
-                                    </p>
-                                </div>
-
-                                <div
-                                    class="flex items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-semibold text-[#061E3A] transition-transform group-hover:scale-105"
-                                >
-                                    {{
-                                        form.processing
-                                            ? 'Starting...'
-                                            : 'Start Interview'
-                                    }}
-                                    <ChevronRight class="h-4 w-4" />
-                                </div>
-                            </button>
+                                {{
+                                    form.processing
+                                        ? 'Starting...'
+                                        : 'Start Mock Interview'
+                                }}
+                                <ChevronRight
+                                    v-if="!form.processing"
+                                    class="h-4 w-4"
+                                />
+                            </Button>
                         </CardContent>
                     </Card>
 

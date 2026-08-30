@@ -9,6 +9,7 @@ use App\Http\Controllers\JobChatController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\SavedJobController;
 use App\Http\Controllers\InterviewPreparationController;
+use App\Http\Controllers\InterviewPrepController;
 use App\Http\Controllers\InterviewSessionController;
 use App\Http\Controllers\JobSelectionController;
 use App\Http\Controllers\ModuleEntryController;
@@ -143,12 +144,15 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
     Route::post('resume-editor/{resume}/items/{type}/reorder', [ResumeEditorController::class, 'reorderItems'])->name('resume-editor.items.reorder');
 
     Route::get('interview-preparation', InterviewPreparationController::class)->name('interview-preparation');
+    Route::get('interview-prep', [InterviewPrepController::class, 'show'])->name('interview-prep.show');
+    Route::post('interview-prep/guidance', [InterviewPrepController::class, 'guidance'])->name('interview-prep.guidance');
     Route::get('salary', SalaryController::class)->name('salary');
     Route::get('development', function () {
         return Inertia::render('Development');
     })->name('development');
     Route::post('interview-sessions', [InterviewSessionController::class, 'store'])->name('interview-session.store');
     Route::get('interview-sessions/{session}', [InterviewSessionController::class, 'show'])->name('interview-session.show');
+    Route::get('interview-sessions/{session}/results', [InterviewSessionController::class, 'results'])->name('interview-session.results');
     Route::post('interview-sessions/{session}/message', [InterviewSessionController::class, 'message'])->name('interview-session.message');
     Route::post('interview-sessions/{session}/audio', [InterviewSessionController::class, 'audio'])->name('interview-session.audio');
     Route::post('interview-sessions/{session}/transcribe', [InterviewSessionController::class, 'transcribe'])->name('interview-session.transcribe');
