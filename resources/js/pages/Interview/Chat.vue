@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '../../../css/interview-readability.css';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import DOMPurify from 'dompurify';
 import {
@@ -11,15 +12,15 @@ import {
 } from 'lucide-vue-next';
 import { marked } from 'marked';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { stringForHuman } from '@/helpers/strings';
 import {
     complete as interviewSessionComplete,
     message as interviewSessionMessage,
     results as interviewSessionResults,
 } from '@/actions/App/Http/Controllers/InterviewSessionController';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { stringForHuman } from '@/helpers/strings';
 import { interviewPreparation } from '@/routes';
 
 marked.setOptions({ gfm: true, breaks: true });
@@ -194,7 +195,7 @@ defineOptions({
     <Head title="AI Interview" />
 
     <div
-        class="container mx-auto flex h-[calc(100vh-120px)] max-w-4xl flex-col px-5 py-8 font-sans"
+        class="interview-readability container mx-auto flex h-[calc(100vh-120px)] max-w-4xl flex-col px-5 py-8 font-sans"
     >
         <div class="mb-6 shrink-0 items-center justify-between gap-5 md:flex">
             <div>

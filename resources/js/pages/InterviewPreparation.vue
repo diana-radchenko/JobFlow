@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '../../css/interview-readability.css';
 import { Head, InfiniteScroll, Link, router, useForm } from '@inertiajs/vue3';
 import {
     ArrowRight,
@@ -269,7 +270,7 @@ defineOptions({
 <template>
     <Head title="Interview Center" />
 
-    <div class="jobflow-page interview-center font-sans dark:bg-slate-950">
+    <div class="jobflow-page interview-center interview-readability font-sans dark:bg-slate-950">
         <div class="jobflow-page-frame">
             <header
                 class="relative flex min-h-24 flex-wrap items-start justify-between gap-4 md:min-h-28"

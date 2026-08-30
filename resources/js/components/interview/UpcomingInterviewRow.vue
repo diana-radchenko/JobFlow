@@ -43,14 +43,14 @@ function formatDateTime(interview: UpcomingInterview): string {
             <CalendarDays class="h-5 w-5" />
         </span>
         <div class="min-w-0 flex-1 basis-36">
-            <h4 class="truncate text-[13px] font-semibold text-[#14213D]">
+            <h4 class="truncate text-[14px] font-semibold text-[#14213D]">
                 {{ interview.work_job?.title || 'Scheduled interview' }}
             </h4>
             <p class="mt-1 truncate text-xs text-[#52658B]">
                 {{ interview.work_job?.company || 'Employer interview' }}
             </p>
             <p
-                class="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-[#52658B]"
+                class="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px] text-[#52658B]"
             >
                 <CalendarClock class="h-3.5 w-3.5" />
                 {{ formatDateTime(interview) }}
@@ -69,7 +69,7 @@ function formatDateTime(interview: UpcomingInterview): string {
         </div>
         <button
             type="button"
-            class="ml-auto inline-flex h-9 items-center justify-center rounded-lg border border-[#E3E8F2] bg-white px-4 text-[11px] font-semibold text-[#0B2F66] transition hover:border-[#4F6FEF] hover:text-[#3157D5] focus-visible:ring-2 focus-visible:ring-[#4F6FEF]/30 focus-visible:outline-none"
+            class="ml-auto inline-flex h-9 items-center justify-center rounded-lg border border-[#E3E8F2] bg-white px-4 text-sm font-semibold text-[#0B2F66] transition hover:border-[#4F6FEF] hover:text-[#3157D5] focus-visible:ring-2 focus-visible:ring-[#4F6FEF]/30 focus-visible:outline-none"
             @click="$emit('prepare', interview)"
         >
             Prepare

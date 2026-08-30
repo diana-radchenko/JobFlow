@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '../../../css/interview-readability.css';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import DOMPurify from 'dompurify';
 import {
@@ -239,7 +240,7 @@ defineOptions({
     <Head title="Voice AI Interview" />
 
     <div
-        class="container mx-auto grid min-h-[calc(100vh-120px)] max-w-[1200px] gap-6 px-5 py-8 font-sans lg:grid-cols-[1fr_380px]"
+        class="interview-readability container mx-auto grid min-h-[calc(100vh-120px)] max-w-[1200px] gap-6 px-5 py-8 font-sans lg:grid-cols-[1fr_380px]"
     >
         <section class="flex min-h-0 flex-col gap-6">
             <div

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '../../../css/interview-readability.css';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import DOMPurify from 'dompurify';
 import { ArrowRight, Loader2, Mic, Sparkles } from 'lucide-vue-next';
@@ -159,7 +160,7 @@ defineOptions({
 <template>
     <Head title="AI Interview Prep" />
 
-    <div class="jobflow-page mx-auto max-w-5xl font-sans">
+    <div class="jobflow-page interview-readability mx-auto max-w-5xl font-sans">
         <div class="mb-7">
             <p class="mb-2 text-sm font-semibold text-[#7047EB]">
                 AI Interview Prep
