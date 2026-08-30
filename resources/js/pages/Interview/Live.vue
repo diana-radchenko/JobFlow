@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import DOMPurify from 'dompurify';
 import {
     Bot,
@@ -20,12 +20,6 @@ import {
     ref,
     watch,
 } from 'vue';
-import {
-    audio as interviewSessionAudio,
-    complete as interviewSessionComplete,
-    message as interviewSessionMessage,
-    transcribe as interviewSessionTranscribe,
-} from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import {
@@ -36,6 +30,13 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { stringForHuman } from '@/helpers/strings';
+import {
+    audio as interviewSessionAudio,
+    complete as interviewSessionComplete,
+    message as interviewSessionMessage,
+    results as interviewSessionResults,
+    transcribe as interviewSessionTranscribe,
+} from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { interviewPreparation } from '@/routes';
 
 marked.setOptions({ gfm: true, breaks: true });
@@ -130,6 +131,14 @@ const statusLabel = computed(() => {
     }
 
     return 'Ready';
+});
+
+const mockInterviewTitle = computed(() => {
+    const type = stringForHuman(props.session.type);
+
+    return type.toLowerCase().endsWith('interview')
+        ? `${stringForHuman(props.session.complexity)} ${type}`
+        : `${stringForHuman(props.session.complexity)} ${type} Mock Interview`;
 });
 
 const scrollToMessage = (index: number) => {
@@ -273,6 +282,7 @@ async function startListening() {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.stop();
         }
+
         mediaRecorder = null;
 
         if (!isHoldingToTalk.value) {
@@ -658,6 +668,13 @@ async function sendMessage(text: string, showUserMessage = true) {
             speakAssistantMessage(data.message.content);
         }
 
+        if (data.session_status === 'completed') {
+            stopAssistantAudio();
+            router.visit(interviewSessionResults.url(props.session.id));
+
+            return;
+        }
+
         if (showUserMessage) {
             resetTranscript();
         }
@@ -710,6 +727,7 @@ onBeforeUnmount(() => {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
     }
+
     cleanupAudioInput();
     stopAssistantAudio();
 });
@@ -718,11 +736,11 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'Interview Preparing',
+                title: 'Interview',
                 href: interviewPreparation(),
             },
             {
-                title: 'Live Interview',
+                title: 'Voice Mock Interview',
             },
         ],
     },
@@ -730,7 +748,7 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Live Interview" />
+    <Head title="Voice Mock Interview" />
 
     <div
         class="container mx-auto grid min-h-[calc(100vh-120px)] max-w-[1200px] gap-6 px-5 py-8 font-sans lg:grid-cols-[1fr_380px]"
@@ -741,13 +759,12 @@ defineOptions({
             >
                 <div>
                     <p class="text-sm font-medium text-slate-500">
-                        Live AI Interview
+                        Voice Mock Interview
                     </p>
                     <h1
                         class="text-2xl font-bold text-slate-900 dark:text-slate-100"
                     >
-                        {{ stringForHuman(session.complexity) }}
-                        {{ stringForHuman(session.type) }} Interview
+                        {{ mockInterviewTitle }}
                     </h1>
                 </div>
 
@@ -852,7 +869,11 @@ defineOptions({
                         @keyup.enter.prevent="stopHoldToTalk"
                     >
                         <Loader2
-                            v-if="isProcessing || isPreparingAudio || isTranscribing"
+                            v-if="
+                                isProcessing ||
+                                isPreparingAudio ||
+                                isTranscribing
+                            "
                             class="h-16 w-16 animate-spin text-yellow-600"
                         />
                         <Volume2
@@ -981,7 +1002,7 @@ defineOptions({
                                 class="h-4 w-4 animate-spin"
                             />
                             <CheckCircle2 v-else class="h-4 w-4" />
-                            Complete Interview
+                            End Mock Interview
                         </Button>
                     </form>
                 </CardFooter>

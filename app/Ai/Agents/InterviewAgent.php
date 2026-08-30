@@ -15,7 +15,10 @@ class InterviewAgent implements Agent, Conversational
         public string $interviewType,
         public string $complexity,
         public string $resumeContext = '',
-        public string $jobContext = ''
+        public string $jobContext = '',
+        public int $currentQuestion = 0,
+        public int $totalQuestions = 6,
+        public bool $finalEvaluation = false,
     ) {}
 
     /**
@@ -23,17 +26,27 @@ class InterviewAgent implements Agent, Conversational
      */
     public function instructions(): string
     {
+        if ($this->finalEvaluation) {
+            return "You are evaluating a completed mock interview.
+Use the conversation, the candidate's resume, and the selected job context.
+Return a concise final result with exactly these headings: Overall Assessment, Strengths, Areas to Improve, Recommendation.
+Do not ask another question and do not invent facts.
+Resume context: {$this->resumeContext}
+Job context: {$this->jobContext}";
+        }
+
+        $nextQuestion = min($this->currentQuestion + 1, $this->totalQuestions);
+
         return "You are an expert HR and Technical Interviewer.
-You are conducting a {$this->complexity} level {$this->interviewType} interview.
+You are conducting a {$this->complexity} level {$this->interviewType} mock interview.
 The candidate's resume context: {$this->resumeContext}
 The job context: {$this->jobContext}
 
 Follow these rules:
-1. Ask ONE relevant interview question at a time.
-2. Wait for the candidate's response.
-3. Evaluate their response briefly, providing constructive feedback if necessary.
-4. Ask the next question.
-5. Maintain a professional, encouraging tone.
-6. When the interview is complete (e.g. after 6-8 questions or if the candidate wants to stop), provide a final evaluation.";
+1. Ask exactly ONE relevant interview question: question {$nextQuestion} of {$this->totalQuestions}.
+2. Return only the interview question. Do not include feedback, coaching, hints, an answer outline, or an evaluation.
+3. Do not repeat a question already asked in this conversation.
+4. Keep a professional interviewer tone.
+5. The application controls interview completion. Never end or score the interview during the question stage.";
     }
 }

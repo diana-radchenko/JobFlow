@@ -23,14 +23,14 @@ test('completing an interview prompts ai for a final evaluation', function () {
 
     $this->actingAs($user)
         ->post(route('interview-session.complete', $session))
-        ->assertRedirect(route('interview-preparation'));
+        ->assertRedirect(route('interview-session.results', $session));
 
     $session->refresh();
 
     expect($session->status)->toBe('completed');
 
     InterviewAgent::assertPrompted(function (AgentPrompt $prompt): bool {
-        return $prompt->contains('The interview is now complete.');
+        return $prompt->contains('The mock interview is complete.');
     });
 });
 
@@ -49,7 +49,7 @@ test('completing an interview without conversation still requests final evaluati
 
     $this->actingAs($user)
         ->post(route('interview-session.complete', $session))
-        ->assertRedirect(route('interview-preparation'));
+        ->assertRedirect(route('interview-session.results', $session));
 
     $session->refresh();
 
@@ -57,7 +57,9 @@ test('completing an interview without conversation still requests final evaluati
     expect($session->conversation_id)->not->toBeNull();
 
     InterviewAgent::assertPrompted(function (AgentPrompt $prompt): bool {
-        return $prompt->contains('top 3 actionable improvements');
+        return $prompt->contains('Overall Assessment')
+            && $prompt->contains('Areas to Improve')
+            && $prompt->contains('Recommendation');
     });
 });
 
