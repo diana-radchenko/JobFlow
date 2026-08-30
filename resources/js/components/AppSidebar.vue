@@ -14,6 +14,7 @@ import {
     MessageSquare,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { index as jobChatIndex } from '@/actions/App/Http/Controllers/JobChatController';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import { SidebarHeader } from '@/components/ui/sidebar';
@@ -27,8 +28,6 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
-import type { NavItem } from '@/types';
-import { index as jobChatIndex } from '@/actions/App/Http/Controllers/JobChatController';
 import {
     dashboard,
     development,
@@ -40,6 +39,7 @@ import {
 } from '@/routes';
 import employerJobs from '@/routes/employer/jobs';
 import resumes from '@/routes/resumes';
+import type { NavItem } from '@/types';
 
 const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 

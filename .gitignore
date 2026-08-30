@@ -29,3 +29,14 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Local VPS database dumps and manual backup files
+*.dump
+*.sql
+*.bak
+*.save
+*.backup-*
+*.before-*
+/database_before_*.sqlite
+/0
+/1

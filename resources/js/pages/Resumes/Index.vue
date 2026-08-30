@@ -52,20 +52,30 @@ const props = defineProps<{
     resumes: ResumeSummary[];
 }>();
 
-const selectedResumeId = ref<number | null>(props.resumes[0]?.id != null ? Number(props.resumes[0].id) : null);
+const normalizeResumeId = (id: number | string) => String(id);
+const selectedResumeId = ref<string | null>(
+    props.resumes[0] ? normalizeResumeId(props.resumes[0].id) : null,
+);
+const isSelectedResume = (resume: ResumeSummary) =>
+    selectedResumeId.value === normalizeResumeId(resume.id);
+const selectResume = (resume: ResumeSummary) => {
+    selectedResumeId.value = normalizeResumeId(resume.id);
+};
 const selectedResume = computed(
-    () =>
-        props.resumes.find((resume) => Number(resume.id) === selectedResumeId.value) ??
-        null,
+    () => props.resumes.find((resume) => isSelectedResume(resume)) ?? null,
 );
 
 const setPrimaryResume = (resume: ResumeSummary) => {
-    router.post(`/resumes/${resume.id}/primary`, {}, {
-        preserveScroll: true,
-        onSuccess: () => {
-            selectedResumeId.value = Number(resume.id);
+    router.post(
+        `/resumes/${resume.id}/primary`,
+        {},
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                selectedResumeId.value = normalizeResumeId(resume.id);
+            },
         },
-    });
+    );
 };
 
 const showCreateForm = ref(false);
@@ -195,27 +205,18 @@ const formatDate = (date: string) =>
                     <Card
                         v-for="resume in resumes"
                         :key="resume.id"
-                        class="cursor-pointer border shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                        :style="{
-                            backgroundColor:
-                                selectedResumeId === Number(resume.id)
-                                    ? '#F3F6F9'
-                                    : '#FFFFFF',
-                            borderColor:
-                                selectedResumeId === Number(resume.id)
-                                    ? '#0A2E48'
-                                    : '#E2E8F0',
-                            boxShadow:
-                                selectedResumeId === Number(resume.id)
-                                    ? '0 0 0 2px rgba(10, 46, 72, 0.16)'
-                                    : undefined,
+                        class="cursor-pointer border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#0A2E48]/40 hover:shadow-md"
+                        :class="{
+                            'border-[#0A2E48] ring-2 ring-[#0A2E48]/20':
+                                isSelectedResume(resume),
                         }"
-                        @click="selectedResumeId = Number(resume.id)"
+                        @click="selectResume(resume)"
                     >
                         <CardHeader>
                             <form
                                 v-if="editingId === resume.id"
                                 @submit.prevent="submitRename(resume)"
+                                @click.stop
                                 class="flex gap-2"
                             >
                                 <Input
@@ -234,36 +235,50 @@ const formatDate = (date: string) =>
                                     type="button"
                                     size="sm"
                                     variant="outline"
-                                    @click="editingId = null"
+                                    @click.stop="editingId = null"
                                 >
                                     Cancel
                                 </Button>
                             </form>
                             <template v-else>
-                                <div class="flex flex-wrap items-start justify-between gap-2">
+                                <div
+                                    class="flex flex-wrap items-start justify-between gap-2"
+                                >
                                     <div>
                                         <CardTitle
                                             class="text-[16px] leading-snug font-semibold"
                                             >{{ resume.title }}</CardTitle
                                         >
                                         <CardDescription class="mt-1 text-sm">
-                                            Updated {{ formatDate(resume.updated_at) }}
+                                            Updated
+                                            {{ formatDate(resume.updated_at) }}
                                         </CardDescription>
                                     </div>
 
-                                    <span
-                                        v-if="resume.is_primary"
-                                        class="inline-flex items-center rounded-full bg-[#051C2E] px-3 py-1 text-[11px] font-bold tracking-wide text-white"
+                                    <div
+                                        class="flex flex-wrap items-center gap-2"
                                     >
-                                        PRIMARY RESUME
-                                    </span>
+                                        <span
+                                            v-if="isSelectedResume(resume)"
+                                            class="inline-flex items-center rounded-full border border-[#0A2E48]/35 bg-white px-2.5 py-1 text-[11px] font-semibold text-[#0A2E48]"
+                                        >
+                                            Selected
+                                        </span>
+                                        <span
+                                            v-if="resume.is_primary"
+                                            class="inline-flex items-center rounded-full bg-[#051C2E] px-3 py-1 text-[11px] font-bold tracking-wide text-white"
+                                        >
+                                            PRIMARY RESUME
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <p
                                     v-if="resume.is_primary"
                                     class="mt-3 rounded-lg bg-[#F3F6F9] px-3 py-2 text-[12.5px] leading-relaxed text-[#475467]"
                                 >
-                                    Used by JobFlow by default for job matching and recommendations.
+                                    Used by JobFlow by default for job matching
+                                    and recommendations.
                                 </p>
                             </template>
                         </CardHeader>
@@ -334,12 +349,17 @@ const formatDate = (date: string) =>
                                     Set as Primary
                                 </Button>
 
-                                <Button as-child size="sm">
+                                <Button as-child size="sm" @click.stop>
                                     <a :href="resumeEditor.show.url(resume.id)">
                                         Edit
                                     </a>
                                 </Button>
-                                <Button as-child size="sm" variant="outline">
+                                <Button
+                                    as-child
+                                    size="sm"
+                                    variant="outline"
+                                    @click.stop
+                                >
                                     <a
                                         :href="
                                             resumeEditor.assistant.url(
@@ -355,7 +375,7 @@ const formatDate = (date: string) =>
                                     type="button"
                                     size="sm"
                                     variant="outline"
-                                    @click="startRename(resume)"
+                                    @click.stop="startRename(resume)"
                                 >
                                     <Pencil class="h-4 w-4" />
                                 </Button>
@@ -363,7 +383,7 @@ const formatDate = (date: string) =>
                                     type="button"
                                     size="sm"
                                     variant="outline"
-                                    @click="duplicateResume(resume)"
+                                    @click.stop="duplicateResume(resume)"
                                 >
                                     <Copy class="h-4 w-4" />
                                 </Button>
@@ -371,7 +391,7 @@ const formatDate = (date: string) =>
                                     type="button"
                                     size="sm"
                                     variant="outline"
-                                    @click="deleteResume(resume)"
+                                    @click.stop="deleteResume(resume)"
                                 >
                                     <Trash2 class="h-4 w-4" />
                                 </Button>

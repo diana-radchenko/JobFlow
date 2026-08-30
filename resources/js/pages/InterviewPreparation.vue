@@ -11,6 +11,11 @@ import {
     Loader2,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import {
+    store as interviewSessionStore,
+    show as interviewSessionShow,
+    complete as interviewSessionComplete,
+} from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -23,11 +28,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { stringForHuman } from '@/helpers/strings';
-import {
-    store as interviewSessionStore,
-    show as interviewSessionShow,
-    complete as interviewSessionComplete,
-} from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { interviewPreparation } from '@/routes';
 
 const props = defineProps<{

@@ -18,6 +18,7 @@ import {
     Circle,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import { show as interviewSessionShow } from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,14 +32,13 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { stringForHuman } from '@/helpers/strings';
+import { dashboard } from '@/routes';
+import { show as jobSelectionShow } from '@/routes/job-selection';
 import type {
     InterviewSession,
     UserWorkJobApplication,
     WorkJob,
 } from '@/types/laravel-models';
-import { show as interviewSessionShow } from '@/actions/App/Http/Controllers/InterviewSessionController';
-import { dashboard } from '@/routes';
-import { show as jobSelectionShow } from '@/routes/job-selection';
 
 interface DashboardResume {
     id: number;

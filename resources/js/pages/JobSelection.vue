@@ -12,9 +12,9 @@ import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { WorkJob } from '@/types/laravel-models';
 import { jobSelection as jobSelectionRoute } from '@/routes';
 import { show as jobSelectionShow } from '@/routes/job-selection';
+import type { WorkJob } from '@/types/laravel-models';
 
 type Filters = {
     keyword?: string;
