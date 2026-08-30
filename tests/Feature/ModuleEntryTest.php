@@ -4,9 +4,11 @@ use App\Enums\UserRole;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
-test('anonymous visitors enter the platform through candidate registration', function () {
+test('anonymous visitors see the FLOW module selection landing page', function () {
     $this->get(route('home'))
-        ->assertRedirect(route('register', ['type' => UserRole::Candidate->value]));
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Welcome'));
 });
 
 test('candidate opening the platform root enters JobFlow', function () {
