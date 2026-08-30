@@ -12,7 +12,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,7 +27,7 @@ class InterviewSessionController extends Controller
 
     private const START_PROMPT = 'Begin the mock interview with question 1. Return only the question.';
 
-    private const FINAL_EVALUATION_PROMPT = 'The mock interview is complete. Return the final result now using the required Overall Assessment, Strengths, Areas to Improve, and Recommendation headings.';
+    private const FINAL_EVALUATION_PROMPT = 'The mock interview is complete. Evaluate the saved answers. Use exactly these Markdown level-two headings: ## Overall Assessment, ## Strengths, ## Areas to Improve, ## Recommendation. Use separate - bullets under Strengths and Areas to Improve, and paragraphs under Overall Assessment and Recommendation.';
 
     private const TYPES = ['behavioral', 'technical', 'case-study', 'resume-based'];
 
@@ -108,6 +110,21 @@ class InterviewSessionController extends Controller
 
     public function message(Request $request, InterviewSession $session): JsonResponse
     {
+        $this->authorizeOwner($request, $session);
+
+        return Cache::lock("interview-session:{$session->id}", 90)->get(function () use ($request, $session): JsonResponse {
+            $session->refresh();
+
+            if ($session->status === 'completed') {
+                return $this->completionResponse($session);
+            }
+
+            return $this->processMessage($request, $session);
+        }) ?: response()->json(['message' => 'An interview request is already in progress. Please try again.'], 409);
+    }
+
+    private function processMessage(Request $request, InterviewSession $session): JsonResponse
+    {
         /** @var User $user */
         $user = $request->user();
 
@@ -137,18 +154,26 @@ class InterviewSessionController extends Controller
                 $response = $this->promptInterviewAgent($user, $session, self::START_PROMPT, 0);
                 $questionNumber = 1;
             } elseif ($questionNumber >= self::TOTAL_QUESTIONS) {
-                $agent = $this->makeInterviewAgent($user, $session, $questionNumber, true);
-                $prompt = "Candidate's answer to question {$questionNumber}:\n\n{$validated['message']}\n\n".self::FINAL_EVALUATION_PROMPT;
-                $response = $this->promptWithAgent($agent, $user, $session, $prompt);
-                $session->update(['status' => 'completed']);
+                DB::transaction(function () use ($session, $user, $validated): void {
+                    DB::table('agent_conversation_messages')->insert([
+                        'id' => (string) Str::uuid(),
+                        'conversation_id' => $session->conversation_id,
+                        'user_id' => $user->id,
+                        'agent' => InterviewAgent::class,
+                        'role' => 'user',
+                        'content' => $validated['message'],
+                        'attachments' => '[]',
+                        'tool_calls' => '[]',
+                        'tool_results' => '[]',
+                        'usage' => '{}',
+                        'meta' => '{}',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $session->update(['status' => 'completed', 'feedback_status' => 'pending']);
+                });
 
-                return response()->json([
-                    'message' => null,
-                    'question_number' => $questionNumber,
-                    'total_questions' => self::TOTAL_QUESTIONS,
-                    'session_status' => 'completed',
-                    'results_url' => route('interview-session.results', $session),
-                ]);
+                return $this->completionResponse($session);
             } else {
                 $response = $this->promptInterviewAgent(
                     $user,
@@ -199,38 +224,73 @@ class InterviewSessionController extends Controller
         return $this->voice->transcribe($validated['audio']);
     }
 
-    public function complete(Request $request, InterviewSession $session)
+    public function complete(Request $request, InterviewSession $session): RedirectResponse|JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
-
         $this->authorizeOwner($request, $session);
 
-        if ($session->status === 'completed') {
-            return redirect()->route('interview-session.results', $session);
+        if ($session->status !== 'completed') {
+            $ended = Cache::lock("interview-session:{$session->id}", 90)->get(function () use ($session): bool {
+                $session->refresh();
+
+                if ($session->status !== 'completed') {
+                    $this->ensureInProgress($session);
+                    $session->update(['status' => 'completed', 'feedback_status' => 'pending']);
+                }
+
+                return true;
+            });
+
+            if (! $ended) {
+                return back()->withErrors(['interview' => 'Please wait for the current answer to finish, then end the interview.']);
+            }
         }
 
-        $this->ensureInProgress($session);
-
-        try {
-            $agent = $this->makeInterviewAgent(
-                $user,
-                $session,
-                $this->assistantMessageCount($session),
-                true,
-            );
-            $this->promptWithAgent($agent, $user, $session, self::FINAL_EVALUATION_PROMPT);
-        } catch (\Throwable $e) {
-            report($e);
-
-            return back()->withErrors([
-                'interview' => 'AI service error. Check your OpenAI connection and try again.',
-            ]);
+        if ($request->expectsJson()) {
+            return $this->completionResponse($session);
         }
 
-        $session->update(['status' => 'completed']);
+        return $request->boolean('return_to_setup')
+            ? redirect()->route('interview-preparation')
+            : redirect()->route('interview-session.results', $session);
+    }
 
-        return redirect()->route('interview-session.results', $session);
+    public function feedback(Request $request, InterviewSession $session): JsonResponse
+    {
+        $this->authorizeOwner($request, $session);
+        abort_unless($session->status === 'completed' && in_array($session->mode, ['text', 'live'], true) && $session->application_id === null, 409);
+
+        return Cache::lock("interview-session:{$session->id}", 90)->get(function () use ($request, $session): JsonResponse {
+            $session->refresh();
+            $result = $this->evaluationResult($session);
+
+            if ($result !== null) {
+                return response()->json(['feedback_status' => 'ready', 'result' => $result]);
+            }
+
+            $session->update(['feedback_status' => 'generating']);
+
+            try {
+                $agent = $this->makeInterviewAgent($request->user(), $session, $this->assistantMessageCount($session), true);
+                $response = $this->promptWithAgent($agent, $request->user(), $session, self::FINAL_EVALUATION_PROMPT);
+                $result = trim((string) $response);
+
+                if ($result === '') {
+                    throw new \RuntimeException('Empty interview evaluation response.');
+                }
+
+                $session->update(['feedback_status' => 'ready']);
+
+                return response()->json(['feedback_status' => 'ready', 'result' => $result]);
+            } catch (\Throwable $exception) {
+                report($exception);
+                $session->update(['feedback_status' => 'failed']);
+
+                return response()->json([
+                    'feedback_status' => 'failed',
+                    'message' => "Your interview was saved, but we couldn't generate feedback yet.",
+                ], 422);
+            }
+        }) ?: response()->json(['feedback_status' => 'generating'], 202);
     }
 
     public function results(Request $request, InterviewSession $session): Response|RedirectResponse
@@ -242,17 +302,10 @@ class InterviewSessionController extends Controller
         }
 
         $session->loadMissing(['resume:id,title', 'workJob:id,title,company']);
-        $assistantMessages = $this->visibleMessages($session)->where('role', 'assistant');
-        $result = $assistantMessages->first(
-            fn (array $message): bool => str_contains($message['content'], 'Overall Assessment')
-                && str_contains($message['content'], 'Strengths')
-                && str_contains($message['content'], 'Areas to Improve')
-                && str_contains($message['content'], 'Recommendation'),
-        ) ?? $assistantMessages->last();
 
         return Inertia::render('Interview/Results', [
             'session' => $session,
-            'result' => $result['content'] ?? null,
+            'result' => $this->evaluationResult($session),
             'context' => [
                 'resume_title' => $session->resume?->title,
                 'job_title' => $session->workJob?->title,
@@ -330,16 +383,45 @@ class InterviewSessionController extends Controller
     ): object {
         if ($session->conversation_id) {
             return $agent->continue($session->conversation_id, as: $user)
-                ->prompt($prompt, model: config('ai.model'));
+                ->prompt($prompt, model: config('ai.model'), timeout: 60);
         }
 
-        $response = $agent->forUser($user)->prompt($prompt, model: config('ai.model'));
+        $response = $agent->forUser($user)->prompt($prompt, model: config('ai.model'), timeout: 60);
 
         $session->update([
             'conversation_id' => $response->conversationId,
         ]);
 
         return $response;
+    }
+
+    private function completionResponse(InterviewSession $session): JsonResponse
+    {
+        return response()->json([
+            'message' => null,
+            'question_number' => min($this->assistantMessageCount($session), self::TOTAL_QUESTIONS),
+            'total_questions' => self::TOTAL_QUESTIONS,
+            'session_status' => 'completed',
+            'feedback_status' => $session->feedback_status,
+            'results_url' => route('interview-session.results', $session),
+        ]);
+    }
+
+    private function evaluationResult(InterviewSession $session): ?string
+    {
+        $messages = $this->visibleMessages($session)->where('role', 'assistant');
+        $result = $messages->first(
+            fn (array $message): bool => str_contains($message['content'], 'Overall Assessment')
+                && str_contains($message['content'], 'Strengths')
+                && str_contains($message['content'], 'Areas to Improve')
+                && str_contains($message['content'], 'Recommendation'),
+        );
+
+        if ($result === null && in_array($session->feedback_status, [null, 'ready'], true)) {
+            $result = $messages->last();
+        }
+
+        return filled($result['content'] ?? null) ? $result['content'] : null;
     }
 
     private function visibleMessages(InterviewSession $session)

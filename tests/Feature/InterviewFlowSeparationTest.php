@@ -85,6 +85,10 @@ test('text mock interview asks six questions without coaching and then exposes r
         ->assertJsonPath('session_status', 'completed');
 
     expect($session->refresh()->status)->toBe('completed');
+    $this->actingAs($user)
+        ->postJson(route('interview-session.feedback', $session))
+        ->assertSuccessful()
+        ->assertJsonPath('feedback_status', 'ready');
     expect((new InterviewAgent('technical', 'advanced'))->instructions())
         ->toContain('Do not include feedback, coaching, hints')
         ->not->toContain('providing constructive feedback');

@@ -14,10 +14,13 @@ class InterviewPreparationController extends Controller
      */
     public function __invoke(Request $request): Response
     {
-        $activeSession = InterviewSession::with(['resume:id,title', 'workJob:id,title,company'])
+        $activeSessions = InterviewSession::with(['resume:id,title', 'workJob:id,title,company'])
             ->where('user_id', $request->user()->id)
             ->where('status', 'in_progress')
-            ->first();
+            ->whereIn('mode', ['text', 'live'])
+            ->whereNull('application_id')
+            ->orderBy('id')
+            ->get();
 
         $pastSessions = InterviewSession::with(['resume:id,title', 'workJob:id,title,company'])
             ->where('user_id', $request->user()->id)
@@ -50,7 +53,7 @@ class InterviewPreparationController extends Controller
             ]);
 
         return Inertia::render('InterviewPreparation', [
-            'activeSession' => $activeSession,
+            'activeSessions' => $activeSessions,
             'pastSessions' => Inertia::scroll($pastSessions),
             'resumes' => $resumes,
             'applications' => $applications,
@@ -58,4 +61,3 @@ class InterviewPreparationController extends Controller
         ]);
     }
 }
-

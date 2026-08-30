@@ -159,6 +159,7 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
     Route::post('interview-sessions/{session}/audio', [InterviewSessionController::class, 'audio'])->name('interview-session.audio');
     Route::post('interview-sessions/{session}/transcribe', [InterviewSessionController::class, 'transcribe'])->name('interview-session.transcribe');
     Route::post('interview-sessions/{session}/complete', [InterviewSessionController::class, 'complete'])->name('interview-session.complete');
+    Route::post('interview-sessions/{session}/feedback', [InterviewSessionController::class, 'feedback'])->name('interview-session.feedback');
     Route::delete('interview-sessions/{session}', [InterviewSessionController::class, 'destroy'])->name('interview-session.destroy');
 });
 

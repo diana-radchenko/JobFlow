@@ -51,7 +51,7 @@ type InterviewTab = 'prepare' | 'upcoming' | 'history';
 const tabs: InterviewTab[] = ['prepare', 'upcoming', 'history'];
 
 const props = defineProps<{
-    activeSession?: {
+    activeSessions: {
         id: number;
         work_job_id: number | null;
         type: string;
@@ -60,7 +60,7 @@ const props = defineProps<{
         created_at: string;
         resume: { id: number; title: string } | null;
         work_job: { id: number; title: string; company: string } | null;
-    } | null;
+    }[];
     pastSessions: {
         data: InterviewHistorySession[];
     };
@@ -82,6 +82,7 @@ const resumeId = ref<string>(
 const workJobId = ref<string>('none');
 const interviewMode = ref<'text' | 'live'>('text');
 const isCompletingInterview = ref(false);
+const endError = ref('');
 const howItWorksOpen = ref(false);
 const deleteDialogOpen = ref(false);
 const sessionToDelete = ref<InterviewHistorySession | null>(null);
@@ -141,9 +142,9 @@ const visiblePastSessions = computed(() =>
     ),
 );
 const activeSessionForMode = computed(() =>
-    props.activeSession?.mode === interviewMode.value
-        ? props.activeSession
-        : null,
+    props.activeSessions.find(
+        (session) => session.mode === interviewMode.value,
+    ),
 );
 const recentSessions = computed(() => visiblePastSessions.value.slice(0, 3));
 const upcomingPreview = computed(() => props.upcomingInterviews.slice(0, 3));
@@ -157,11 +158,27 @@ const form = useForm({
 });
 
 function handleCompleteInterviewSubmit() {
-    if (isCompletingInterview.value) {
+    if (isCompletingInterview.value || !activeSessionForMode.value) {
         return;
     }
 
     isCompletingInterview.value = true;
+    endError.value = '';
+    router.post(
+        interviewSessionComplete.url(activeSessionForMode.value.id),
+        { return_to_setup: true },
+        {
+            preserveScroll: true,
+            onError: (errors) => {
+                endError.value =
+                    errors.interview ||
+                    'Could not end the interview. Please try again.';
+            },
+            onFinish: () => {
+                isCompletingInterview.value = false;
+            },
+        },
+    );
 }
 
 function selectedContext() {
@@ -270,7 +287,9 @@ defineOptions({
 <template>
     <Head title="Interview Center" />
 
-    <div class="jobflow-page interview-center interview-readability font-sans dark:bg-slate-950">
+    <div
+        class="jobflow-page interview-center interview-readability font-sans dark:bg-slate-950"
+    >
         <div class="jobflow-page-frame">
             <header
                 class="relative flex min-h-24 flex-wrap items-start justify-between gap-4 md:min-h-28"
@@ -370,8 +389,9 @@ defineOptions({
                         </div>
 
                         <div
-                            v-if="activeSession"
-                            class="mt-5 flex flex-col gap-4 rounded-2xl border border-[#BFD3EC] bg-[#F4F8FD] p-4 sm:flex-row sm:items-center sm:justify-between"
+                            v-if="activeSessionForMode"
+                            data-test="active-interview-notice"
+                            class="mt-5 flex flex-col gap-4 rounded-2xl border border-[#BFD3EC] bg-[#F4F8FD] p-4"
                         >
                             <div class="flex items-start gap-3">
                                 <PlayCircle
@@ -381,44 +401,58 @@ defineOptions({
                                     <p
                                         class="text-sm font-semibold text-[#14213D]"
                                     >
-                                        Active AI Interview
+                                        {{
+                                            interviewMode === 'text'
+                                                ? 'Text'
+                                                : 'Voice'
+                                        }}
+                                        AI Interview already in progress
                                     </p>
                                     <p class="mt-0.5 text-xs text-[#667085]">
                                         {{
-                                            activeSession.resume?.title ||
-                                            'Resume'
+                                            activeSessionForMode.resume
+                                                ?.title || 'Resume'
                                         }}
-                                        <template v-if="activeSession.work_job">
-                                            · {{ activeSession.work_job.title }}
+                                        <template
+                                            v-if="activeSessionForMode.work_job"
+                                        >
+                                            ·
+                                            {{
+                                                activeSessionForMode.work_job
+                                                    .title
+                                            }}
                                         </template>
+                                    </p>
+                                    <p class="mt-2 text-xs text-[#52658B]">
+                                        Finish or end the active interview
+                                        before starting another interview in
+                                        this mode.
+                                    </p>
+                                    <p
+                                        v-if="endError"
+                                        role="alert"
+                                        class="mt-2 text-xs text-red-700"
+                                    >
+                                        {{ endError }}
                                     </p>
                                 </div>
                             </div>
-                            <div class="flex gap-2">
+                            <div class="flex shrink-0 flex-wrap gap-2">
                                 <Link
                                     :href="
                                         interviewSessionShow.url(
-                                            activeSession.id,
+                                            activeSessionForMode.id,
                                         )
                                     "
                                     class="inline-flex h-9 items-center justify-center rounded-lg bg-[#0B2F66] px-3 text-xs font-semibold text-white transition hover:bg-[#123B7A]"
                                 >
-                                    Continue
+                                    Continue Interview
                                 </Link>
                                 <form
-                                    :action="
-                                        interviewSessionComplete.url(
-                                            activeSession.id,
-                                        )
+                                    @submit.prevent="
+                                        handleCompleteInterviewSubmit
                                     "
-                                    method="POST"
-                                    @submit="handleCompleteInterviewSubmit"
                                 >
-                                    <input
-                                        type="hidden"
-                                        name="_token"
-                                        :value="$page.props.csrf_token"
-                                    />
                                     <button
                                         type="submit"
                                         class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#D7DEE8] bg-white px-3 text-xs font-semibold text-[#0A2E48] disabled:opacity-50"
