@@ -42,7 +42,7 @@ defineOptions({
     <div class="jobflow-page mx-auto max-w-4xl font-sans">
         <div class="mb-7">
             <p class="mb-2 text-sm font-semibold text-emerald-700">
-                Mock Interview Completed
+                AI Interview Completed
             </p>
             <h1 class="jobflow-page-title">Interview Results</h1>
             <p class="mt-2 text-sm text-slate-600">
@@ -60,7 +60,7 @@ defineOptions({
                 />
                 <p v-else class="text-sm text-slate-500">
                     Your result is not available yet. Return to Interview Center
-                    and try another mock interview.
+                    and try another AI interview.
                 </p>
             </CardContent>
         </Card>

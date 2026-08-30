@@ -7,7 +7,7 @@ const candidateEmail = `interview-${runId}@example.test`;
 const resumeTitle = 'Interview E2E Resume';
 const finalEvaluation = [
     '## Overall Assessment',
-    'Strong, relevant answers throughout the mock interview.',
+    'Strong, relevant answers throughout the AI interview.',
     '',
     '## Strengths',
     '- Clear examples',
@@ -17,7 +17,7 @@ const finalEvaluation = [
     '- Add measurable outcomes',
     '',
     '## Recommendation',
-    'Practice one more technical mock interview.',
+    'Practice one more technical AI interview.',
 ].join('\n');
 
 function persistCompletedResult(sessionId: number): void {
@@ -56,9 +56,52 @@ function persistCompletedResult(sessionId: number): void {
     });
 }
 
-test('candidate can prepare, recover, complete a mock, and view results', async ({
+function persistUpcomingInterview(email: string): void {
+    const php = `
+        $candidate = App\\Models\\User::where('email', ${JSON.stringify(email)})->firstOrFail();
+        $resume = $candidate->resumes()->firstOrFail();
+        $employer = App\\Models\\User::factory()->employer()->create();
+        $job = App\\Models\\WorkJob::create([
+            'user_id' => $employer->id,
+            'title' => 'Future Platform Engineer',
+            'company' => 'Flow Labs',
+            'description' => 'Build reliable platforms.',
+            'contacts' => 'jobs@flow.test',
+            'location' => 'Remote',
+            'technologies' => ['PHP'],
+        ]);
+        $application = App\\Models\\UserWorkJobApplication::create([
+            'user_id' => $candidate->id,
+            'work_job_id' => $job->id,
+            'resume_id' => $resume->id,
+            'status' => App\\Enums\\ApplicationStatus::Applied,
+        ]);
+        App\\Models\\InterviewSession::create([
+            'user_id' => $candidate->id,
+            'resume_id' => $resume->id,
+            'work_job_id' => $job->id,
+            'application_id' => $application->id,
+            'employer_id' => $employer->id,
+            'type' => 'job_interview',
+            'complexity' => 'standard',
+            'mode' => 'scheduled',
+            'status' => 'scheduled',
+            'scheduled_at' => now()->addDay(),
+            'timezone' => 'UTC',
+            'interview_format' => 'video',
+        ]);
+    `;
+
+    execFileSync('php', ['artisan', 'tinker', '--execute', php], {
+        cwd: process.cwd(),
+        stdio: 'pipe',
+    });
+}
+
+test('candidate can prepare, recover, complete an AI interview, and manage history', async ({
     page,
-}) => {
+}, testInfo) => {
+    test.setTimeout(60000);
     await page.goto('/register?type=candidate');
     await page.getByLabel('Email address').fill(candidateEmail);
     await page.getByLabel('Password', { exact: true }).fill(password);
@@ -77,19 +120,68 @@ test('candidate can prepare, recover, complete a mock, and view results', async 
     await expect(
         page.getByRole('heading', { name: 'Interview Center' }),
     ).toBeVisible();
-    await page.getByText('Technical', { exact: true }).click();
-    await page.getByText('Intermediate', { exact: true }).click();
-
-    await expect(page.getByText(`Resume: ${resumeTitle}`)).toBeVisible();
+    await expect(page.getByText('No upcoming interviews.')).toBeVisible();
     await expect(
-        page.getByText('General interview', { exact: true }).first(),
+        page.getByText('No completed AI interviews yet.'),
     ).toBeVisible();
+    await page.getByTestId('interview-tab-history').click();
+    await expect(
+        page.getByText('No completed AI interviews yet.'),
+    ).toBeVisible();
+
+    persistUpcomingInterview(candidateEmail);
+    await page.goto('/interview-preparation');
+    await page.getByTestId('interview-resume-select').click();
+    await page.getByRole('option', { name: resumeTitle }).click();
+    await page.getByTestId('interview-job-select').click();
+    await page
+        .getByRole('option', { name: /Future Platform Engineer/ })
+        .click();
+    const upcomingInterview = page
+        .getByTestId(/^upcoming-interview-/)
+        .filter({ hasText: 'Future Platform Engineer' });
+    await upcomingInterview.getByRole('button', { name: 'Prepare' }).click();
+    await expect(page.getByTestId('interview-job-select')).toContainText(
+        'Future Platform Engineer',
+    );
+    await page.getByTestId('interview-type-select').click();
+    await page.getByRole('option', { name: 'Technical' }).click();
+    await page.getByTestId('interview-difficulty-select').click();
+    await page.getByRole('option', { name: 'Intermediate' }).click();
+    await page.getByTestId('interview-mode-voice').click();
+    await expect(page.getByTestId('interview-mode-voice')).toHaveAttribute(
+        'aria-pressed',
+        'true',
+    );
+    await page.getByTestId('interview-mode-text').click();
+    await expect(page.getByTestId('interview-mode-text')).toHaveAttribute(
+        'aria-pressed',
+        'true',
+    );
     await expect(
         page.getByRole('button', { name: 'Prepare with AI' }),
     ).toBeVisible();
     await expect(
-        page.getByRole('button', { name: 'Start Mock Interview' }),
+        page.getByRole('button', { name: 'Start AI Interview' }),
     ).toBeVisible();
+    await page.setViewportSize({ width: 1536, height: 1024 });
+    await page.screenshot({
+        path: testInfo.outputPath('interview-center-desktop.png'),
+        fullPage: true,
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(
+        await page.evaluate(
+            () =>
+                document.documentElement.scrollWidth <=
+                document.documentElement.clientWidth,
+        ),
+    ).toBe(true);
+    await page.screenshot({
+        path: testInfo.outputPath('interview-center-mobile.png'),
+        fullPage: true,
+    });
+    await page.setViewportSize({ width: 1536, height: 1024 });
 
     await page.route('**/interview-prep/guidance', async (route) => {
         await route.fulfill({
@@ -110,7 +202,7 @@ test('candidate can prepare, recover, complete a mock, and view results', async 
     await expect(page).toHaveURL(/\/interview-prep\?/);
     await expect(page.getByText(resumeTitle, { exact: true })).toBeVisible();
     await expect(
-        page.getByText('General interview', { exact: true }),
+        page.getByText('Future Platform Engineer', { exact: true }),
     ).toBeVisible();
     await expect(page.getByText('Technical · Intermediate')).toBeVisible();
     await expect(
@@ -125,6 +217,16 @@ test('candidate can prepare, recover, complete a mock, and view results', async 
         page.getByText('Review your strongest technical project.'),
     ).toBeVisible();
     await expect(page.getByText(/Question 1 of/)).toHaveCount(0);
+
+    await page.goto('/interview-preparation');
+    await page.getByTestId('interview-job-select').click();
+    await page
+        .getByRole('option', { name: /Future Platform Engineer/ })
+        .click();
+    await page.getByTestId('interview-type-select').click();
+    await page.getByRole('option', { name: 'Technical' }).click();
+    await page.getByTestId('interview-difficulty-select').click();
+    await page.getByRole('option', { name: 'Intermediate' }).click();
 
     let firstStartAttempt = true;
     let questionNumber = 0;
@@ -187,7 +289,7 @@ test('candidate can prepare, recover, complete a mock, and view results', async 
         });
     });
 
-    await page.getByRole('button', { name: 'Start Mock Interview' }).click();
+    await page.getByRole('button', { name: 'Start AI Interview' }).click();
     await expect(page).toHaveURL(/\/interview-sessions\/\d+$/);
     await expect(
         page.getByText('The AI is preparing your first interview question.'),
@@ -204,7 +306,7 @@ test('candidate can prepare, recover, complete a mock, and view results', async 
     await expect(page.getByText('Technical question 1?')).toBeVisible();
     await expect(page.getByText('Question 1 of 6')).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-        'Intermediate Technical Mock Interview',
+        'Intermediate Technical AI Interview',
     );
     await expect(page.getByText(/Interview Interview/)).toHaveCount(0);
     await expect(page.getByText(/hint|suggested answer|coaching/i)).toHaveCount(
@@ -264,4 +366,27 @@ test('candidate can prepare, recover, complete a mock, and view results', async 
     await expect(
         page.getByRole('heading', { name: 'Recommendation' }),
     ).toBeVisible();
+
+    await page.goto('/interview-preparation');
+    await page.getByTestId('interview-tab-history').click();
+    const historyRow = page.getByTestId(`interview-history-${sessionId}`);
+    await expect(historyRow).toBeVisible();
+    await expect(
+        historyRow.getByRole('link', { name: 'View Results' }),
+    ).toBeVisible();
+
+    await historyRow
+        .getByRole('button', { name: `Delete interview ${sessionId}` })
+        .click();
+    await expect(
+        page.getByRole('heading', { name: 'Delete this interview?' }),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await expect(historyRow).toBeVisible();
+
+    await historyRow
+        .getByRole('button', { name: `Delete interview ${sessionId}` })
+        .click();
+    await page.getByRole('button', { name: 'Delete Interview' }).click();
+    await expect(historyRow).toHaveCount(0);
 });

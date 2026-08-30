@@ -83,7 +83,7 @@ async function prepare(): Promise<void> {
     }
 }
 
-function startMockInterview(): void {
+function startAiInterview(): void {
     startForm.post(interviewSessionStore.url());
 }
 
@@ -105,12 +105,10 @@ defineOptions({
             <p class="mb-2 text-sm font-semibold text-[#7047EB]">
                 AI Interview Prep
             </p>
-            <h1 class="jobflow-page-title">
-                Prepare before your mock interview
-            </h1>
+            <h1 class="jobflow-page-title">Prepare before your AI interview</h1>
             <p class="mt-2 max-w-2xl text-sm text-slate-600">
                 Get coaching based on your selected resume and vacancy. Formal
-                scoring happens only after the mock interview.
+                scoring happens only after the AI interview.
             </p>
         </div>
 
@@ -176,9 +174,9 @@ defineOptions({
                         variant="outline"
                         class="mt-3 w-full gap-2"
                         :disabled="startForm.processing"
-                        @click="startMockInterview"
+                        @click="startAiInterview"
                     >
-                        Start Mock Interview <ArrowRight class="h-4 w-4" />
+                        Start AI Interview <ArrowRight class="h-4 w-4" />
                     </Button>
                 </CardContent>
             </Card>

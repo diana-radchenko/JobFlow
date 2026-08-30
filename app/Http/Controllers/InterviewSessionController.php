@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Ai\Agents\InterviewAgent;
 use App\Data\InterviewContextData;
 use App\Models\InterviewSession;
+use App\Models\Resume;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -288,6 +289,32 @@ class InterviewSessionController extends Controller
         ]);
     }
 
+    public function destroy(Request $request, InterviewSession $session): RedirectResponse
+    {
+        $this->authorizeOwner($request, $session);
+
+        abort_unless(
+            $session->status === 'completed'
+                && in_array($session->mode, ['text', 'live'], true)
+                && $session->application_id === null,
+            422,
+            'Only completed AI interviews can be deleted.',
+        );
+
+        $conversationId = $session->conversation_id;
+        $userId = $request->user()->id;
+
+        DB::transaction(function () use ($conversationId, $session, $userId): void {
+            $session->delete();
+
+            if ($conversationId) {
+                $this->deleteConversationIfUnused($conversationId, $userId);
+            }
+        });
+
+        return back()->with('success', 'Interview deleted.');
+    }
+
     private function makeInterviewAgent(
         User $user,
         InterviewSession $session,
@@ -376,6 +403,28 @@ class InterviewSessionController extends Controller
             ->count();
     }
 
+    private function deleteConversationIfUnused(string $conversationId, int $userId): void
+    {
+        $conversationBelongsToUser = DB::table('agent_conversations')
+            ->where('id', $conversationId)
+            ->where('user_id', $userId)
+            ->exists();
+
+        if (! $conversationBelongsToUser
+            || InterviewSession::where('conversation_id', $conversationId)->exists()
+            || Resume::where('ai_conversation_id', $conversationId)->exists()) {
+            return;
+        }
+
+        DB::table('agent_conversation_messages')
+            ->where('conversation_id', $conversationId)
+            ->delete();
+        DB::table('agent_conversations')
+            ->where('id', $conversationId)
+            ->where('user_id', $userId)
+            ->delete();
+    }
+
     private function authorizeOwner(Request $request, InterviewSession $session): void
     {
         if ($session->user_id !== $request->user()->id) {
@@ -385,7 +434,7 @@ class InterviewSessionController extends Controller
 
     private function ensureInProgress(InterviewSession $session): void
     {
-        abort_unless($session->status === 'in_progress', 409, 'This mock interview is not in progress.');
+        abort_unless($session->status === 'in_progress', 409, 'This AI interview is not in progress.');
     }
 }
 
