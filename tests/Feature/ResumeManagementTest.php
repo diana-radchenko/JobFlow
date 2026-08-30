@@ -123,3 +123,59 @@ test('a user can manually add a research project to a resume', function () {
     expect($user->projects()->where('title', 'Distributed Systems Paper')->where('type', 'research')->exists())->toBeTrue();
 });
 
+test('first created resume becomes the only primary resume', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('resumes.store'), ['title' => 'First Resume'])
+        ->assertRedirect();
+
+    $first = $user->resumes()->where('title', 'First Resume')->first();
+
+    $this->actingAs($user)
+        ->post(route('resumes.store'), ['title' => 'Second Resume'])
+        ->assertRedirect();
+
+    expect($first->fresh()->is_primary)->toBeTruthy()
+        ->and($user->resumes()->where('is_primary', true)->count())->toBe(1);
+});
+
+test('setting a resume as primary moves primary status without affecting selection data', function () {
+    $user = User::factory()->create();
+    $first = $user->resumes()->create([
+        'title' => 'First Resume',
+        'is_primary' => true,
+    ]);
+    $second = $user->resumes()->create([
+        'title' => 'Second Resume',
+        'is_primary' => false,
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('resumes.primary', $second))
+        ->assertRedirect();
+
+    expect($first->fresh()->is_primary)->toBeFalsy()
+        ->and($second->fresh()->is_primary)->toBeTruthy()
+        ->and($second->fresh()->title)->toBe('Second Resume')
+        ->and($user->resumes()->where('is_primary', true)->count())->toBe(1);
+});
+
+test('deleting the primary resume safely promotes one remaining resume', function () {
+    $user = User::factory()->create();
+    $primary = $user->resumes()->create([
+        'title' => 'Primary Resume',
+        'is_primary' => true,
+    ]);
+    $remaining = $user->resumes()->create([
+        'title' => 'Remaining Resume',
+        'is_primary' => false,
+    ]);
+
+    $this->actingAs($user)
+        ->delete(route('resumes.destroy', $primary))
+        ->assertRedirect();
+
+    expect($remaining->fresh()->is_primary)->toBeTruthy()
+        ->and($user->resumes()->where('is_primary', true)->count())->toBe(1);
+});
