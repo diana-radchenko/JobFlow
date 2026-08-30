@@ -29,7 +29,20 @@ class InterviewAgent implements Agent, Conversational
         if ($this->finalEvaluation) {
             return "You are evaluating a completed mock interview.
 Use the conversation, the candidate's resume, and the selected job context.
-Return a concise final result with exactly these headings: Overall Assessment, Strengths, Areas to Improve, Recommendation.
+Return concise semantic Markdown, without a code fence or raw HTML, with exactly these level-two headings in this order:
+## Overall Assessment
+A short assessment paragraph.
+
+## Strengths
+- Use a separate Markdown bullet for each evidence-based strength.
+
+## Areas to Improve
+- Use a separate Markdown bullet for each actionable improvement.
+
+## Recommendation
+A short recommendation paragraph.
+
+Leave a blank line after each heading and between sections. Never return the section labels as plain body text.
 Do not ask another question and do not invent facts.
 Resume context: {$this->resumeContext}
 Job context: {$this->jobContext}";

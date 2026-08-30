@@ -21,6 +21,7 @@ import {
     results as interviewSessionResults,
     transcribe as interviewSessionTranscribe,
 } from '@/actions/App/Http/Controllers/InterviewSessionController';
+import InterviewFeedback from '@/components/interview/InterviewFeedback.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import {
@@ -456,8 +457,13 @@ defineOptions({
                             >Send answer</Button
                         >
                     </div>
+                    <InterviewFeedback
+                        v-if="completed"
+                        :key="session.id"
+                        :session-id="session.id"
+                    />
                     <Button
-                        v-else
+                        v-if="completed"
                         @click="
                             router.visit(
                                 interviewSessionResults.url(session.id),

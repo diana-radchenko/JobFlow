@@ -10,7 +10,7 @@ use Laravel\Ai\Prompts\AudioPrompt;
 use Laravel\Ai\Responses\AudioResponse;
 use Laravel\Ai\Responses\Data\Meta;
 
-test('completing an interview prompts ai for a final evaluation', function () {
+test('completing an interview saves immediately and feedback is requested separately', function () {
     InterviewAgent::fake();
 
     /** @var User $user */
@@ -30,13 +30,17 @@ test('completing an interview prompts ai for a final evaluation', function () {
     $session->refresh();
 
     expect($session->status)->toBe('completed');
+    expect($session->feedback_status)->toBe('pending');
+    InterviewAgent::assertNeverPrompted();
+
+    $this->actingAs($user)->postJson(route('interview-session.feedback', $session))->assertSuccessful();
 
     InterviewAgent::assertPrompted(function (AgentPrompt $prompt): bool {
         return $prompt->contains('The mock interview is complete.');
     });
 });
 
-test('completing an interview without conversation still requests final evaluation', function () {
+test('an ended interview without conversation can request feedback', function () {
     InterviewAgent::fake();
 
     /** @var User $user */
@@ -56,6 +60,9 @@ test('completing an interview without conversation still requests final evaluati
     $session->refresh();
 
     expect($session->status)->toBe('completed');
+    InterviewAgent::assertNeverPrompted();
+    $this->actingAs($user)->postJson(route('interview-session.feedback', $session))->assertSuccessful();
+    $session->refresh();
     expect($session->conversation_id)->not->toBeNull();
 
     InterviewAgent::assertPrompted(function (AgentPrompt $prompt): bool {

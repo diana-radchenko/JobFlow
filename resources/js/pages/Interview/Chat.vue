@@ -17,6 +17,7 @@ import {
     message as interviewSessionMessage,
     results as interviewSessionResults,
 } from '@/actions/App/Http/Controllers/InterviewSessionController';
+import InterviewFeedback from '@/components/interview/InterviewFeedback.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -175,10 +176,14 @@ function handleKeydown(event: KeyboardEvent): void {
     }
 }
 
-function handleCompleteInterviewSubmit(): void {
-    if (!isProcessing.value) {
-        isCompletingInterview.value = true;
+function handleCompleteInterviewSubmit(event: Event): void {
+    if (isProcessing.value || isCompletingInterview.value) {
+        event.preventDefault();
+
+        return;
     }
+
+    isCompletingInterview.value = true;
 }
 
 defineOptions({
@@ -230,7 +235,7 @@ defineOptions({
                     v-else-if="state === 'COMPLETED'"
                     class="mt-2 text-sm font-semibold text-emerald-700"
                 >
-                    Completed
+                    Interview completed
                 </p>
                 <p v-else class="mt-2 text-sm font-semibold text-red-700">
                     Question preparation failed
@@ -338,7 +343,7 @@ defineOptions({
                         />
                     </div>
                     <div
-                        v-if="isProcessing"
+                        v-if="isProcessing && state !== 'COMPLETED'"
                         class="mr-auto flex items-center gap-3 text-sm text-slate-500"
                     >
                         <Loader2 class="h-5 w-5 animate-spin" />Preparing the
@@ -374,18 +379,21 @@ defineOptions({
             </CardFooter>
             <CardFooter
                 v-else-if="state === 'COMPLETED'"
-                class="shrink-0 justify-center gap-3 border-t border-slate-100 bg-slate-50 p-4"
+                class="shrink-0 flex-col items-stretch gap-4 border-t border-slate-100 bg-slate-50 p-4"
             >
-                <Button as-child
-                    ><Link :href="interviewSessionResults.url(session.id)"
-                        >View Interview Results</Link
-                    ></Button
-                >
-                <Button as-child variant="outline"
-                    ><Link :href="interviewPreparation()"
-                        >Practice Again</Link
-                    ></Button
-                >
+                <InterviewFeedback :key="session.id" :session-id="session.id" />
+                <div class="flex flex-wrap justify-center gap-3">
+                    <Button as-child
+                        ><Link :href="interviewSessionResults.url(session.id)"
+                            >View Interview Results</Link
+                        ></Button
+                    >
+                    <Button as-child variant="outline"
+                        ><Link :href="interviewPreparation()"
+                            >Practice Again</Link
+                        ></Button
+                    >
+                </div>
             </CardFooter>
         </Card>
     </div>

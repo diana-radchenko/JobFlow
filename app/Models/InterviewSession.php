@@ -20,6 +20,7 @@ class InterviewSession extends Model
         'complexity',
         'mode',
         'status',
+        'feedback_status',
         'application_id',
         'employer_id',
         'scheduled_at',
