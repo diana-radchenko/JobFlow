@@ -54,7 +54,9 @@ const props = defineProps<{
 
 const normalizeResumeId = (id: number | string) => String(id);
 const initialSelectedResume =
-    props.resumes.find((resume) => resume.is_primary) ?? props.resumes[0] ?? null;
+    props.resumes.find((resume) => resume.is_primary) ??
+    props.resumes[0] ??
+    null;
 const selectedResumeId = ref<string | null>(
     initialSelectedResume ? normalizeResumeId(initialSelectedResume.id) : null,
 );
@@ -353,7 +355,8 @@ const formatDate = (date: string) =>
                                         class="h-full rounded-full bg-[#0A2E48]"
                                         :style="{
                                             width:
-                                                primaryResume.completeness + '%',
+                                                primaryResume.completeness +
+                                                '%',
                                         }"
                                     ></div>
                                 </div>
@@ -426,9 +429,7 @@ const formatDate = (date: string) =>
                                         size="icon"
                                         variant="ghost"
                                         aria-label="Rename resume"
-                                        @click.stop="
-                                            startRename(primaryResume)
-                                        "
+                                        @click.stop="startRename(primaryResume)"
                                     >
                                         <Pencil class="h-4 w-4" />
                                     </Button>
@@ -600,7 +601,9 @@ const formatDate = (date: string) =>
                                     {{ resume.educations_count }} education
                                 </span>
                                 <span>{{ resume.skills_count }} skills</span>
-                                <span>{{ resume.projects_count }} projects</span>
+                                <span
+                                    >{{ resume.projects_count }} projects</span
+                                >
                             </div>
 
                             <div class="flex flex-wrap gap-2">
@@ -619,11 +622,7 @@ const formatDate = (date: string) =>
                                     variant="outline"
                                     @click.stop
                                 >
-                                    <a
-                                        :href="
-                                            resumeEditor.show.url(resume.id)
-                                        "
-                                    >
+                                    <a :href="resumeEditor.show.url(resume.id)">
                                         <Pencil class="mr-1 h-4 w-4" />
                                         Edit
                                     </a>
@@ -753,8 +752,7 @@ const formatDate = (date: string) =>
                                     {{
                                         item.complete
                                             ? item.label
-                                            : 'Add ' +
-                                              item.label.toLowerCase()
+                                            : 'Add ' + item.label.toLowerCase()
                                     }}
                                 </span>
                             </div>
@@ -793,11 +791,7 @@ const formatDate = (date: string) =>
                                         Improve with AI
                                     </a>
                                 </Button>
-                                <Button
-                                    as-child
-                                    size="sm"
-                                    variant="outline"
-                                >
+                                <Button as-child size="sm" variant="outline">
                                     <a
                                         :href="
                                             resumeEditor.show.url(
