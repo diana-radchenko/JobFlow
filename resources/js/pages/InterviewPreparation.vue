@@ -442,7 +442,52 @@ defineOptions({
                                             {{ resume.title }}
                                         </SelectItem>
                                     </SelectContent>
-                    any }}
+                                </Select>
+                                <p
+                                    v-if="resumes.length === 0"
+                                    class="text-xs text-red-600"
+                                >
+                                    Create a resume first to personalize your
+                                    interview.
+                                </p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label
+                                    for="interview-job"
+                                    class="flex items-center gap-2 text-sm font-semibold text-[#14213D]"
+                                >
+                                    <BriefcaseBusiness
+                                        class="h-4 w-4 text-[#3157D5]"
+                                    />
+                                    Job / Application
+                                </label>
+                                <Select
+                                    v-model="workJobId"
+                                    :disabled="!!activeSession"
+                                >
+                                    <SelectTrigger
+                                        id="interview-job"
+                                        data-test="interview-job-select"
+                                        class="w-full"
+                                    >
+                                        <SelectValue
+                                            placeholder="General Interview"
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">
+                                            General Interview (no specific job)
+                                        </SelectItem>
+                                        <SelectItem
+                                            v-for="application in applications"
+                                            :key="application.id"
+                                            :value="
+                                                String(application.work_job_id)
+                                            "
+                                        >
+                                            {{ application.work_job?.title }} ·
+                                            {{ application.work_job?.company }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
