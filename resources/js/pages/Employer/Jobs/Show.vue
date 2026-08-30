@@ -14,6 +14,7 @@ import {
     Trash2,
     Users,
 } from 'lucide-vue-next';
+import MarkdownContent from '@/components/MarkdownContent.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -238,27 +239,31 @@ const deleteJob = () => {
             ><CardContent class="space-y-7 p-6 sm:p-8">
                 <div>
                     <h2 class="mb-2 text-lg font-bold">Description</h2>
-                    <p class="whitespace-pre-wrap text-foreground/70">
-                        {{ props.job.description }}
-                    </p>
+                    <MarkdownContent
+                        :source="props.job.description"
+                        class="text-foreground/70"
+                    />
                 </div>
                 <div v-if="props.job.responsibilities">
                     <h2 class="mb-2 text-lg font-bold">Responsibilities</h2>
-                    <p class="whitespace-pre-wrap text-foreground/70">
-                        {{ props.job.responsibilities }}
-                    </p>
+                    <MarkdownContent
+                        :source="props.job.responsibilities"
+                        class="text-foreground/70"
+                    />
                 </div>
                 <div v-if="props.job.requirements">
                     <h2 class="mb-2 text-lg font-bold">Requirements</h2>
-                    <p class="whitespace-pre-wrap text-foreground/70">
-                        {{ props.job.requirements }}
-                    </p>
+                    <MarkdownContent
+                        :source="props.job.requirements"
+                        class="text-foreground/70"
+                    />
                 </div>
                 <div v-if="props.job.benefits">
                     <h2 class="mb-2 text-lg font-bold">Benefits</h2>
-                    <p class="whitespace-pre-wrap text-foreground/70">
-                        {{ props.job.benefits }}
-                    </p>
+                    <MarkdownContent
+                        :source="props.job.benefits"
+                        class="text-foreground/70"
+                    />
                 </div>
             </CardContent></Card
         >
@@ -341,4 +346,3 @@ const deleteJob = () => {
         </section>
     </div>
 </template>
-

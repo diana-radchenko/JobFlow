@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { useVModel } from '@vueuse/core';
-import DOMPurify from 'dompurify';
 import { Bold, Eye, Heading2, Italic, List, Pencil } from 'lucide-vue-next';
-import { marked } from 'marked';
 import { ref, useTemplateRef } from 'vue';
+import MarkdownContent from '@/components/MarkdownContent.vue';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-
-marked.setOptions({ gfm: true, breaks: true });
 
 defineOptions({ inheritAttrs: false });
 
@@ -26,11 +23,6 @@ const emit = defineEmits<{
 const modelValue = useVModel(props, 'modelValue', emit);
 const textareaRef = useTemplateRef<InstanceType<typeof Textarea>>('textarea');
 const mode = ref<'write' | 'preview'>('write');
-
-const previewHtml = () =>
-    DOMPurify.sanitize(
-        marked.parse(modelValue.value || '', { async: false }) as string,
-    );
 
 /**
  * Wraps the current selection with markdown syntax (e.g. `**` for bold),
@@ -178,10 +170,10 @@ const prefixLines = (marker: string) => {
             :placeholder="placeholder"
             class="rounded-none border-0 focus-visible:ring-0"
         />
-        <div
+        <MarkdownContent
             v-else
-            class="markdown-body min-h-[8rem] px-3 py-2 text-sm"
-            v-html="previewHtml()"
+            :source="modelValue"
+            class="min-h-[8rem] px-3 py-2 text-sm"
         />
     </div>
 </template>
