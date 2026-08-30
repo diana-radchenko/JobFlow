@@ -14,14 +14,18 @@ class InterviewPreparationController extends Controller
      */
     public function __invoke(Request $request): Response
     {
-        $activeSession = InterviewSession::where('user_id', $request->user()->id)
+        $activeSession = InterviewSession::with(['resume:id,title', 'workJob:id,title,company'])
+            ->where('user_id', $request->user()->id)
             ->where('status', 'in_progress')
             ->first();
 
-        $pastSessions = InterviewSession::where('user_id', $request->user()->id)
+        $pastSessions = InterviewSession::with(['resume:id,title', 'workJob:id,title,company'])
+            ->where('user_id', $request->user()->id)
             ->where('status', 'completed')
-            ->orderBy('created_at', 'desc')
-            ->paginate(3);
+            ->whereIn('mode', ['text', 'live'])
+            ->whereNull('application_id')
+            ->latest()
+            ->paginate(5);
         $upcomingInterviews = InterviewSession::with('workJob:id,title,company')
             ->where('user_id', $request->user()->id)
             ->where('status', 'scheduled')

@@ -56,12 +56,12 @@ const isProcessing = ref(false);
 const isCompletingInterview = ref(false);
 const messageRefs = ref<HTMLElement[]>([]);
 
-const mockInterviewTitle = computed(() => {
+const aiInterviewTitle = computed(() => {
     const type = stringForHuman(props.session.type);
 
     return type.toLowerCase().endsWith('interview')
         ? `${stringForHuman(props.session.complexity)} ${type}`
-        : `${stringForHuman(props.session.complexity)} ${type} Mock Interview`;
+        : `${stringForHuman(props.session.complexity)} ${type} AI Interview`;
 });
 
 function assistantMessageHtml(content: string): string {
@@ -184,14 +184,14 @@ defineOptions({
     layout: {
         breadcrumbs: [
             { title: 'Interview', href: interviewPreparation() },
-            { title: 'Mock Interview' },
+            { title: 'AI Interview' },
         ],
     },
 });
 </script>
 
 <template>
-    <Head title="Mock Interview" />
+    <Head title="AI Interview" />
 
     <div
         class="container mx-auto flex h-[calc(100vh-120px)] max-w-4xl flex-col px-5 py-8 font-sans"
@@ -201,10 +201,10 @@ defineOptions({
                 <p
                     class="mb-1 text-xs font-semibold tracking-wide text-[#7047EB] uppercase"
                 >
-                    Mock Interview
+                    AI Interview
                 </p>
                 <h1 class="text-2xl font-bold text-slate-900">
-                    {{ mockInterviewTitle }}
+                    {{ aiInterviewTitle }}
                 </h1>
                 <p class="mt-1 text-sm text-slate-500">
                     {{ context.job_title || 'General interview'
@@ -258,7 +258,7 @@ defineOptions({
                         class="h-4 w-4 animate-spin"
                     />
                     <CheckCircle2 v-else class="h-4 w-4" />
-                    End Mock Interview
+                    End AI Interview
                 </Button>
             </form>
         </div>

@@ -133,12 +133,12 @@ const statusLabel = computed(() => {
     return 'Ready';
 });
 
-const mockInterviewTitle = computed(() => {
+const aiInterviewTitle = computed(() => {
     const type = stringForHuman(props.session.type);
 
     return type.toLowerCase().endsWith('interview')
         ? `${stringForHuman(props.session.complexity)} ${type}`
-        : `${stringForHuman(props.session.complexity)} ${type} Mock Interview`;
+        : `${stringForHuman(props.session.complexity)} ${type} AI Interview`;
 });
 
 const scrollToMessage = (index: number) => {
@@ -740,7 +740,7 @@ defineOptions({
                 href: interviewPreparation(),
             },
             {
-                title: 'Voice Mock Interview',
+                title: 'Voice AI Interview',
             },
         ],
     },
@@ -748,7 +748,7 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Voice Mock Interview" />
+    <Head title="Voice AI Interview" />
 
     <div
         class="container mx-auto grid min-h-[calc(100vh-120px)] max-w-[1200px] gap-6 px-5 py-8 font-sans lg:grid-cols-[1fr_380px]"
@@ -759,12 +759,12 @@ defineOptions({
             >
                 <div>
                     <p class="text-sm font-medium text-slate-500">
-                        Voice Mock Interview
+                        Voice AI Interview
                     </p>
                     <h1
                         class="text-2xl font-bold text-slate-900 dark:text-slate-100"
                     >
-                        {{ mockInterviewTitle }}
+                        {{ aiInterviewTitle }}
                     </h1>
                 </div>
 
@@ -1002,7 +1002,7 @@ defineOptions({
                                 class="h-4 w-4 animate-spin"
                             />
                             <CheckCircle2 v-else class="h-4 w-4" />
-                            End Mock Interview
+                            End AI Interview
                         </Button>
                     </form>
                 </CardFooter>
