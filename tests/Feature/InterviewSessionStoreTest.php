@@ -88,3 +88,24 @@ test('a user cannot start an interview for a job they have not applied to', func
         ])
         ->assertSessionHasErrors('work_job_id');
 });
+
+test('starting an interview only resumes an active session of the requested mode', function (string $existingMode, string $requestedMode) {
+    $user = User::factory()->create();
+    $resume = $user->resumes()->create(['title' => 'My Resume']);
+    $context = ['type' => 'technical', 'complexity' => 'intermediate', 'resume_id' => $resume->id];
+    $existing = InterviewSession::create([
+        ...$context, 'user_id' => $user->id, 'mode' => $existingMode, 'status' => 'in_progress',
+    ]);
+
+    $response = $this->actingAs($user)->post(route('interview-session.store'), [...$context, 'mode' => $requestedMode]);
+
+    $selected = InterviewSession::where('user_id', $user->id)->where('mode', $requestedMode)->firstOrFail();
+    $response->assertRedirect(route('interview-session.show', $selected));
+    expect($selected->id === $existing->id)->toBe($existingMode === $requestedMode);
+    expect(InterviewSession::where('user_id', $user->id)->count())->toBe($existingMode === $requestedMode ? 1 : 2);
+})->with([
+    'Voice does not resume Text' => ['text', 'live'],
+    'Text does not resume Voice' => ['live', 'text'],
+    'Voice resumes Voice' => ['live', 'live'],
+    'Text resumes Text' => ['text', 'text'],
+]);

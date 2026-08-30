@@ -7,14 +7,18 @@ use App\Data\InterviewContextData;
 use App\Models\Resume;
 use App\Models\User;
 use App\Models\WorkJob;
+use App\Services\InterviewVoice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class InterviewPrepController extends Controller
 {
+    public function __construct(private InterviewVoice $voice) {}
+
     private const TYPES = ['behavioral', 'technical', 'case-study', 'resume-based'];
 
     private const COMPLEXITIES = ['beginner', 'intermediate', 'advanced'];
@@ -63,6 +67,28 @@ class InterviewPrepController extends Controller
         }
 
         return response()->json(['guidance' => (string) $response]);
+    }
+
+    public function audio(Request $request): HttpResponse|JsonResponse
+    {
+        $this->validateVoiceContext($request);
+        $validated = $request->validate($this->voice->speechRules());
+
+        return $this->voice->audio($validated['content']);
+    }
+
+    public function transcribe(Request $request): JsonResponse
+    {
+        $this->validateVoiceContext($request);
+        $validated = $request->validate($this->voice->transcriptionRules());
+
+        return $this->voice->transcribe($validated['audio']);
+    }
+
+    private function validateVoiceContext(Request $request): void
+    {
+        $this->validatedContext($request);
+        $request->validate(['mode' => ['required', Rule::in(['live'])]]);
     }
 
     /**

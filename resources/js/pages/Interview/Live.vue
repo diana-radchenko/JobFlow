@@ -12,14 +12,14 @@ import {
     Volume2,
 } from 'lucide-vue-next';
 import { marked } from 'marked';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import {
-    computed,
-    nextTick,
-    onBeforeUnmount,
-    onMounted,
-    ref,
-    watch,
-} from 'vue';
+    audio as interviewSessionAudio,
+    complete as interviewSessionComplete,
+    message as interviewSessionMessage,
+    results as interviewSessionResults,
+    transcribe as interviewSessionTranscribe,
+} from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import {
@@ -29,27 +29,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useInterviewVoice } from '@/composables/useInterviewVoice';
 import { stringForHuman } from '@/helpers/strings';
-import {
-    audio as interviewSessionAudio,
-    complete as interviewSessionComplete,
-    message as interviewSessionMessage,
-    results as interviewSessionResults,
-    transcribe as interviewSessionTranscribe,
-} from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { interviewPreparation } from '@/routes';
 
 marked.setOptions({ gfm: true, breaks: true });
-
-const INITIAL_GREETING =
-    "Hello! Welcome to your AI interview practice. Take a moment to get comfortable, and when you're ready, tell me we can start.";
-
-function assistantMessageHtml(content: string): string {
-    const raw = marked.parse(content, { async: false }) as string;
-
-    return DOMPurify.sanitize(raw);
-}
-
 const props = defineProps<{
     session: {
         id: number;
@@ -59,80 +44,58 @@ const props = defineProps<{
         status: string;
         created_at: string;
     };
-    messages: {
-        role: string;
-        content: string;
-    }[];
+    messages: { role: string; content: string }[];
 }>();
-
+const page = usePage();
 const chatMessages = ref([...props.messages]);
 const messageRefs = ref<HTMLElement[]>([]);
 const currentTranscript = ref('');
 const recognitionLanguage = ref('en-US');
-const isListening = ref(false);
-const isStartingListening = ref(false);
-const isTranscribing = ref(false);
+const recognitionLanguages = [{ value: 'en-US', label: 'English' }];
 const isProcessing = ref(false);
 const isCompletingInterview = ref(false);
-const isPreparingAudio = ref(false);
-const isSpeaking = ref(false);
-const isHoldingToTalk = ref(false);
-const liveError = ref<string | null>(null);
-const volumeLevel = ref(0);
-let audioContext: AudioContext | null = null;
-let analyser: AnalyserNode | null = null;
-let microphoneStream: MediaStream | null = null;
-let animationFrame: number | null = null;
-let assistantAudio: HTMLAudioElement | null = null;
-let assistantAudioUrl: string | null = null;
-let assistantAudioRequest: AbortController | null = null;
-
-let mediaRecorder: MediaRecorder | null = null;
-let recordedChunks: Blob[] = [];
-const shouldSendWhenRecordingEnds = ref(false);
-
-const recognitionLanguages = [{ value: 'en-US', label: 'English' }];
-
-const supportsVoiceRecording = computed(
-    () =>
-        Boolean(navigator.mediaDevices?.getUserMedia) &&
-        typeof MediaRecorder !== 'undefined',
+const completed = ref(props.session.status === 'completed');
+const messageError = ref('');
+const failedMessage = ref<{ text: string; intent: 'start' | 'answer' } | null>(
+    null,
 );
-
-const isSecureBrowserContext = computed(() => window.isSecureContext);
-
-const canUseVoiceInput = computed(
-    () => supportsVoiceRecording.value && isSecureBrowserContext.value,
-);
-
-const statusLabel = computed(() => {
-    if (props.session.status === 'completed') {
-        return 'Completed';
-    }
-
-    if (isProcessing.value) {
-        return 'Thinking';
-    }
-
-    if (isTranscribing.value) {
-        return 'Transcribing';
-    }
-
-    if (isPreparingAudio.value) {
-        return 'Preparing voice';
-    }
-
-    if (isSpeaking.value) {
-        return 'Speaking';
-    }
-
-    if (isListening.value) {
-        return 'Listening';
-    }
-
-    return 'Ready';
+const voice = useInterviewVoice({
+    csrfToken: () => page.props.csrf_token,
+    transcribeUrl: () => interviewSessionTranscribe.url(props.session.id),
+    audioUrl: () => interviewSessionAudio.url(props.session.id),
+    onTranscript: async (text) => {
+        currentTranscript.value = text;
+        await sendMessage(text);
+    },
 });
-
+const {
+    isListening,
+    isStartingListening,
+    isTranscribing,
+    isPreparingAudio,
+    isSpeaking,
+    canUseVoiceInput,
+    isSecureBrowserContext,
+    canReplay,
+} = voice;
+const liveError = computed(() => messageError.value || voice.error.value);
+const statusLabel = computed(() =>
+    completed.value
+        ? 'Completed'
+        : isProcessing.value
+          ? 'Thinking'
+          : voice.status.value,
+);
+const hasQuestion = computed(() =>
+    chatMessages.value.some((message) => message.role === 'assistant'),
+);
+const busy = computed(
+    () =>
+        isProcessing.value ||
+        isTranscribing.value ||
+        isPreparingAudio.value ||
+        isStartingListening.value,
+);
 const aiInterviewTitle = computed(() => {
     const type = stringForHuman(props.session.type);
 
@@ -140,608 +103,133 @@ const aiInterviewTitle = computed(() => {
         ? `${stringForHuman(props.session.complexity)} ${type}`
         : `${stringForHuman(props.session.complexity)} ${type} AI Interview`;
 });
-
-const scrollToMessage = (index: number) => {
-    nextTick(() => {
-        messageRefs.value[index]?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'end',
-        });
-    });
-};
-
-const scrollToLastMessage = () => {
-    if (chatMessages.value.length > 0) {
-        scrollToMessage(chatMessages.value.length - 1);
-    }
-};
-
-watch(chatMessages, scrollToLastMessage, { deep: true });
-
-function pickAudioMimeType(): string | undefined {
-    const candidates = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/ogg;codecs=opus',
-        'audio/mp4',
-    ];
-
-    return candidates.find((type) => MediaRecorder.isTypeSupported?.(type));
+function assistantMessageHtml(content: string): string {
+    return DOMPurify.sanitize(
+        marked.parse(content, { async: false }) as string,
+    );
 }
+watch(
+    chatMessages,
+    () =>
+        nextTick(() =>
+            messageRefs.value
+                .at(-1)
+                ?.scrollIntoView({ behavior: 'smooth', block: 'end' }),
+        ),
+    { deep: true },
+);
 
-function resetTranscript() {
-    currentTranscript.value = '';
-    liveError.value = null;
-}
-
-function cleanupAudioInput() {
-    if (microphoneStream) {
-        microphoneStream.getTracks().forEach((track) => {
-            track.stop();
-        });
-        microphoneStream = null;
-    }
-
-    if (animationFrame !== null) {
-        cancelAnimationFrame(animationFrame);
-        animationFrame = null;
-    }
-
-    analyser = null;
-
-    if (audioContext) {
-        const context = audioContext;
-        audioContext = null;
-        void context.close().catch(() => {});
-    }
-
-    volumeLevel.value = 0;
-}
-
-function stopAssistantAudio() {
-    assistantAudioRequest?.abort();
-    assistantAudioRequest = null;
-
-    if (assistantAudio) {
-        assistantAudio.onplay = null;
-        assistantAudio.onended = null;
-        assistantAudio.onerror = null;
-        assistantAudio.pause();
-        assistantAudio.src = '';
-        assistantAudio = null;
-    }
-
-    if (assistantAudioUrl) {
-        URL.revokeObjectURL(assistantAudioUrl);
-        assistantAudioUrl = null;
-    }
-
-    isSpeaking.value = false;
-    isPreparingAudio.value = false;
-}
-
-async function ensureMicrophonePermission(): Promise<boolean> {
-    if (!navigator.mediaDevices?.getUserMedia) {
-        return true;
-    }
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-        });
-
-        microphoneStream = stream;
-        setupVolumeMeter(stream);
-
-        return true;
-    } catch {
-        liveError.value =
-            'Microphone permission was denied. Allow microphone access and try again.';
-
-        return false;
-    }
-}
-
-async function startListening() {
+async function sendMessage(
+    text: string,
+    intent: 'start' | 'answer' = 'answer',
+): Promise<void> {
     if (
-        isStartingListening.value ||
-        isListening.value ||
         isProcessing.value ||
-        isPreparingAudio.value ||
-        isTranscribing.value ||
-        props.session.status === 'completed'
-    ) {
-        return false;
-    }
-
-    isStartingListening.value = true;
-
-    if (!isSecureBrowserContext.value) {
-        liveError.value =
-            'Live voice mode requires HTTPS or localhost. Open the app through the secure Herd URL and try again.';
-
-        isStartingListening.value = false;
-
-        return false;
-    }
-
-    if (!supportsVoiceRecording.value) {
-        liveError.value =
-            'Your browser does not support audio recording. Use Chrome or Edge for live mode.';
-
-        isStartingListening.value = false;
-
-        return false;
-    }
-
-    try {
-        if (!(await ensureMicrophonePermission())) {
-            return false;
-        }
-
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop();
-        }
-
-        mediaRecorder = null;
-
-        if (!isHoldingToTalk.value) {
-            cleanupAudioInput();
-
-            return false;
-        }
-
-        stopAssistantAudio();
-        shouldSendWhenRecordingEnds.value = false;
-        resetTranscript();
-
-        if (!microphoneStream) {
-            liveError.value = 'Microphone stream unavailable. Try again.';
-
-            return false;
-        }
-
-        recordedChunks = [];
-        const mimeType = pickAudioMimeType();
-        mediaRecorder = mimeType
-            ? new MediaRecorder(microphoneStream, { mimeType })
-            : new MediaRecorder(microphoneStream);
-
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                recordedChunks.push(event.data);
-            }
-        };
-
-        mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, {
-                type: mediaRecorder?.mimeType || 'audio/webm',
-            });
-            recordedChunks = [];
-            cleanupAudioInput();
-
-            if (shouldSendWhenRecordingEnds.value) {
-                shouldSendWhenRecordingEnds.value = false;
-
-                if (blob.size > 0) {
-                    transcribeAndSend(blob);
-                } else {
-                    liveError.value =
-                        'No audio was captured. Click the microphone and try again.';
-                }
-            }
-        };
-
-        mediaRecorder.start();
-        isListening.value = true;
-
-        return true;
-    } catch {
-        liveError.value =
-            'Audio recording could not start. Refresh the page and try again.';
-        isListening.value = false;
-        mediaRecorder = null;
-        cleanupAudioInput();
-
-        return false;
-    } finally {
-        isStartingListening.value = false;
-    }
-}
-
-function setupVolumeMeter(stream: MediaStream) {
-    audioContext = new (
-        window.AudioContext || (window as any).webkitAudioContext
-    )();
-    analyser = audioContext.createAnalyser();
-    const source = audioContext.createMediaStreamSource(stream);
-    source.connect(analyser);
-    analyser.fftSize = 256;
-
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    const updateVolume = () => {
-        if (!analyser) {
-            return;
-        }
-
-        analyser.getByteFrequencyData(dataArray);
-
-        let sum = 0;
-
-        for (let i = 0; i < bufferLength; i++) {
-            sum += dataArray[i];
-        }
-
-        volumeLevel.value = sum / bufferLength;
-        animationFrame = requestAnimationFrame(updateVolume);
-    };
-
-    updateVolume();
-}
-
-function stopListening(sendWhenStopped = false) {
-    shouldSendWhenRecordingEnds.value = sendWhenStopped;
-    isStartingListening.value = false;
-
-    if (!mediaRecorder || mediaRecorder.state === 'inactive') {
-        cleanupAudioInput();
-
-        if (sendWhenStopped) {
-            liveError.value =
-                'No audio was captured. Click the microphone and try again.';
-        }
-
-        return;
-    }
-
-    try {
-        mediaRecorder.stop();
-    } catch {
-        mediaRecorder = null;
-        cleanupAudioInput();
-    }
-
-    isListening.value = false;
-}
-
-async function transcribeAndSend(blob: Blob) {
-    const csrfToken = usePage().props.csrf_token as string | undefined;
-
-    if (!csrfToken) {
-        liveError.value =
-            'Session token missing. Refresh the page and try again.';
-
-        return;
-    }
-
-    isTranscribing.value = true;
-    liveError.value = null;
-
-    try {
-        const formData = new FormData();
-        formData.append('audio', blob, 'answer.webm');
-        formData.append('language', recognitionLanguage.value.split('-')[0]);
-
-        const response = await fetch(
-            interviewSessionTranscribe.url(props.session.id),
-            {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: formData,
-            },
-        );
-
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-            const serverMessage =
-                typeof data.message === 'string'
-                    ? data.message
-                    : `Transcription failed (${response.status})`;
-
-            throw new Error(serverMessage);
-        }
-
-        const text = typeof data.text === 'string' ? data.text.trim() : '';
-
-        if (!text) {
-            liveError.value =
-                'No speech was detected. Click the microphone, speak clearly, then use Stop & Send.';
-
-            return;
-        }
-
-        currentTranscript.value = text;
-
-        await sendMessage(text);
-    } catch (error) {
-        liveError.value =
-            error instanceof Error
-                ? error.message
-                : 'Could not transcribe audio. Check your OpenAI connection and try again.';
-    } finally {
-        isTranscribing.value = false;
-    }
-}
-
-async function startHoldToTalk(event?: PointerEvent | KeyboardEvent) {
-    if (
-        isListening.value ||
-        isStartingListening.value ||
-        isProcessing.value ||
-        isPreparingAudio.value ||
-        isTranscribing.value ||
-        props.session.status === 'completed'
+        completed.value ||
+        (intent === 'answer' && !text.trim())
     ) {
         return;
     }
 
-    if (event instanceof PointerEvent) {
-        const target = event.currentTarget as HTMLElement | null;
-
-        if (target && !target.hasPointerCapture(event.pointerId)) {
-            target.setPointerCapture(event.pointerId);
-        }
-    }
-
-    isHoldingToTalk.value = true;
-    const started = await startListening();
-
-    if (!started) {
-        isHoldingToTalk.value = false;
-
-        return;
-    }
-
-    if (!isHoldingToTalk.value && isListening.value) {
-        stopListening(true);
-    }
-}
-
-function stopHoldToTalk(event?: PointerEvent | KeyboardEvent) {
-    if (!isHoldingToTalk.value) {
-        return;
-    }
-
-    if (event instanceof PointerEvent) {
-        const target = event.currentTarget as HTMLElement | null;
-
-        if (target?.hasPointerCapture(event.pointerId)) {
-            target.releasePointerCapture(event.pointerId);
-        }
-    }
-
-    isHoldingToTalk.value = false;
-
-    if (isListening.value || isStartingListening.value) {
-        stopListening(true);
-    }
-}
-
-async function speakAssistantMessage(content: string) {
-    const csrfToken = usePage().props.csrf_token as string | undefined;
-
-    if (!csrfToken) {
-        liveError.value =
-            'Session token missing. Refresh the page and try again.';
-
-        return;
-    }
-
-    stopAssistantAudio();
-
-    const controller = new AbortController();
-    assistantAudioRequest = controller;
-    isPreparingAudio.value = true;
-
-    try {
-        const response = await fetch(
-            interviewSessionAudio.url(props.session.id),
-            {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'audio/mpeg',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: JSON.stringify({ content }),
-                signal: controller.signal,
-            },
-        );
-
-        if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            const serverMessage =
-                typeof data.message === 'string'
-                    ? data.message
-                    : `Audio generation failed (${response.status})`;
-
-            throw new Error(serverMessage);
-        }
-
-        const audioBlob = await response.blob();
-
-        if (assistantAudioRequest !== controller) {
-            return;
-        }
-
-        assistantAudioUrl = URL.createObjectURL(audioBlob);
-        assistantAudio = new Audio(assistantAudioUrl);
-        assistantAudio.onplay = () => {
-            isPreparingAudio.value = false;
-            isSpeaking.value = true;
-        };
-        assistantAudio.onended = stopAssistantAudio;
-        assistantAudio.onerror = () => {
-            liveError.value = 'Audio playback failed. Try again.';
-            stopAssistantAudio();
-        };
-
-        await assistantAudio.play();
-    } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-            return;
-        }
-
-        liveError.value =
-            error instanceof Error
-                ? error.message
-                : 'Could not generate audio. Check your AI audio provider settings and try again.';
-        stopAssistantAudio();
-    } finally {
-        if (assistantAudioRequest === controller) {
-            assistantAudioRequest = null;
-        }
-    }
-}
-
-async function sendMessage(text: string, showUserMessage = true) {
-    const trimmedText = text.trim();
-
-    if (
-        !trimmedText ||
-        isProcessing.value ||
-        isPreparingAudio.value ||
-        props.session.status === 'completed'
-    ) {
-        return;
-    }
-
-    const csrfToken = usePage().props.csrf_token as string | undefined;
-
-    if (!csrfToken) {
-        liveError.value =
-            'Session token missing. Refresh the page and try again.';
-
-        return;
-    }
-
-    if (showUserMessage) {
-        chatMessages.value.push({
-            role: 'user',
-            content: trimmedText,
-        });
-    }
-
+    voice.stopAudio();
+    messageError.value = '';
+    voice.error.value = '';
+    failedMessage.value = null;
     isProcessing.value = true;
-    liveError.value = null;
+    const userMessage = { role: 'user', content: text.trim() };
+
+    if (intent === 'answer') {
+        chatMessages.value.push(userMessage);
+    }
 
     try {
-        const response = await fetch(
+        const response = await voice.request(
             interviewSessionMessage.url(props.session.id),
             {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: JSON.stringify({ message: trimmedText }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text.trim(), intent }),
             },
+            65_000,
         );
+        const data = await response.json();
+        const content =
+            typeof data.message === 'string'
+                ? data.message
+                : data.message?.content;
+        const isCompleted = data.session_status === 'completed';
 
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-            const serverMessage =
-                typeof data.message === 'string'
-                    ? data.message
-                    : (data.errors?.message?.[0] ??
-                      `Request failed (${response.status})`);
-
-            throw new Error(serverMessage);
+        if (!isCompleted && (typeof content !== 'string' || !content.trim())) {
+            throw new Error(
+                'No interview response was received. Please try again.',
+            );
         }
 
-        if (data.message) {
-            chatMessages.value.push(data.message);
-            speakAssistantMessage(data.message.content);
+        if (content) {
+            chatMessages.value.push({ role: 'assistant', content });
         }
 
-        if (data.session_status === 'completed') {
-            stopAssistantAudio();
-            router.visit(interviewSessionResults.url(props.session.id));
+        currentTranscript.value = '';
 
-            return;
+        if (isCompleted) {
+            completed.value = true;
+        } else {
+            void voice.speak(content);
+        }
+    } catch (failure) {
+        if (intent === 'answer') {
+            const index = chatMessages.value.indexOf(userMessage);
+
+            if (index !== -1) {
+                chatMessages.value.splice(index, 1);
+            }
         }
 
-        if (showUserMessage) {
-            resetTranscript();
-        }
-    } catch (error) {
-        if (showUserMessage) {
-            chatMessages.value.pop();
-        }
-
-        liveError.value =
-            error instanceof Error
-                ? error.message
-                : 'Could not reach the AI. Check OPENAI_API_KEY in .env and try again.';
+        messageError.value =
+            failure instanceof Error
+                ? failure.message
+                : 'The interview request failed. Please try again.';
+        failedMessage.value = { text, intent };
     } finally {
         isProcessing.value = false;
     }
 }
+async function toggleRecording() {
+    if (isListening.value) {
+        voice.stopRecording();
+    } else if (!busy.value && !completed.value && hasQuestion.value) {
+        await voice.startRecording();
+    }
+}
+async function retry() {
+    if (failedMessage.value) {
+        await sendMessage(failedMessage.value.text, failedMessage.value.intent);
+    } else if (voice.retryAction.value) {
+        await voice.retryAction.value();
+    } else {
+        await voice.startRecording();
+    }
+}
+function handleCompleteInterviewSubmit(event: Event) {
+    if (busy.value || isCompletingInterview.value) {
+        event.preventDefault();
 
-function handleCompleteInterviewSubmit() {
-    if (
-        isCompletingInterview.value ||
-        isProcessing.value ||
-        isPreparingAudio.value
-    ) {
         return;
     }
 
-    stopListening();
-    isHoldingToTalk.value = false;
-    stopAssistantAudio();
+    voice.stopRecording(false);
+    voice.stopAudio();
     isCompletingInterview.value = true;
 }
-
 onMounted(() => {
-    if (
-        chatMessages.value.length === 0 &&
-        props.session.status === 'in_progress'
-    ) {
-        chatMessages.value.push({
-            role: 'assistant',
-            content: INITIAL_GREETING,
-        });
-
-        speakAssistantMessage(INITIAL_GREETING);
+    if (!hasQuestion.value && !completed.value) {
+        void sendMessage('', 'start');
     }
-
-    scrollToLastMessage();
 });
-
-onBeforeUnmount(() => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-    }
-
-    cleanupAudioInput();
-    stopAssistantAudio();
-});
-
 defineOptions({
     layout: {
         breadcrumbs: [
-            {
-                title: 'Interview',
-                href: interviewPreparation(),
-            },
-            {
-                title: 'Voice AI Interview',
-            },
+            { title: 'Interview', href: interviewPreparation() },
+            { title: 'Voice AI Interview' },
         ],
     },
 });
@@ -854,19 +342,14 @@ defineOptions({
                                     ? 'border-blue-300 bg-blue-50 shadow-[0_0_0_18px_rgba(59,130,246,0.12)] dark:border-blue-900 dark:bg-blue-950/40'
                                     : 'border-slate-200 bg-slate-50 hover:border-primary/40 dark:border-slate-800 dark:bg-slate-900',
                         ]"
-                        :disabled="
-                            isProcessing ||
-                            isPreparingAudio ||
-                            isTranscribing ||
-                            session.status === 'completed'
+                        :disabled="busy || completed || !hasQuestion"
+                        :aria-label="
+                            isListening
+                                ? 'Stop recording and send answer'
+                                : 'Start recording'
                         "
-                        @pointerdown.prevent="startHoldToTalk"
-                        @pointerup.prevent="stopHoldToTalk"
-                        @pointercancel.prevent="stopHoldToTalk"
-                        @keydown.space.prevent="startHoldToTalk"
-                        @keyup.space.prevent="stopHoldToTalk"
-                        @keydown.enter.prevent="startHoldToTalk"
-                        @keyup.enter.prevent="stopHoldToTalk"
+                        :aria-pressed="isListening"
+                        @click="toggleRecording"
                     >
                         <Loader2
                             v-if="
@@ -892,65 +375,95 @@ defineOptions({
                             class="text-xl font-bold text-slate-900 dark:text-slate-100"
                         >
                             {{
-                                isListening
-                                    ? 'Listening to your answer'
-                                    : isTranscribing
-                                      ? 'Transcribing your answer'
-                                      : isProcessing
-                                        ? 'AI is preparing the next response'
-                                        : isPreparingAudio
-                                          ? 'AI is preparing the voice'
-                                          : isSpeaking
-                                            ? 'AI is speaking'
-                                            : 'Ready for your answer'
+                                completed
+                                    ? 'Interview completed'
+                                    : isStartingListening
+                                      ? 'Waiting for microphone permission'
+                                      : isListening
+                                        ? 'Listening to your answer'
+                                        : isTranscribing
+                                          ? 'Transcribing your answer'
+                                          : isProcessing
+                                            ? 'AI is preparing the next response'
+                                            : isPreparingAudio
+                                              ? 'AI is preparing the voice'
+                                              : isSpeaking
+                                                ? 'AI is speaking'
+                                                : 'Ready for your answer'
                             }}
                         </h2>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">
-                            Hold the microphone while speaking. Release it to
-                            send your answer automatically.
+                        <p
+                            v-if="!completed"
+                            class="text-sm text-slate-500 dark:text-slate-400"
+                        >
+                            Click the microphone, allow access, and speak. Click
+                            again to send. Recordings stop after 90 seconds. The
+                            interviewer's voice is AI-generated.
                         </p>
                     </div>
 
                     <div
                         class="min-h-28 w-full max-w-3xl rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left text-sm leading-relaxed text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                     >
-                        <div
-                            v-if="isListening"
-                            class="mb-4 flex items-center gap-2"
-                        >
-                            <div
-                                class="text-xs font-bold tracking-wider text-slate-400 uppercase"
-                            >
-                                Mic Level:
-                            </div>
-                            <div
-                                class="h-2 flex-1 overflow-hidden rounded-full bg-slate-200"
-                            >
-                                <div
-                                    class="h-full bg-green-500 transition-all duration-75"
-                                    :style="{
-                                        width:
-                                            Math.min(volumeLevel * 2, 100) +
-                                            '%',
-                                    }"
-                                ></div>
-                            </div>
-                        </div>
                         <span v-if="currentTranscript">
                             {{ currentTranscript }}
                         </span>
                         <span v-else class="text-slate-400">
-                            Hold the microphone and speak in English. Your
-                            transcribed answer will appear here.
+                            Speak in English. Your transcribed answer will
+                            appear here.
                         </span>
                     </div>
 
                     <p
                         v-if="liveError"
+                        role="alert"
                         class="max-w-2xl rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/30 dark:text-red-400"
                     >
                         {{ liveError }}
                     </p>
+                    <Button
+                        v-if="canReplay && !completed"
+                        variant="outline"
+                        :disabled="isListening || busy"
+                        @click="voice.replay"
+                    >
+                        Play audio
+                    </Button>
+                    <div
+                        v-if="!completed"
+                        class="w-full max-w-3xl space-y-3 text-left"
+                    >
+                        <label
+                            for="voice-text-answer"
+                            class="text-sm font-medium"
+                            >Or type your answer</label
+                        >
+                        <Textarea
+                            id="voice-text-answer"
+                            v-model="currentTranscript"
+                            :disabled="busy || isListening || !hasQuestion"
+                            placeholder="Type your answer if your microphone is unavailable..."
+                        />
+                        <Button
+                            :disabled="
+                                busy ||
+                                isListening ||
+                                !hasQuestion ||
+                                !currentTranscript.trim()
+                            "
+                            @click="sendMessage(currentTranscript)"
+                            >Send answer</Button
+                        >
+                    </div>
+                    <Button
+                        v-else
+                        @click="
+                            router.visit(
+                                interviewSessionResults.url(session.id),
+                            )
+                        "
+                        >View Interview Results</Button
+                    >
                 </CardContent>
 
                 <CardFooter
@@ -958,6 +471,7 @@ defineOptions({
                 >
                     <div class="flex w-full gap-3 sm:w-auto">
                         <Button
+                            v-if="liveError && !completed"
                             type="button"
                             variant="outline"
                             class="flex-1 gap-2 sm:flex-none"
@@ -966,17 +480,17 @@ defineOptions({
                                 isProcessing ||
                                 isPreparingAudio ||
                                 isTranscribing ||
-                                session.status === 'completed'
+                                completed
                             "
-                            @click="resetTranscript"
+                            @click="retry"
                         >
                             <RotateCcw class="h-4 w-4" />
-                            Retry
+                            Try Again
                         </Button>
                     </div>
 
                     <form
-                        v-if="session.status === 'in_progress'"
+                        v-if="!completed"
                         :action="interviewSessionComplete.url(session.id)"
                         method="POST"
                         @submit="handleCompleteInterviewSubmit"
@@ -1024,7 +538,11 @@ defineOptions({
                         v-if="chatMessages.length === 0"
                         class="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-slate-900"
                     >
-                        The AI is preparing your first question.
+                        {{
+                            isProcessing
+                                ? 'The AI is preparing your first question.'
+                                : 'No question yet. Select Try Again to start.'
+                        }}
                     </div>
 
                     <div

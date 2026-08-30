@@ -3,14 +3,12 @@
 use App\Enums\UserRole;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationController;
-use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\Employer\InterviewScheduleController;
-use App\Http\Controllers\JobChatController;
-use App\Http\Controllers\SalaryController;
-use App\Http\Controllers\SavedJobController;
+use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\InterviewPreparationController;
 use App\Http\Controllers\InterviewPrepController;
 use App\Http\Controllers\InterviewSessionController;
+use App\Http\Controllers\JobChatController;
 use App\Http\Controllers\JobSelectionController;
 use App\Http\Controllers\ModuleEntryController;
 use App\Http\Controllers\RequestTrackerController;
@@ -20,6 +18,8 @@ use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\ResumeEditorController;
 use App\Http\Controllers\ResumeSalaryAnalysisController;
 use App\Http\Controllers\ResumeScoreController;
+use App\Http\Controllers\SalaryController;
+use App\Http\Controllers\SavedJobController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -146,6 +146,8 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
     Route::get('interview-preparation', InterviewPreparationController::class)->name('interview-preparation');
     Route::get('interview-prep', [InterviewPrepController::class, 'show'])->name('interview-prep.show');
     Route::post('interview-prep/guidance', [InterviewPrepController::class, 'guidance'])->name('interview-prep.guidance');
+    Route::post('interview-prep/audio', [InterviewPrepController::class, 'audio'])->name('interview-prep.audio');
+    Route::post('interview-prep/transcribe', [InterviewPrepController::class, 'transcribe'])->name('interview-prep.transcribe');
     Route::get('salary', SalaryController::class)->name('salary');
     Route::get('development', function () {
         return Inertia::render('Development');

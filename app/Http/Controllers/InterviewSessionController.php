@@ -7,18 +7,20 @@ use App\Data\InterviewContextData;
 use App\Models\InterviewSession;
 use App\Models\Resume;
 use App\Models\User;
+use App\Services\InterviewVoice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use Laravel\Ai\Audio;
-use Laravel\Ai\Transcription;
 
 class InterviewSessionController extends Controller
 {
+    public function __construct(private InterviewVoice $voice) {}
+
     private const TOTAL_QUESTIONS = 6;
 
     private const START_PROMPT = 'Begin the mock interview with question 1. Return only the question.';
@@ -54,6 +56,7 @@ class InterviewSessionController extends Controller
         $activeSession = InterviewSession::query()
             ->where('user_id', $user->id)
             ->where('status', 'in_progress')
+            ->where('mode', $validated['mode'])
             ->first();
 
         if ($activeSession) {
@@ -176,55 +179,24 @@ class InterviewSessionController extends Controller
         ]);
     }
 
-    public function audio(Request $request, InterviewSession $session)
+    public function audio(Request $request, InterviewSession $session): HttpResponse|JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
-
         $this->authorizeOwner($request, $session);
         $this->ensureInProgress($session);
 
-        $validated = $request->validate([
-            'content' => ['required', 'string', 'max:10000'],
-        ]);
+        $validated = $request->validate($this->voice->speechRules());
 
-        $audio = Audio::of($validated['content'])
-            ->female()
-            ->instructions('Speak naturally as a calm, supportive technical interviewer. Keep a warm conversational tone and avoid sounding robotic.')
-            ->generate();
-
-        return response((string) $audio)
-            ->header('Content-Type', $audio->mimeType() ?? 'audio/mpeg')
-            ->header('Cache-Control', 'no-store');
+        return $this->voice->audio($validated['content']);
     }
 
-    public function transcribe(Request $request, InterviewSession $session)
+    public function transcribe(Request $request, InterviewSession $session): JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
-
         $this->authorizeOwner($request, $session);
         $this->ensureInProgress($session);
 
-        $validated = $request->validate([
-            'audio' => ['required', 'file', 'max:20480'],
-        ]);
+        $validated = $request->validate($this->voice->transcriptionRules());
 
-        try {
-            $transcript = Transcription::fromUpload($validated['audio'])
-                ->language('en')
-                ->generate('openai');
-        } catch (\Throwable $e) {
-            report($e);
-
-            return response()->json([
-                'message' => 'Could not transcribe audio. Check your OpenAI connection and try again.',
-            ], 422);
-        }
-
-        return response()->json([
-            'text' => trim($transcript->text),
-        ]);
+        return $this->voice->transcribe($validated['audio']);
     }
 
     public function complete(Request $request, InterviewSession $session)
@@ -320,8 +292,7 @@ class InterviewSessionController extends Controller
         InterviewSession $session,
         int $currentQuestion = 0,
         bool $finalEvaluation = false,
-    ): InterviewAgent
-    {
+    ): InterviewAgent {
         $context = $session->resume
             ? InterviewContextData::fromResume($session->resume, $session->workJob)
             : InterviewContextData::fromUser($user);
@@ -342,8 +313,7 @@ class InterviewSessionController extends Controller
         InterviewSession $session,
         string $prompt,
         int $currentQuestion,
-    ): object
-    {
+    ): object {
         return $this->promptWithAgent(
             $this->makeInterviewAgent($user, $session, $currentQuestion),
             $user,
@@ -357,8 +327,7 @@ class InterviewSessionController extends Controller
         User $user,
         InterviewSession $session,
         string $prompt,
-    ): object
-    {
+    ): object {
         if ($session->conversation_id) {
             return $agent->continue($session->conversation_id, as: $user)
                 ->prompt($prompt, model: config('ai.model'));
@@ -437,4 +406,3 @@ class InterviewSessionController extends Controller
         abort_unless($session->status === 'in_progress', 409, 'This AI interview is not in progress.');
     }
 }
-
