@@ -377,7 +377,7 @@ defineOptions({
             >
                 <Button as-child
                     ><Link :href="interviewSessionResults.url(session.id)"
-                        >View Results</Link
+                        >View Interview Results</Link
                     ></Button
                 >
                 <Button as-child variant="outline"
