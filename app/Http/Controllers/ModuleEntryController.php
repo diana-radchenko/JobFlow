@@ -11,12 +11,12 @@ use Inertia\Response;
 
 class ModuleEntryController extends Controller
 {
-    public function home(Request $request): RedirectResponse
+    public function home(Request $request): RedirectResponse|Response
     {
         $role = $request->user()?->role();
 
         if (! $role) {
-            return redirect()->route('register', ['type' => UserRole::Candidate->value]);
+            return Inertia::render('Welcome');
         }
 
         return redirect()->route($role === UserRole::Employer ? 'hrflow' : 'jobflow');
