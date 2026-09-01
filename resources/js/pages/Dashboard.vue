@@ -30,13 +30,13 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { stringForHuman } from '@/helpers/strings';
+import { dashboard } from '@/routes';
+import { show as jobSelectionShow } from '@/routes/job-selection';
 import type {
     InterviewSession,
     UserWorkJobApplication,
     WorkJob,
 } from '@/types/laravel-models';
-import { dashboard } from '@/routes';
-import { show as jobSelectionShow } from '@/routes/job-selection';
 
 interface DashboardResume {
     id: number;

@@ -2,9 +2,9 @@
 import { Link } from '@inertiajs/vue3';
 import { CalendarDays, Trash2 } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { results as interviewSessionResults } from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { stringForHuman } from '@/helpers/strings';
 import type { InterviewHistorySession } from '@/types/interview-center';
-import { results as interviewSessionResults } from '@/actions/App/Http/Controllers/InterviewSessionController';
 
 const props = defineProps<{ session: InterviewHistorySession }>();
 
