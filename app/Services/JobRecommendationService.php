@@ -28,6 +28,16 @@ class JobRecommendationService
             ->values();
     }
 
+    /** @return array<string, mixed> */
+    public function forJob(Resume $resume, WorkJob $job): array
+    {
+        $resume->loadMissing(['skills', 'workExperiences', 'educations', 'user']);
+        $appliedJobIds = $resume->user->applications()->pluck('work_job_id');
+        $savedJobIds = $resume->user->savedWorkJobs()->pluck('work_jobs.id');
+
+        return $this->score($resume, $job, $appliedJobIds, $savedJobIds);
+    }
+
     /** @param Collection<int, int> $appliedJobIds @param Collection<int, int> $savedJobIds */
     private function score(Resume $resume, WorkJob $job, Collection $appliedJobIds, Collection $savedJobIds): array
     {
@@ -104,7 +114,7 @@ class JobRecommendationService
 
         return [
             'job' => $job,
-            'score' => $available > 0 ? (int) round($earned / $available * 100) : 0,
+            'score' => $available > 0 ? (int) round($earned / $available * 100) : null,
             'criteria' => $criteria,
             'strong_matches' => array_values(array_unique($strongMatches)),
             'gaps' => $gaps,
