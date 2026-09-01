@@ -72,7 +72,7 @@ function formatDate(value: string): string {
                 <CalendarDays class="h-3.5 w-3.5" />
                 {{ formatDate(session.created_at) }}
                 <span
-                    class="rounded-md border border-emerald-100 bg-emerald-50/70 px-2 py-0.5 text-[12px] font-medium text-emerald-700"
+                    class="rounded-md border border-emerald-100 bg-emerald-50/70 px-2 py-0.5 text-[13px] font-medium text-emerald-700"
                     >Completed</span
                 >
             </p>

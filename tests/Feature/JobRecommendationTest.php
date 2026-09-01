@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\UserWorkJobApplication;
 use App\Models\WorkJob;
 use App\Services\JobRecommendationService;
+use App\Services\JobTitleNormalizer;
 use Inertia\Testing\AssertableInertia as Assert;
 
 function recommendationJob(User $employer, array $attributes = []): WorkJob
@@ -105,6 +106,32 @@ test('recommendation score and explanations come from evaluated resume fields', 
     $result = app(JobRecommendationService::class)->forResume($resume)->first();
 
     expect($result['score'])->toBe(100)
-        ->and(collect($result['criteria'])->pluck('label')->all())->toBe(['Skills', 'Role relevance'])
+        ->and(collect($result['criteria'])->pluck('label')->all())->toBe(['Skills', 'Role relevance', 'Experience', 'Education'])
+        ->and(collect($result['criteria'])->firstWhere('label', 'Education')['status'])->toBe('not_specified')
         ->and($result['strong_matches'])->toContain('Relevant skill: Laravel', 'Relevant role experience');
+});
+
+test('technology role wording alone is not treated as an education requirement', function () {
+    $candidate = User::factory()->create();
+    $employer = User::factory()->employer()->create();
+    $resume = Resume::create(['user_id' => $candidate->id, 'title' => 'Programming Instructor']);
+    recommendationJob($employer, [
+        'title' => 'Programming Instructor',
+        'description' => 'Teach programming fundamentals to students.',
+        'requirements' => 'Professional teaching experience',
+        'technologies' => [],
+    ]);
+
+    $result = app(JobRecommendationService::class)->forResume($resume)->first();
+
+    expect(collect($result['criteria'])->firstWhere('label', 'Education')['status'])
+        ->toBe('not_specified');
+});
+
+test('related teaching role titles normalize without matching unrelated roles', function () {
+    $normalizer = app(JobTitleNormalizer::class);
+
+    expect($normalizer->similarity('Coding Teacher', 'Programming Tutor'))->toBe(1.0)
+        ->and($normalizer->comparable('Coding Instructor', 'Programming Tutor'))->toBeTrue()
+        ->and($normalizer->comparable('Coding Instructor', 'Financial Analyst'))->toBeFalse();
 });

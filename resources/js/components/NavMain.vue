@@ -13,6 +13,7 @@ import type { NavItem } from '@/types';
 
 const props = defineProps<{
     items: NavItem[];
+    candidate?: boolean;
 }>();
 
 const { isCurrentUrl } = useCurrentUrl();
@@ -47,13 +48,19 @@ function handleNavigation() {
                     size="lg"
                     :is-active="isMenuItemActive(item)"
                     :tooltip="item.title"
-                    class="text-[13.5px] text-slate-200 transition-colors duration-200 hover:bg-[#08263D] hover:text-white data-[active=true]:bg-[#0A2E48] data-[active=true]:font-semibold data-[active=true]:text-white"
+                    class="text-slate-200 transition-colors duration-200 hover:bg-[#08263D] hover:text-white data-[active=true]:bg-[#0A2E48] data-[active=true]:font-semibold data-[active=true]:text-white"
+                    :class="props.candidate ? 'text-[15px]' : 'text-[13.5px]'"
                 >
                     <Link :href="item.href" @click="handleNavigation">
                         <component :is="item.icon" />
                         <span
-                            class="truncate text-[13.5px] font-medium"
-                            :class="state === 'collapsed' && 'hidden'"
+                            class="truncate font-medium"
+                            :class="[
+                                props.candidate
+                                    ? 'text-[15px]'
+                                    : 'text-[13.5px]',
+                                state === 'collapsed' && 'hidden',
+                            ]"
                         >
                             {{ item.title }}
                         </span>
@@ -63,4 +70,3 @@ function handleNavigation() {
         </SidebarMenu>
     </SidebarGroup>
 </template>
-

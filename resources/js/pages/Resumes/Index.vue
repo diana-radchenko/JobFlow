@@ -310,7 +310,7 @@ const formatDate = (date: string) =>
                                         class="mt-3 flex flex-wrap items-center gap-2"
                                     >
                                         <span
-                                            class="rounded-full bg-[#051C2E] px-3 py-1 text-[11px] font-bold tracking-wide text-white"
+                                            class="rounded-full bg-[#051C2E] px-3 py-1 text-[13px] font-bold tracking-wide text-white"
                                         >
                                             PRIMARY RESUME
                                         </span>
@@ -318,7 +318,7 @@ const formatDate = (date: string) =>
                                             v-if="
                                                 isSelectedResume(primaryResume)
                                             "
-                                            class="rounded-full border border-[#0A2E48]/35 bg-white px-2.5 py-1 text-[11px] font-semibold text-[#0A2E48]"
+                                            class="rounded-full border border-[#0A2E48]/35 bg-white px-2.5 py-1 text-[13px] font-semibold text-[#0A2E48]"
                                         >
                                             Selected
                                         </span>
@@ -534,7 +534,7 @@ const formatDate = (date: string) =>
                                     </div>
                                     <span
                                         v-if="isSelectedResume(resume)"
-                                        class="shrink-0 rounded-full border border-[#0A2E48]/35 bg-white px-2.5 py-1 text-[11px] font-semibold text-[#0A2E48]"
+                                        class="shrink-0 rounded-full border border-[#0A2E48]/35 bg-white px-2.5 py-1 text-[13px] font-semibold text-[#0A2E48]"
                                     >
                                         Selected
                                     </span>

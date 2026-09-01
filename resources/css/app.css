@@ -209,7 +209,7 @@
         --ring: #0a2e48;
         background: #f5f7fb;
         color: #14213d;
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .candidate-workspace [data-slot='card'] {
@@ -220,7 +220,7 @@
 
     .candidate-workspace [data-slot='button'] {
         border-radius: 10px;
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 600;
     }
 
@@ -233,11 +233,11 @@
     }
 
     .jobflow-page-title {
-        @apply text-[23px] leading-tight font-bold tracking-tight text-[#14213D];
+        @apply text-[30px] leading-tight font-bold tracking-tight text-[#14213D];
     }
 
     .jobflow-section-title {
-        @apply text-[18px] leading-tight font-semibold text-[#14213D];
+        @apply text-[22px] leading-tight font-semibold text-[#14213D];
     }
 
     .jobflow-surface {
@@ -280,4 +280,23 @@
     .markdown-body a {
         @apply underline;
     }
+}
+
+/* Candidate-only readability scale. Explicit utility overrides are scoped so
+   HRFlow keeps its existing typography and layout. */
+.candidate-workspace .text-xs {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+}
+
+.candidate-workspace .text-sm {
+    font-size: 0.9375rem;
+    line-height: 1.4rem;
+}
+
+.candidate-workspace input,
+.candidate-workspace select,
+.candidate-workspace textarea,
+.candidate-workspace [role='combobox'] {
+    font-size: 0.9375rem;
 }

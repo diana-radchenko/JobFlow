@@ -33,6 +33,17 @@ class DashboardController extends Controller
         $nextInterview = $interviewSessions->first(
             fn (InterviewSession $session) => $session->scheduled_at?->isFuture(),
         );
+        $upcomingInterviewCount = $interviewSessions->filter(
+            fn (InterviewSession $session) => $session->scheduled_at?->isFuture(),
+        )->count();
+        $underReviewCount = $applications->filter(function (UserWorkJobApplication $application): bool {
+            $status = $application->status instanceof \BackedEnum
+                ? $application->status->value
+                : (string) $application->status;
+
+            return ! in_array($status, ['rejected', 'offer', 'hired'], true)
+                && ($application->viewed_at !== null || in_array($status, ['shortlisted', 'interview_scheduled'], true));
+        })->count();
 
         $user = $request->user();
         $profileFirstName = str($user->name ?: $user->email)
@@ -65,6 +76,8 @@ class DashboardController extends Controller
             'dashboardSummary' => [
                 'applications' => $applications->count(),
                 'interviews' => $interviewSessions->count(),
+                'upcomingInterviews' => $upcomingInterviewCount,
+                'underReview' => $underReviewCount,
                 'offers' => $applications->whereIn('status', ['offer', 'hired'])->count(),
                 'resumeCompleteness' => $resumeSummary['completeness'] ?? null,
                 'recommendedMatches' => count($recommendedJobs),
@@ -210,14 +223,18 @@ class DashboardController extends Controller
             fn (UserWorkJobApplication $application) => $application->viewed_at !== null
                 || $application->status->value !== 'applied',
         );
+        $hasOffer = $applications->contains(
+            fn (UserWorkJobApplication $application) => in_array($application->status->value, ['offer', 'hired'], true),
+        );
 
         $milestones = [
-            ['label' => 'Resume created', 'weight' => 20, 'complete' => $resumeSummary !== null],
-            ['label' => 'Resume has meaningful content', 'weight' => 20, 'complete' => ($resumeSummary['completeness'] ?? 0) >= 50],
+            ['label' => 'Resume created', 'weight' => 10, 'complete' => $resumeSummary !== null],
+            ['label' => 'Resume optimized', 'weight' => 10, 'complete' => ($resumeSummary['completeness'] ?? 0) >= 50],
             ['label' => 'Job saved', 'weight' => 10, 'complete' => $hasSavedJob],
             ['label' => 'Application submitted', 'weight' => 20, 'complete' => $hasApplication],
-            ['label' => 'Employer interaction received', 'weight' => 15, 'complete' => $hasEmployerInteraction],
-            ['label' => 'Interview scheduled or completed', 'weight' => 15, 'complete' => $hasInterview],
+            ['label' => 'Employer response', 'weight' => 15, 'complete' => $hasEmployerInteraction],
+            ['label' => 'Interview scheduled', 'weight' => 15, 'complete' => $hasInterview],
+            ['label' => 'Offer received', 'weight' => 20, 'complete' => $hasOffer],
         ];
 
         return [

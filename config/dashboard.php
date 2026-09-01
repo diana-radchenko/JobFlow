@@ -4,7 +4,7 @@ return [
     'articles' => [
         [
             'id' => 'future-of-jobs',
-            'image' => '/articles/flexible-work.svg',
+            'image' => 'https://assets.weforum.org/report/cover_image/AL_Mk1INpfGqFsEusljaTdMFVY07v40xVFBxeFcY4cI.jpg',
             'fallback_image' => '/articles/article-fallback.svg',
             'category' => 'Future of work',
             'title' => 'Future of Jobs Report 2025',
@@ -15,7 +15,7 @@ return [
         ],
         [
             'id' => 'freelance-career',
-            'image' => '/articles/freelance-career.svg',
+            'image' => 'https://proximus.talent-pool.com/cdn/image/1e9df313-1c48-4148-a2a7-eb479039283e?format=webp&width=1200&withoutEnlargement=true',
             'fallback_image' => '/articles/article-fallback.svg',
             'category' => 'Flexible work',
             'title' => 'Why freelance at Proximus?',
