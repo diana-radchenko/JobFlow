@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\JobSelectionRequest;
 use App\Models\UserWorkJobApplication;
-use App\Services\JobConversationService;
 use App\Models\WorkJob;
+use App\Services\JobConversationService;
+use App\Services\JobRecommendationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -14,7 +15,7 @@ use Inertia\Response;
 
 class JobSelectionController extends Controller
 {
-    public function jobSelection(JobSelectionRequest $request): Response
+    public function jobSelection(JobSelectionRequest $request, JobRecommendationService $recommendations): Response
     {
         $annualMinimum = "salary_start * CASE LOWER(COALESCE(salary_period, 'annual')) WHEN 'hour' THEN 2080 WHEN 'hourly' THEN 2080 WHEN 'week' THEN 52 WHEN 'weekly' THEN 52 WHEN 'month' THEN 12 WHEN 'monthly' THEN 12 ELSE 1 END";
         $annualMaximum = "COALESCE(salary_end, salary_start) * CASE LOWER(COALESCE(salary_period, 'annual')) WHEN 'hour' THEN 2080 WHEN 'hourly' THEN 2080 WHEN 'week' THEN 52 WHEN 'weekly' THEN 52 WHEN 'month' THEN 12 WHEN 'monthly' THEN 12 ELSE 1 END";
@@ -29,18 +30,13 @@ class JobSelectionController extends Controller
             ->where('title', 'like', "%{$value}%")
             ->orWhere('description', 'like', "%{$value}%")));
         $query->when($request->industry, function ($query, $industry) {
-            $query->whereIn('industry', [
-                $industry,
-                ...config("jobs.industry_aliases.{$industry}", []),
-            ]);
+            $query->whereIn('industry', [$industry, ...config("jobs.industry_aliases.{$industry}", [])]);
         });
         $query->when($request->position_level, fn ($q, $value) => $q->where('position_level', $value));
         $query->when($request->company, fn ($q, $value) => $q->where('company', 'like', "%{$value}%"));
         $query->when($request->employment_type, fn ($q, $value) => $q->where('employment_type', $value));
         $query->when($request->location, fn ($q, $value) => $q->where('location', 'like', "%{$value}%"));
         $query->when($request->workplace_type, fn ($q, $value) => $q->where('workplace_type', $value));
-        // Query-string numbers are bound as text by SQLite. Cast the bound values
-        // so annualized salary comparisons behave consistently across databases.
         $query->when($request->salary_min, fn ($q, $value) => $q->whereRaw("{$annualMaximum} >= CAST(? AS REAL)", [$value]));
         $query->when($request->salary_max, fn ($q, $value) => $q->whereRaw("{$annualMinimum} <= CAST(? AS REAL)", [$value]));
         $query->when($request->date_posted, fn ($q, $days) => $q->where('published_at', '>=', now()->subDays((int) $days)));
@@ -52,6 +48,22 @@ class JobSelectionController extends Controller
         };
 
         $jobs = $query->get();
+        $user = $request->user();
+        $matchingResume = $user->resumes()->where('is_primary', true)->first()
+            ?? $user->resumes()->latest('updated_at')->first();
+
+        $matches = $matchingResume
+            ? $jobs->mapWithKeys(function (WorkJob $job) use ($matchingResume, $recommendations) {
+                $match = $recommendations->forJob($matchingResume, $job);
+
+                return [$job->id => [
+                    'score' => $match['score'],
+                    'criteria' => $match['criteria'],
+                    'strong_matches' => $match['strong_matches'],
+                    'gaps' => $match['gaps'],
+                ]];
+            })
+            : collect();
 
         return Inertia::render('JobSelection', [
             'jobs' => $jobs,
@@ -62,6 +74,8 @@ class JobSelectionController extends Controller
                 'employmentTypes' => config('jobs.employment_types'),
                 'workplaceTypes' => config('jobs.workplace_types'),
             ],
+            'matchingResume' => $matchingResume?->only(['id', 'title']),
+            'matches' => $matches,
         ]);
     }
 
@@ -69,10 +83,7 @@ class JobSelectionController extends Controller
     {
         abort_unless($job->user_id !== null && $job->status === 'published', 404);
         $job->loadCount('applications');
-        $userApplication = auth()->user()
-            ->applications()
-            ->where('work_job_id', $job->id)
-            ->first();
+        $userApplication = auth()->user()->applications()->where('work_job_id', $job->id)->first();
 
         return Inertia::render('JobDetail', [
             'job' => $job,
@@ -90,10 +101,7 @@ class JobSelectionController extends Controller
         ]);
 
         $application = UserWorkJobApplication::firstOrCreate(
-            [
-                'user_id' => auth()->id(),
-                'work_job_id' => $job->id,
-            ],
+            ['user_id' => auth()->id(), 'work_job_id' => $job->id],
             $validated,
         );
 
@@ -102,5 +110,3 @@ class JobSelectionController extends Controller
         return redirect()->route('job-selection.show', $job)->with('success', 'Application submitted successfully!');
     }
 }
-
-
