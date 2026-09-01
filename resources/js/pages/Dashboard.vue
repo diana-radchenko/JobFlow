@@ -46,6 +46,8 @@ interface DashboardResume {
 interface DashboardSummary {
     applications: number;
     interviews: number;
+    upcomingInterviews: number;
+    underReview: number;
     offers: number;
     resumeCompleteness: number | null;
     recommendedMatches: number;
@@ -175,18 +177,6 @@ const completedMilestonesCount = computed(
 const currentMilestoneIndex = computed(() =>
     props.jobSearchMilestones.findIndex((item) => !item.complete),
 );
-const underReviewCount = computed(
-    () =>
-        (props.applications ?? []).filter((application) => {
-            const status = String(application.status);
-
-            return (
-                application.viewed_at ||
-                ['shortlisted', 'interview_scheduled'].includes(status)
-            );
-        }).length,
-);
-
 const activityTime = (value: string) =>
     new Intl.DateTimeFormat('en-US', {
         month: 'short',
@@ -798,7 +788,7 @@ const useArticleFallback = (event: Event, fallback: string) => {
                                 {{ dashboardSummary.applications }}
                             </p>
                             <p class="text-sm text-slate-500">
-                                {{ underReviewCount }} under review
+                                {{ dashboardSummary.underReview }} under review
                             </p>
                         </div>
                     </CardContent>
@@ -820,7 +810,9 @@ const useArticleFallback = (event: Event, fallback: string) => {
                             </p>
                             <p class="text-sm text-slate-500">
                                 {{
-                                    nextInterview ? '1 upcoming' : 'No upcoming'
+                                    dashboardSummary.upcomingInterviews > 0
+                                        ? `${dashboardSummary.upcomingInterviews} upcoming`
+                                        : 'No upcoming'
                                 }}
                             </p>
                         </div>

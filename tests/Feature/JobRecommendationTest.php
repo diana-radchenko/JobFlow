@@ -111,6 +111,23 @@ test('recommendation score and explanations come from evaluated resume fields', 
         ->and($result['strong_matches'])->toContain('Relevant skill: Laravel', 'Relevant role experience');
 });
 
+test('technology role wording alone is not treated as an education requirement', function () {
+    $candidate = User::factory()->create();
+    $employer = User::factory()->employer()->create();
+    $resume = Resume::create(['user_id' => $candidate->id, 'title' => 'Programming Instructor']);
+    recommendationJob($employer, [
+        'title' => 'Programming Instructor',
+        'description' => 'Teach programming fundamentals to students.',
+        'requirements' => 'Professional teaching experience',
+        'technologies' => [],
+    ]);
+
+    $result = app(JobRecommendationService::class)->forResume($resume)->first();
+
+    expect(collect($result['criteria'])->firstWhere('label', 'Education')['status'])
+        ->toBe('not_specified');
+});
+
 test('related teaching role titles normalize without matching unrelated roles', function () {
     $normalizer = app(JobTitleNormalizer::class);
 

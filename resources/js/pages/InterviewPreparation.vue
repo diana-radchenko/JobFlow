@@ -71,15 +71,23 @@ const props = defineProps<{
         work_job: { id: number; title: string; company: string } | null;
     }[];
     upcomingInterviews: UpcomingInterview[];
+    initialResumeId: number | null;
+    initialWorkJobId: number | null;
 }>();
 
 const activeTab = ref<InterviewTab>('prepare');
 const interviewType = ref('resume-based');
 const complexity = ref('advanced');
 const resumeId = ref<string>(
-    props.resumes.length > 0 ? String(props.resumes[0].id) : '',
+    props.initialResumeId
+        ? String(props.initialResumeId)
+        : props.resumes.length > 0
+          ? String(props.resumes[0].id)
+          : '',
 );
-const workJobId = ref<string>('none');
+const workJobId = ref<string>(
+    props.initialWorkJobId ? String(props.initialWorkJobId) : 'none',
+);
 const interviewMode = ref<'text' | 'live'>('text');
 const isCompletingInterview = ref(false);
 const endError = ref('');

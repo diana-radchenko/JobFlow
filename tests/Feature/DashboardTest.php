@@ -78,6 +78,8 @@ test('dashboard summary uses only the current candidates real applications and i
         ->assertInertia(fn (Assert $page) => $page
             ->where('dashboardSummary.applications', 1)
             ->where('dashboardSummary.interviews', 1)
+            ->where('dashboardSummary.upcomingInterviews', 1)
+            ->where('dashboardSummary.underReview', 0)
             ->where('dashboardSummary.resumeCompleteness', 13)
             ->where('dashboardSummary.jobSearchProgress', 45)
             ->has('interviewSessions', 1)
@@ -85,6 +87,71 @@ test('dashboard summary uses only the current candidates real applications and i
             ->has('applications', 1)
             ->where('applications.0.work_job.title', $job->title)
             ->where('applications.0.status', ApplicationStatus::Applied->value));
+});
+
+test('dashboard excludes terminal applications from review and counts every upcoming interview', function () {
+    CarbonImmutable::setTestNow('2026-09-01 12:00:00 UTC');
+    $candidate = User::factory()->create();
+    $employer = User::factory()->employer()->create();
+    $resume = Resume::create(['user_id' => $candidate->id, 'title' => 'Candidate Resume']);
+    $job = WorkJob::factory()->for($employer, 'employer')->create();
+    $application = UserWorkJobApplication::create([
+        'user_id' => $candidate->id,
+        'work_job_id' => $job->id,
+        'resume_id' => $resume->id,
+        'status' => ApplicationStatus::Rejected,
+        'viewed_at' => now(),
+    ]);
+    $session = [
+        'user_id' => $candidate->id,
+        'employer_id' => $employer->id,
+        'resume_id' => $resume->id,
+        'work_job_id' => $job->id,
+        'application_id' => $application->id,
+        'type' => 'job_interview',
+        'complexity' => 'standard',
+        'mode' => 'scheduled',
+        'status' => 'scheduled',
+        'timezone' => 'UTC',
+    ];
+    InterviewSession::create([...$session, 'scheduled_at' => now()->subDay()]);
+    InterviewSession::create([...$session, 'scheduled_at' => now()->addDay()]);
+    InterviewSession::create([...$session, 'scheduled_at' => now()->addDays(2)]);
+
+    $this->actingAs($candidate)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('dashboardSummary.underReview', 0)
+            ->where('dashboardSummary.upcomingInterviews', 2));
+
+    CarbonImmutable::setTestNow();
+});
+
+test('interview preparation preserves an owned dashboard resume and vacancy context', function () {
+    $candidate = User::factory()->create();
+    $otherCandidate = User::factory()->create();
+    $employer = User::factory()->employer()->create();
+    $resume = Resume::create(['user_id' => $candidate->id, 'title' => 'Selected Resume']);
+    $otherResume = Resume::create(['user_id' => $otherCandidate->id, 'title' => 'Other Resume']);
+    $job = WorkJob::factory()->for($employer, 'employer')->create();
+    $otherJob = WorkJob::factory()->for($employer, 'employer')->create();
+    UserWorkJobApplication::create([
+        'user_id' => $candidate->id,
+        'work_job_id' => $job->id,
+        'resume_id' => $resume->id,
+        'status' => ApplicationStatus::Applied,
+    ]);
+
+    $this->actingAs($candidate)
+        ->get(route('interview-preparation', ['resume_id' => $resume->id, 'work_job_id' => $job->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('initialResumeId', $resume->id)
+            ->where('initialWorkJobId', $job->id));
+
+    $this->actingAs($candidate)
+        ->get(route('interview-preparation', ['resume_id' => $otherResume->id, 'work_job_id' => $otherJob->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('initialResumeId', null)
+            ->where('initialWorkJobId', null));
 });
 
 test('dashboard chooses the nearest upcoming interview and preserves its calendar timezone date', function () {

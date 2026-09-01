@@ -52,12 +52,17 @@ class InterviewPreparationController extends Controller
                 'work_job' => $application->workJob?->only(['id', 'title', 'company']),
             ]);
 
+        $requestedResumeId = $request->integer('resume_id');
+        $requestedWorkJobId = $request->integer('work_job_id');
+
         return Inertia::render('InterviewPreparation', [
             'activeSessions' => $activeSessions,
             'pastSessions' => Inertia::scroll($pastSessions),
             'resumes' => $resumes,
             'applications' => $applications,
             'upcomingInterviews' => $upcomingInterviews,
+            'initialResumeId' => $resumes->contains('id', $requestedResumeId) ? $requestedResumeId : null,
+            'initialWorkJobId' => $applications->contains('work_job_id', $requestedWorkJobId) ? $requestedWorkJobId : null,
         ]);
     }
 }

@@ -33,6 +33,17 @@ class DashboardController extends Controller
         $nextInterview = $interviewSessions->first(
             fn (InterviewSession $session) => $session->scheduled_at?->isFuture(),
         );
+        $upcomingInterviewCount = $interviewSessions->filter(
+            fn (InterviewSession $session) => $session->scheduled_at?->isFuture(),
+        )->count();
+        $underReviewCount = $applications->filter(function (UserWorkJobApplication $application): bool {
+            $status = $application->status instanceof \BackedEnum
+                ? $application->status->value
+                : (string) $application->status;
+
+            return ! in_array($status, ['rejected', 'offer', 'hired'], true)
+                && ($application->viewed_at !== null || in_array($status, ['shortlisted', 'interview_scheduled'], true));
+        })->count();
 
         $user = $request->user();
         $profileFirstName = str($user->name ?: $user->email)
@@ -65,6 +76,8 @@ class DashboardController extends Controller
             'dashboardSummary' => [
                 'applications' => $applications->count(),
                 'interviews' => $interviewSessions->count(),
+                'upcomingInterviews' => $upcomingInterviewCount,
+                'underReview' => $underReviewCount,
                 'offers' => $applications->whereIn('status', ['offer', 'hired'])->count(),
                 'resumeCompleteness' => $resumeSummary['completeness'] ?? null,
                 'recommendedMatches' => count($recommendedJobs),

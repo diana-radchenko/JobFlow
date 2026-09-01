@@ -122,7 +122,7 @@ class JobRecommendationService
 
     private function educationRequirementSpecified(string $jobText): bool
     {
-        return preg_match('/\b(degree|bachelor|master|phd|education|computer science|information technology|software engineering|programming)\b/i', $jobText) === 1;
+        return preg_match('/\b(degree|required education|education requirement|bachelor(?:\'s)?|master(?:\'s)?|phd|doctorate|college diploma|academic qualification)\b/i', $jobText) === 1;
     }
 
     private function educationMatchScore(string $jobText, Education $education): float
