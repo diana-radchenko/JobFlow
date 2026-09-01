@@ -107,7 +107,7 @@ test('dashboard excludes terminal applications from review and counts every upco
         'employer_id' => $employer->id,
         'resume_id' => $resume->id,
         'work_job_id' => $job->id,
-        'application_id' => $application->id,
+        'application_id' => null,
         'type' => 'job_interview',
         'complexity' => 'standard',
         'mode' => 'scheduled',
