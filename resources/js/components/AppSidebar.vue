@@ -14,7 +14,6 @@ import {
     MessageSquare,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
-import { index as jobChatIndex } from '@/actions/App/Http/Controllers/JobChatController';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import { SidebarHeader } from '@/components/ui/sidebar';
@@ -28,6 +27,8 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import type { NavItem } from '@/types';
+import { index as jobChatIndex } from '@/actions/App/Http/Controllers/JobChatController';
 import {
     dashboard,
     development,
@@ -39,7 +40,6 @@ import {
 } from '@/routes';
 import employerJobs from '@/routes/employer/jobs';
 import resumes from '@/routes/resumes';
-import type { NavItem } from '@/types';
 
 const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 
@@ -157,7 +157,7 @@ function handleNavigation() {
     <Sidebar
         collapsible="icon"
         variant="inset"
-        class="border-r border-white/10 bg-[#051C2E] text-slate-200 [--sidebar:#051C2E] [--sidebar-accent:#08263D] [--sidebar-accent-foreground:#FFFFFF] [--sidebar-border:rgba(255,255,255,0.10)] [--sidebar-foreground:#DCE5F4] [--sidebar-primary:#0A2E48] [--sidebar-primary-foreground:#FFFFFF]"
+        class="border-r border-white/10 bg-[#051C2E] text-slate-200 [--sidebar-accent-foreground:#FFFFFF] [--sidebar-accent:#08263D] [--sidebar-border:rgba(255,255,255,0.10)] [--sidebar-foreground:#DCE5F4] [--sidebar-primary-foreground:#FFFFFF] [--sidebar-primary:#0A2E48] [--sidebar:#051C2E]"
     >
         <SidebarHeader class="bg-[#051C2E] text-white">
             <SidebarMenu>
@@ -176,7 +176,7 @@ function handleNavigation() {
         </SidebarHeader>
 
         <SidebarContent class="bg-[#051C2E]">
-            <NavMain :items="mainNavItems" />
+            <NavMain :items="mainNavItems" :candidate="!isEmployer" />
         </SidebarContent>
 
         <SidebarFooter class="bg-[#051C2E] text-slate-200">
@@ -186,8 +186,11 @@ function handleNavigation() {
                         <a href="#" @click.prevent>
                             <Globe />
                             <span
-                                class="text-sm font-medium"
-                                :class="state === 'collapsed' && 'hidden'"
+                                class="font-medium"
+                                :class="[
+                                    isEmployer ? 'text-sm' : 'text-[15px]',
+                                    state === 'collapsed' && 'hidden',
+                                ]"
                                 >Support</span
                             >
                         </a>
@@ -203,8 +206,11 @@ function handleNavigation() {
                         >
                             <LogOut />
                             <span
-                                class="text-sm font-medium"
-                                :class="state === 'collapsed' && 'hidden'"
+                                class="font-medium"
+                                :class="[
+                                    isEmployer ? 'text-sm' : 'text-[15px]',
+                                    state === 'collapsed' && 'hidden',
+                                ]"
                                 >Log out</span
                             >
                         </Link>
@@ -215,4 +221,3 @@ function handleNavigation() {
     </Sidebar>
     <slot />
 </template>
-

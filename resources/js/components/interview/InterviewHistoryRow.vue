@@ -2,9 +2,9 @@
 import { Link } from '@inertiajs/vue3';
 import { CalendarDays, Trash2 } from 'lucide-vue-next';
 import { computed } from 'vue';
-import { results as interviewSessionResults } from '@/actions/App/Http/Controllers/InterviewSessionController';
 import { stringForHuman } from '@/helpers/strings';
 import type { InterviewHistorySession } from '@/types/interview-center';
+import { results as interviewSessionResults } from '@/actions/App/Http/Controllers/InterviewSessionController';
 
 const props = defineProps<{ session: InterviewHistorySession }>();
 
@@ -72,7 +72,7 @@ function formatDate(value: string): string {
                 <CalendarDays class="h-3.5 w-3.5" />
                 {{ formatDate(session.created_at) }}
                 <span
-                    class="rounded-md border border-emerald-100 bg-emerald-50/70 px-2 py-0.5 text-[12px] font-medium text-emerald-700"
+                    class="rounded-md border border-emerald-100 bg-emerald-50/70 px-2 py-0.5 text-[13px] font-medium text-emerald-700"
                     >Completed</span
                 >
             </p>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ApplicationStatus;
+use App\Http\Controllers\DashboardController;
 use App\Models\InterviewSession;
 use App\Models\Resume;
 use App\Models\User;
@@ -78,7 +79,7 @@ test('dashboard summary uses only the current candidates real applications and i
             ->where('dashboardSummary.applications', 1)
             ->where('dashboardSummary.interviews', 1)
             ->where('dashboardSummary.resumeCompleteness', 13)
-            ->where('dashboardSummary.jobSearchProgress', 55)
+            ->where('dashboardSummary.jobSearchProgress', 45)
             ->has('interviewSessions', 1)
             ->where('interviewSessions.0.user_id', $candidate->id)
             ->has('applications', 1)
@@ -125,20 +126,20 @@ test('dashboard chooses the nearest upcoming interview and preserves its calenda
     CarbonImmutable::setTestNow();
 });
 
-test('dashboard article catalog uses local images and provides a local fallback', function () {
+test('dashboard article catalog uses publisher visuals and original links with a local fallback', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
             ->has('articles', 2)
-            ->where('articles.0.image', '/articles/flexible-work.svg')
+            ->where('articles.0.image', fn (string $image) => str_starts_with($image, 'https://assets.weforum.org/'))
             ->where('articles.0.fallback_image', '/articles/article-fallback.svg')
             ->where('articles.0.category', 'Future of work')
             ->where('articles.0.url', 'https://www.weforum.org/publications/the-future-of-jobs-report-2025/')
+            ->where('articles.1.image', fn (string $image) => str_starts_with($image, 'https://proximus.talent-pool.com/cdn/image/'))
             ->where('articles.1.url', 'https://proximus.talent-pool.com/freelance'));
 
-    expect(public_path('articles/flexible-work.svg'))->toBeFile()
-        ->and(public_path('articles/article-fallback.svg'))->toBeFile();
+    expect(public_path('articles/article-fallback.svg'))->toBeFile();
 });
 
 test('dashboard calculates stable job search progress from real candidate milestones', function () {
@@ -180,7 +181,7 @@ test('dashboard calculates stable job search progress from real candidate milest
     $this->actingAs($candidate)->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('profileFirstName', 'Diana')
-            ->where('dashboardSummary.jobSearchProgress', 80)
+            ->where('dashboardSummary.jobSearchProgress', 70)
             ->where('selectedResumeSummary.title', 'Career Resume')
             ->where('selectedResumeSummary.completeness', 13)
             ->has('selectedResumeSummary.checklist', 4)
@@ -189,7 +190,29 @@ test('dashboard calculates stable job search progress from real candidate milest
             ->where('applications.0.status', ApplicationStatus::Applied->value)
             ->where('jobSearchMilestones', fn ($milestones) => collect($milestones)
                 ->where('complete', true)
-                ->sum('weight') === 80));
+                ->sum('weight') === 70)
+            ->has('jobSearchMilestones', 7));
+});
+
+test('job search progress is capped at 80 until an offer or hire exists', function () {
+    $controller = app(DashboardController::class);
+    $method = new ReflectionMethod($controller, 'jobSearchProgress');
+    $resumeSummary = ['completeness' => 100];
+    $application = new UserWorkJobApplication([
+        'status' => ApplicationStatus::Applied,
+        'viewed_at' => now(),
+    ]);
+
+    $beforeOffer = $method->invoke($controller, $resumeSummary, collect([$application]), true, true);
+    expect($beforeOffer['percentage'])->toBe(80)
+        ->and($beforeOffer['milestones'])->toHaveCount(7)
+        ->and(collect($beforeOffer['milestones'])->firstWhere('label', 'Offer received')['complete'])->toBeFalse();
+
+    foreach ([ApplicationStatus::Offer, ApplicationStatus::Hired] as $status) {
+        $application->status = $status;
+        $completed = $method->invoke($controller, $resumeSummary, collect([$application]), true, true);
+        expect($completed['percentage'])->toBe(100);
+    }
 });
 
 test('dashboard derives next steps and recent activity from current candidate data', function () {

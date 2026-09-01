@@ -48,8 +48,10 @@ class JobRecommendationService
             $matchedSkills = $skills->filter(fn (string $skill) => $this->contains($jobText, $skill))->values();
             $skillScore = $matchedSkills->count() / $skills->count();
             $earned += $skillScore * 45;
-            $criteria[] = ['label' => 'Skills', 'score' => (int) round($skillScore * 100), 'matches' => $matchedSkills->all()];
+            $criteria[] = ['label' => 'Skills', 'score' => (int) round($skillScore * 100), 'status' => 'available', 'matches' => $matchedSkills->all()];
             $strongMatches = [...$strongMatches, ...$matchedSkills->take(3)->map(fn ($skill) => "Relevant skill: {$skill}")->all()];
+        } else {
+            $criteria[] = ['label' => 'Skills', 'score' => null, 'status' => 'not_enough_data'];
         }
 
         $roleTitles = collect([$resume->title])->merge($resume->workExperiences->pluck('job_title'))->filter();
@@ -57,10 +59,12 @@ class JobRecommendationService
             $available += 30;
             $roleScore = (float) $roleTitles->max(fn (string $title) => $this->titleNormalizer->similarity($title, $job->title));
             $earned += $roleScore * 30;
-            $criteria[] = ['label' => 'Role relevance', 'score' => (int) round($roleScore * 100)];
+            $criteria[] = ['label' => 'Role relevance', 'score' => (int) round($roleScore * 100), 'status' => 'available'];
             if ($roleScore >= 0.6) {
                 $strongMatches[] = 'Relevant role experience';
             }
+        } else {
+            $criteria[] = ['label' => 'Role relevance', 'score' => null, 'status' => 'not_enough_data'];
         }
 
         if ($resume->workExperiences->isNotEmpty()) {
@@ -72,18 +76,22 @@ class JobRecommendationService
                 )
             );
             $earned += $experienceScore * 15;
-            $criteria[] = ['label' => 'Experience', 'score' => (int) round($experienceScore * 100)];
+            $criteria[] = ['label' => 'Experience', 'score' => (int) round($experienceScore * 100), 'status' => 'available'];
+        } else {
+            $criteria[] = ['label' => 'Experience', 'score' => null, 'status' => 'not_enough_data'];
         }
 
-        if ($resume->educations->isNotEmpty()) {
+        if (! $this->educationRequirementSpecified($jobText)) {
+            $criteria[] = ['label' => 'Education', 'score' => null, 'status' => 'not_specified'];
+        } elseif ($resume->educations->isEmpty()) {
+            $criteria[] = ['label' => 'Education', 'score' => null, 'status' => 'not_enough_data'];
+        } else {
             $available += 10;
-            $educationMatches = $resume->educations->filter(fn (Education $education) =>
-                $this->contains($jobText, $education->field_of_study ?? '')
-                || $this->contains($jobText, $education->degree?->value ?? '')
+            $educationScore = (float) $resume->educations->max(
+                fn (Education $education) => $this->educationMatchScore($jobText, $education),
             );
-            $educationScore = $educationMatches->count() / $resume->educations->count();
             $earned += $educationScore * 10;
-            $criteria[] = ['label' => 'Education', 'score' => (int) round($educationScore * 100)];
+            $criteria[] = ['label' => 'Education', 'score' => (int) round($educationScore * 100), 'status' => 'available'];
         }
 
         $resumeSkills = $skills->map(fn (string $skill) => strtolower($skill));
@@ -110,5 +118,35 @@ class JobRecommendationService
         $term = trim(strtolower($term));
 
         return $term !== '' && preg_match('/(?<![a-z0-9])'.preg_quote($term, '/').'(?![a-z0-9])/i', $haystack) === 1;
+    }
+
+    private function educationRequirementSpecified(string $jobText): bool
+    {
+        return preg_match('/\b(degree|bachelor|master|phd|education|computer science|information technology|software engineering|programming)\b/i', $jobText) === 1;
+    }
+
+    private function educationMatchScore(string $jobText, Education $education): float
+    {
+        $field = trim((string) ($education->field_of_study ?? ''));
+        $degree = trim((string) ($education->degree?->value ?? ''));
+
+        if ($this->contains($jobText, $field) || $this->contains($jobText, $degree)) {
+            return 1.0;
+        }
+
+        $technologyFields = [
+            'computer science',
+            'information technology',
+            'software engineering',
+            'programming',
+            'computer engineering',
+        ];
+        $resumeEducation = strtolower("{$degree} {$field}");
+        $jobRequiresTechnologyEducation = collect($technologyFields)
+            ->contains(fn (string $term) => str_contains($jobText, $term));
+        $resumeHasTechnologyEducation = collect($technologyFields)
+            ->contains(fn (string $term) => str_contains($resumeEducation, $term));
+
+        return $jobRequiresTechnologyEducation && $resumeHasTechnologyEducation ? 1.0 : 0.0;
     }
 }
