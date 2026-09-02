@@ -38,5 +38,21 @@ class JobSelectionRequest extends FormRequest
             'sort' => ['nullable', Rule::in(['newest', 'salary_high', 'salary_low'])],
         ];
     }
-}
 
+    protected function prepareForValidation(): void
+    {
+        $payload = collect($this->all())
+            ->map(function (mixed $value) {
+                if (is_string($value)) {
+                    $trimmed = trim($value);
+
+                    return $trimmed === '' ? null : $trimmed;
+                }
+
+                return $value;
+            })
+            ->toArray();
+
+        $this->replace($payload);
+    }
+}

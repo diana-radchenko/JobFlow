@@ -17,6 +17,7 @@ class JobSelectionController extends Controller
 {
     public function jobSelection(JobSelectionRequest $request, JobRecommendationService $recommendations): Response
     {
+        $filters = $request->validated();
         $annualMinimum = "salary_start * CASE LOWER(COALESCE(salary_period, 'annual')) WHEN 'hour' THEN 2080 WHEN 'hourly' THEN 2080 WHEN 'week' THEN 52 WHEN 'weekly' THEN 52 WHEN 'month' THEN 12 WHEN 'monthly' THEN 12 ELSE 1 END";
         $annualMaximum = "COALESCE(salary_end, salary_start) * CASE LOWER(COALESCE(salary_period, 'annual')) WHEN 'hour' THEN 2080 WHEN 'hourly' THEN 2080 WHEN 'week' THEN 52 WHEN 'weekly' THEN 52 WHEN 'month' THEN 12 WHEN 'monthly' THEN 12 ELSE 1 END";
         $query = WorkJob::published()
@@ -24,24 +25,32 @@ class JobSelectionController extends Controller
                 'applications as applied' => fn ($query) => $query->where('user_id', auth()->id()),
                 'savedBy as saved' => fn ($query) => $query->where('users.id', auth()->id()),
             ]);
-        $query->when($request->view === 'saved', fn ($query) => $query->whereHas('savedBy', fn ($saved) => $saved->where('users.id', auth()->id())));
-        $query->when($request->view === 'applied', fn ($query) => $query->whereHas('applications', fn ($applications) => $applications->where('user_id', auth()->id())));
-        $query->when($request->keyword, fn ($q, $value) => $q->where(fn ($q) => $q
+
+        $view = $filters['view'] ?? 'all';
+        $query->when($view === 'saved', fn ($query) => $query->whereHas('savedBy', fn ($saved) => $saved->where('users.id', auth()->id())));
+        $query->when($view === 'applied', fn ($query) => $query->whereHas('applications', fn ($applications) => $applications->where('user_id', auth()->id())));
+        $query->when($filters['keyword'] ?? null, fn ($q, $value) => $q->where(fn ($q) => $q
             ->where('title', 'like', "%{$value}%")
             ->orWhere('description', 'like', "%{$value}%")));
-        $query->when($request->industry, function ($query, $industry) {
+        $query->when($filters['industry'] ?? null, function ($query, $industry) {
             $query->whereIn('industry', [$industry, ...config("jobs.industry_aliases.{$industry}", [])]);
         });
-        $query->when($request->position_level, fn ($q, $value) => $q->where('position_level', $value));
-        $query->when($request->company, fn ($q, $value) => $q->where('company', 'like', "%{$value}%"));
-        $query->when($request->employment_type, fn ($q, $value) => $q->where('employment_type', $value));
-        $query->when($request->location, fn ($q, $value) => $q->where('location', 'like', "%{$value}%"));
-        $query->when($request->workplace_type, fn ($q, $value) => $q->where('workplace_type', $value));
-        $query->when($request->salary_min, fn ($q, $value) => $q->whereRaw("{$annualMaximum} >= CAST(? AS REAL)", [$value]));
-        $query->when($request->salary_max, fn ($q, $value) => $q->whereRaw("{$annualMinimum} <= CAST(? AS REAL)", [$value]));
-        $query->when($request->date_posted, fn ($q, $days) => $q->where('published_at', '>=', now()->subDays((int) $days)));
+        $query->when($filters['position_level'] ?? null, fn ($q, $value) => $q->where('position_level', $value));
+        $query->when($filters['company'] ?? null, fn ($q, $value) => $q->where('company', 'like', "%{$value}%"));
+        $query->when($filters['employment_type'] ?? null, fn ($q, $value) => $q->where('employment_type', $value));
+        $query->when($filters['location'] ?? null, fn ($q, $value) => $q->where('location', 'like', "%{$value}%"));
+        $query->when($filters['workplace_type'] ?? null, fn ($q, $value) => $q->where('workplace_type', $value));
 
-        match ($request->sort) {
+        if (array_key_exists('salary_min', $filters) && $filters['salary_min'] !== null) {
+            $query->whereRaw("{$annualMaximum} >= CAST(? AS REAL)", [(float) $filters['salary_min']]);
+        }
+        if (array_key_exists('salary_max', $filters) && $filters['salary_max'] !== null) {
+            $query->whereRaw("{$annualMinimum} <= CAST(? AS REAL)", [(float) $filters['salary_max']]);
+        }
+
+        $query->when($filters['date_posted'] ?? null, fn ($q, $days) => $q->where('published_at', '>=', now()->subDays((int) $days)));
+
+        match ($filters['sort'] ?? 'newest') {
             'salary_high' => $query->orderByRaw("{$annualMaximum} DESC"),
             'salary_low' => $query->orderByRaw("{$annualMinimum} ASC"),
             default => $query->orderByDesc('published_at'),
@@ -67,7 +76,7 @@ class JobSelectionController extends Controller
 
         return Inertia::render('JobSelection', [
             'jobs' => $jobs,
-            'filters' => $request->only(['keyword', 'company', 'industry', 'position_level', 'employment_type', 'location', 'workplace_type', 'salary_min', 'salary_max', 'date_posted', 'view', 'sort']),
+            'filters' => $filters,
             'filterOptions' => [
                 'industries' => config('jobs.industries'),
                 'positionLevels' => config('jobs.position_levels'),
