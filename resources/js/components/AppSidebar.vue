@@ -9,7 +9,7 @@ import {
     BrainCircuit,
     Code,
     Settings,
-    Globe,
+    LifeBuoy,
     LogOut,
     MessageSquare,
 } from 'lucide-vue-next';
@@ -47,6 +47,7 @@ const dashboardUrl = dashboard();
 const requestTrackerUrl = requestTrackerRoute();
 const resumesUrl = resumes.index();
 const settingsUrl = '/settings';
+const supportUrl = '/support';
 const jobChatUrl = jobChatIndex();
 
 const page = usePage();
@@ -183,8 +184,8 @@ function handleNavigation() {
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <a href="#" @click.prevent>
-                            <Globe />
+                        <Link :href="supportUrl" @click="handleNavigation">
+                            <LifeBuoy />
                             <span
                                 class="font-medium"
                                 :class="[
@@ -193,7 +194,7 @@ function handleNavigation() {
                                 ]"
                                 >Support</span
                             >
-                        </a>
+                        </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
 

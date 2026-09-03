@@ -166,6 +166,7 @@ Route::middleware(['auth', 'verified', 'role:'.UserRole::Candidate->value])->gro
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('job-chat', [JobChatController::class, 'index'])->name('job-chat.index');
     Route::post('job-chat/applications/{application}', [JobChatController::class, 'store'])->name('job-chat.messages.store');
+    Route::get('support', fn () => Inertia::render('Support'))->name('support');
 });
 
 require __DIR__.'/settings.php';
