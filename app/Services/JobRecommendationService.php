@@ -122,16 +122,16 @@ class JobRecommendationService
         }
 
         if (! $this->educationRequirementSpecified($jobText)) {
-            $criteria[] = ['label' => 'Education', 'score' => null, 'status' => 'not_required'];
+            $criteria[] = ['label' => 'Education requirement', 'score' => null, 'status' => 'not_specified'];
         } elseif ($resume->educations->isEmpty()) {
-            $criteria[] = ['label' => 'Education', 'score' => null, 'status' => 'not_enough_data'];
+            $criteria[] = ['label' => 'Education requirement', 'score' => null, 'status' => 'not_enough_data'];
         } else {
             $available += 10;
             $educationScore = (float) $resume->educations->max(
                 fn (Education $education) => $this->educationMatchScore($jobText, $education),
             );
             $earned += $educationScore * 10;
-            $criteria[] = ['label' => 'Education', 'score' => (int) round($educationScore * 100), 'status' => 'available'];
+            $criteria[] = ['label' => 'Education requirement', 'score' => (int) round($educationScore * 100), 'status' => 'available'];
         }
 
         $gaps = collect($job->technologies ?? [])
