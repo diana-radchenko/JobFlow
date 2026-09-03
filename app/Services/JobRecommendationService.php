@@ -71,9 +71,6 @@ class JobRecommendationService
                 )->values();
                 $skillScore = $matchedRequirements->count() / $requiredSkills->count();
             } else {
-                // When a vacancy has no structured technology list, use positive evidence
-                // found in the vacancy text without penalizing a candidate for unrelated
-                // extra skills present in their resume.
                 $matchedSkills = $skills->filter(fn (string $skill) => $this->contains($jobText, $skill))->values();
                 $skillScore = match (true) {
                     $matchedSkills->count() >= 3 => 1.0,
@@ -123,7 +120,21 @@ class JobRecommendationService
         }
 
         if (! $this->educationRequirementSpecified($jobText)) {
-            $criteria[] = ['label' => 'Education requirement', 'score' => null, 'status' => 'not_specified'];
+            if ($resume->educations->isNotEmpty()) {
+                $criteria[] = [
+                    'label' => 'Education',
+                    'score' => null,
+                    'status' => 'informational',
+                    'detail' => $this->resumeEducationSummary($resume).' · no employer requirement',
+                ];
+            } else {
+                $criteria[] = [
+                    'label' => 'Education requirement',
+                    'score' => null,
+                    'status' => 'not_specified',
+                    'detail' => 'Employer did not specify an education requirement',
+                ];
+            }
         } elseif ($resume->educations->isEmpty()) {
             $criteria[] = ['label' => 'Education requirement', 'score' => null, 'status' => 'not_enough_data'];
         } else {
@@ -258,6 +269,22 @@ class JobRecommendationService
         return preg_match('/\b(degree|required education|education requirement|academic qualification|college diploma)\b/i', $jobText) === 1
             ? 1.0
             : 0.0;
+    }
+
+    private function resumeEducationSummary(Resume $resume): string
+    {
+        /** @var Education|null $education */
+        $education = $resume->educations->first();
+        if (! $education) {
+            return 'Resume education available';
+        }
+
+        $parts = collect([
+            trim((string) ($education->field_of_study ?? '')),
+            trim((string) ($education->institution ?? '')),
+        ])->filter()->values();
+
+        return $parts->isNotEmpty() ? $parts->implode(' · ') : 'Resume education available';
     }
 
     private function requiredEducationRank(string $jobText): ?int
