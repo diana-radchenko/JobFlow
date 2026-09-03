@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\EducationDegree;
 use App\Models\Education;
 use App\Models\Resume;
 use App\Models\WorkExperience;
@@ -210,12 +211,14 @@ class JobRecommendationService
     private function educationMatchScore(string $jobText, Education $education): float
     {
         $field = trim((string) ($education->field_of_study ?? ''));
-        $degree = trim((string) ($education->degree?->value ?? ''));
+        $degree = $education->degree;
+        $degreeValue = $degree?->value ?? '';
         $institution = trim((string) ($education->institution ?? ''));
-        $resumeEducation = strtolower(trim("{$degree} {$field} {$institution}"));
+        $resumeEducation = strtolower(trim("{$degreeValue} {$field} {$institution}"));
 
-        if ($this->contains($jobText, $field) || $this->contains($jobText, $degree)) {
-            return 1.0;
+        $requiredRank = $this->requiredEducationRank($jobText);
+        if ($requiredRank !== null && $this->educationDegreeRank($degree) < $requiredRank) {
+            return 0.0;
         }
 
         $technologyFields = [
@@ -230,16 +233,54 @@ class JobRecommendationService
         $resumeHasTechnologyEducation = collect($technologyFields)
             ->contains(fn (string $term) => str_contains($resumeEducation, $term));
 
-        if ($jobRequiresTechnologyEducation && $resumeHasTechnologyEducation) {
+        if ($jobRequiresTechnologyEducation) {
+            return $resumeHasTechnologyEducation ? 1.0 : 0.0;
+        }
+
+        if ($requiredRank !== null) {
             return 1.0;
         }
 
-        // If the employer only requires general enrollment/degree completion and the
-        // resume contains an education record, treat that requirement as satisfied.
-        if (preg_match('/\b(degree|college student|university student|currently enrolled|high school diploma)\b/i', $jobText) === 1) {
+        if (preg_match('/\b(college student|university student|currently enrolled)\b/i', $jobText) === 1) {
+            return in_array($degree, [
+                EducationDegree::Associate,
+                EducationDegree::Bachelors,
+                EducationDegree::Masters,
+                EducationDegree::Doctorate,
+                EducationDegree::PostdoctoralResearcher,
+            ], true) ? 1.0 : 0.0;
+        }
+
+        if ($this->contains($jobText, $field) || ($degreeValue !== '' && $this->contains($jobText, str_replace('_', ' ', $degreeValue)))) {
             return 1.0;
         }
 
-        return 0.0;
+        return preg_match('/\b(degree|required education|education requirement|academic qualification|college diploma)\b/i', $jobText) === 1
+            ? 1.0
+            : 0.0;
+    }
+
+    private function requiredEducationRank(string $jobText): ?int
+    {
+        return match (true) {
+            preg_match('/\b(phd|doctorate|doctoral)\b/i', $jobText) === 1 => 5,
+            preg_match('/\bmaster(?:\'s)?\b/i', $jobText) === 1 => 4,
+            preg_match('/\bbachelor(?:\'s)?\b/i', $jobText) === 1 => 3,
+            preg_match('/\b(associate(?:\'s)?|college diploma)\b/i', $jobText) === 1 => 2,
+            preg_match('/\bhigh school diploma\b/i', $jobText) === 1 => 1,
+            default => null,
+        };
+    }
+
+    private function educationDegreeRank(?EducationDegree $degree): int
+    {
+        return match ($degree) {
+            EducationDegree::HighSchool, EducationDegree::Certificate => 1,
+            EducationDegree::Associate => 2,
+            EducationDegree::Bachelors => 3,
+            EducationDegree::Masters => 4,
+            EducationDegree::Doctorate, EducationDegree::PostdoctoralResearcher => 5,
+            default => 0,
+        };
     }
 }
