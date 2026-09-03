@@ -1,0 +1,96 @@
+<?php
+
+use App\Enums\EducationDegree;
+use App\Models\Education;
+use App\Models\Resume;
+use App\Models\Skill;
+use App\Models\User;
+use App\Models\WorkJob;
+use App\Services\JobRecommendationService;
+
+function recommendationJob(array $attributes = []): WorkJob
+{
+    return WorkJob::factory()
+        ->for(User::factory()->employer()->create(), 'employer')
+        ->create(array_merge([
+            'title' => 'Summer Camp Coding Instructor',
+            'company' => 'CodeWizardsHQ',
+            'description' => 'Teach students Python and HTML in online coding classes.',
+            'requirements' => null,
+            'technologies' => [],
+            'status' => 'published',
+            'published_at' => now(),
+        ], $attributes));
+}
+
+test('extra resume skills do not reduce the match score for skills mentioned in vacancy text', function () {
+    $user = User::factory()->create();
+    $resume = Resume::create(['user_id' => $user->id, 'title' => 'Junior Developer', 'is_primary' => true]);
+
+    foreach (['Python', 'HTML', 'JavaScript', 'SQL', 'Git', 'React'] as $index => $name) {
+        $skill = Skill::create(['user_id' => $user->id, 'name' => $name]);
+        $resume->skills()->attach($skill->id, ['order' => $index]);
+    }
+
+    $match = app(JobRecommendationService::class)->forJob($resume->fresh(), recommendationJob());
+    $skills = collect($match['criteria'])->firstWhere('label', 'Skills');
+
+    expect($skills['score'])->toBe(75)
+        ->and($skills['matches'])->toContain('Python', 'HTML');
+});
+
+test('structured vacancy technologies are scored against required skills rather than all resume skills', function () {
+    $user = User::factory()->create();
+    $resume = Resume::create(['user_id' => $user->id, 'title' => 'Coding Instructor', 'is_primary' => true]);
+
+    foreach (['Python Programming', 'HTML', 'JavaScript', 'Git'] as $index => $name) {
+        $skill = Skill::create(['user_id' => $user->id, 'name' => $name]);
+        $resume->skills()->attach($skill->id, ['order' => $index]);
+    }
+
+    $job = recommendationJob(['technologies' => ['Python', 'HTML', 'Scratch']]);
+    $match = app(JobRecommendationService::class)->forJob($resume->fresh(), $job);
+    $skills = collect($match['criteria'])->firstWhere('label', 'Skills');
+
+    expect($skills['score'])->toBe(67)
+        ->and($match['gaps'])->toContain('Missing requirement: Scratch');
+});
+
+test('education requirement is clearly marked as unspecified by employer when vacancy has no education requirement', function () {
+    $user = User::factory()->create();
+    $resume = Resume::create(['user_id' => $user->id, 'title' => 'Coding Instructor', 'is_primary' => true]);
+    $education = Education::create([
+        'user_id' => $user->id,
+        'degree' => EducationDegree::HighSchool,
+        'institution' => 'Dostoevsky School',
+        'field_of_study' => 'Information Technology',
+    ]);
+    $resume->educations()->attach($education->id, ['order' => 0]);
+
+    $match = app(JobRecommendationService::class)->forJob($resume->fresh(), recommendationJob());
+    $educationCriterion = collect($match['criteria'])->firstWhere('label', 'Education requirement');
+
+    expect($educationCriterion['status'])->toBe('not_specified')
+        ->and($educationCriterion['score'])->toBeNull();
+});
+
+test('general student education requirement is satisfied when resume contains education', function () {
+    $user = User::factory()->create();
+    $resume = Resume::create(['user_id' => $user->id, 'title' => 'Coding Instructor', 'is_primary' => true]);
+    $education = Education::create([
+        'user_id' => $user->id,
+        'degree' => EducationDegree::HighSchool,
+        'institution' => 'Dostoevsky School',
+        'field_of_study' => 'Information Technology',
+    ]);
+    $resume->educations()->attach($education->id, ['order' => 0]);
+
+    $job = recommendationJob([
+        'requirements' => 'Applicants must be currently enrolled as a college or university student.',
+    ]);
+    $match = app(JobRecommendationService::class)->forJob($resume->fresh(), $job);
+    $educationCriterion = collect($match['criteria'])->firstWhere('label', 'Education requirement');
+
+    expect($educationCriterion['status'])->toBe('available')
+        ->and($educationCriterion['score'])->toBe(100);
+});
