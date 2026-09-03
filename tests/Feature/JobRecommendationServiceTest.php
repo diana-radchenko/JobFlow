@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Models\WorkJob;
 use App\Services\JobRecommendationService;
 
-function recommendationJob(array $attributes = []): WorkJob
+function jobMatchVacancy(array $attributes = []): WorkJob
 {
     return WorkJob::factory()
         ->for(User::factory()->employer()->create(), 'employer')
@@ -32,7 +32,7 @@ test('extra resume skills do not reduce the match score for skills mentioned in 
         $resume->skills()->attach($skill->id, ['order' => $index]);
     }
 
-    $match = app(JobRecommendationService::class)->forJob($resume->fresh(), recommendationJob());
+    $match = app(JobRecommendationService::class)->forJob($resume->fresh(), jobMatchVacancy());
     $skills = collect($match['criteria'])->firstWhere('label', 'Skills');
 
     expect($skills['score'])->toBe(75)
@@ -48,7 +48,7 @@ test('structured vacancy technologies are scored against required skills rather 
         $resume->skills()->attach($skill->id, ['order' => $index]);
     }
 
-    $job = recommendationJob(['technologies' => ['Python', 'HTML', 'Scratch']]);
+    $job = jobMatchVacancy(['technologies' => ['Python', 'HTML', 'Scratch']]);
     $match = app(JobRecommendationService::class)->forJob($resume->fresh(), $job);
     $skills = collect($match['criteria'])->firstWhere('label', 'Skills');
 
@@ -67,25 +67,25 @@ test('education requirement is clearly marked as unspecified by employer when va
     ]);
     $resume->educations()->attach($education->id, ['order' => 0]);
 
-    $match = app(JobRecommendationService::class)->forJob($resume->fresh(), recommendationJob());
+    $match = app(JobRecommendationService::class)->forJob($resume->fresh(), jobMatchVacancy());
     $educationCriterion = collect($match['criteria'])->firstWhere('label', 'Education requirement');
 
     expect($educationCriterion['status'])->toBe('not_specified')
         ->and($educationCriterion['score'])->toBeNull();
 });
 
-test('general student education requirement is satisfied when resume contains education', function () {
+test('college student requirement is satisfied only by college level education records', function () {
     $user = User::factory()->create();
     $resume = Resume::create(['user_id' => $user->id, 'title' => 'Coding Instructor', 'is_primary' => true]);
     $education = Education::create([
         'user_id' => $user->id,
-        'degree' => EducationDegree::HighSchool,
-        'institution' => 'Dostoevsky School',
+        'degree' => EducationDegree::Bachelors,
+        'institution' => 'Example University',
         'field_of_study' => 'Information Technology',
     ]);
     $resume->educations()->attach($education->id, ['order' => 0]);
 
-    $job = recommendationJob([
+    $job = jobMatchVacancy([
         'requirements' => 'Applicants must be currently enrolled as a college or university student.',
     ]);
     $match = app(JobRecommendationService::class)->forJob($resume->fresh(), $job);
@@ -93,4 +93,25 @@ test('general student education requirement is satisfied when resume contains ed
 
     expect($educationCriterion['status'])->toBe('available')
         ->and($educationCriterion['score'])->toBe(100);
+});
+
+test('bachelors requirement is not satisfied by high school education', function () {
+    $user = User::factory()->create();
+    $resume = Resume::create(['user_id' => $user->id, 'title' => 'Coding Instructor', 'is_primary' => true]);
+    $education = Education::create([
+        'user_id' => $user->id,
+        'degree' => EducationDegree::HighSchool,
+        'institution' => 'Example School',
+        'field_of_study' => 'Information Technology',
+    ]);
+    $resume->educations()->attach($education->id, ['order' => 0]);
+
+    $job = jobMatchVacancy([
+        'requirements' => "Bachelor's degree in Computer Science required.",
+    ]);
+    $match = app(JobRecommendationService::class)->forJob($resume->fresh(), $job);
+    $educationCriterion = collect($match['criteria'])->firstWhere('label', 'Education requirement');
+
+    expect($educationCriterion['status'])->toBe('available')
+        ->and($educationCriterion['score'])->toBe(0);
 });
