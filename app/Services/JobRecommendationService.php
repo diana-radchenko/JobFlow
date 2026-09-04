@@ -16,7 +16,7 @@ class JobRecommendationService
     /** @return Collection<int, array<string, mixed>> */
     public function forResume(Resume $resume): Collection
     {
-        $resume->loadMissing(['skills', 'workExperiences', 'educations', 'user']);
+        $this->loadMatchRelations($resume);
         $appliedJobIds = $resume->user->applications()->pluck('work_job_id');
         $savedJobIds = $resume->user->savedWorkJobs()->pluck('work_jobs.id');
 
@@ -32,11 +32,24 @@ class JobRecommendationService
     /** @return array<string, mixed> */
     public function forJob(Resume $resume, WorkJob $job): array
     {
-        $resume->loadMissing(['skills', 'workExperiences', 'educations', 'user']);
+        $this->loadMatchRelations($resume);
         $appliedJobIds = $resume->user->applications()->pluck('work_job_id');
         $savedJobIds = $resume->user->savedWorkJobs()->pluck('work_jobs.id');
 
         return $this->score($resume, $job, $appliedJobIds, $savedJobIds);
+    }
+
+    private function loadMatchRelations(Resume $resume): void
+    {
+        $resume->loadMissing([
+            'skills',
+            'workExperiences',
+            'educations',
+            'projects',
+            'leadershipActivities',
+            'volunteerExperiences',
+            'user',
+        ]);
     }
 
     /** @param Collection<int, int> $appliedJobIds @param Collection<int, int> $savedJobIds */
@@ -92,7 +105,13 @@ class JobRecommendationService
             $criteria[] = ['label' => 'Skills', 'score' => null, 'status' => 'not_enough_data'];
         }
 
-        $roleTitles = collect([$resume->title])->merge($resume->workExperiences->pluck('job_title'))->filter();
+        $roleTitles = collect([$resume->title])
+            ->merge($resume->workExperiences->pluck('job_title'))
+            ->merge($resume->leadershipActivities->pluck('role'))
+            ->merge($resume->volunteerExperiences->pluck('role'))
+            ->merge($resume->projects->pluck('title'))
+            ->filter();
+
         if ($roleTitles->isNotEmpty()) {
             $available += 30;
             $roleScore = (float) $roleTitles->max(fn (string $title) => $this->titleNormalizer->similarity($title, $job->title));
@@ -105,14 +124,39 @@ class JobRecommendationService
             $criteria[] = ['label' => 'Role relevance', 'score' => null, 'status' => 'not_enough_data'];
         }
 
-        if ($resume->workExperiences->isNotEmpty()) {
+        $experienceScores = collect();
+
+        $resume->workExperiences->each(function (WorkExperience $experience) use ($experienceScores, $job, $jobText) {
+            $experienceScores->push(max(
+                $this->titleNormalizer->similarity((string) $experience->job_title, $job->title),
+                $this->experienceTextOverlap($jobText, (string) ($experience->description ?? '')),
+            ));
+        });
+
+        $resume->leadershipActivities->each(function ($activity) use ($experienceScores, $job, $jobText) {
+            $experienceScores->push(max(
+                $this->titleNormalizer->similarity((string) ($activity->role ?? ''), $job->title),
+                $this->experienceTextOverlap($jobText, (string) ($activity->description ?? '')),
+            ));
+        });
+
+        $resume->volunteerExperiences->each(function ($activity) use ($experienceScores, $job, $jobText) {
+            $experienceScores->push(max(
+                $this->titleNormalizer->similarity((string) ($activity->role ?? ''), $job->title),
+                $this->experienceTextOverlap($jobText, (string) ($activity->description ?? '')),
+            ));
+        });
+
+        $resume->projects->each(function ($project) use ($experienceScores, $job, $jobText) {
+            $experienceScores->push(max(
+                $this->titleNormalizer->similarity((string) ($project->title ?? ''), $job->title),
+                $this->experienceTextOverlap($jobText, (string) ($project->description ?? '')),
+            ));
+        });
+
+        if ($experienceScores->isNotEmpty()) {
             $available += 15;
-            $experienceScore = (float) $resume->workExperiences->max(
-                fn (WorkExperience $experience) => max(
-                    $this->titleNormalizer->similarity($experience->job_title, $job->title),
-                    $this->experienceTextOverlap($jobText, (string) ($experience->description ?? '')),
-                )
-            );
+            $experienceScore = (float) $experienceScores->max();
             $earned += $experienceScore * 15;
             $criteria[] = ['label' => 'Experience', 'score' => (int) round($experienceScore * 100), 'status' => 'available'];
         } else {
