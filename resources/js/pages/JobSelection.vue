@@ -28,7 +28,7 @@ const toggleSaved=(job:WorkJob&{saved:boolean})=>job.saved?router.delete(`/saved
 const salary=(job:WorkJob)=>{const a=Number(job.salary_start??0),b=Number(job.salary_end??0);if(a<=0&&b<=0)return 'Salary not specified';const f=new Intl.NumberFormat('en-US',{style:'currency',currency:job.salary_currency||'USD',maximumFractionDigits:0});const r=a>0&&b>0?`${f.format(a)}–${f.format(b)}`:f.format(a||b);return job.salary_period?`${r} / ${job.salary_period}`:r};
 const posted=(job:WorkJob)=>job.published_at?new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}).format(new Date(job.published_at)):'Date not specified';
 const isNew=(job:WorkJob)=>!!job.published_at&&Date.now()-new Date(job.published_at).getTime()<=259200000;
-const criterionText=(c:Criterion)=>{if(c.status==='not_required')return 'Not required';if(c.status==='not_enough_data'){if(c.label==='Experience')return 'No experience listed';if(c.label==='Skills')return 'No skills listed';if(c.label==='Education')return 'No education listed';if(c.label==='Role relevance')return 'No role information';return 'Not available';}return `${c.score??0}%`;};
+const criterionText=(c:Criterion)=>c.status==='not_required'?'N/A':`${c.score??0}%`;
 defineOptions({layout:{breadcrumbs:[{title:'Job Selection',href:jobSelectionRoute()}]}});
 </script>
 
