@@ -2,85 +2,198 @@
 
 ### AI-Powered Career Platform for Job Seekers and Employers
 
-**FLOW** is a career-technology platform that brings job-seeker tools and employer recruitment workflows into one product. The platform currently contains two connected entry points:
+FLOW is a project I started developing in March 2026. My main idea was to build one platform that could be useful for both sides of the hiring process: people looking for a job and employers looking for candidates.
 
-- **JobFlow** — the candidate workspace for resumes, vacancy discovery, applications, job matching, interview preparation, salary tools, development resources, and account management.
-- **HRFlow** — the employer workspace for publishing vacancies, reviewing candidates, managing application status, communicating with applicants, and scheduling interviews.
+The platform has two connected parts:
 
-Development began in March 2026. The current implementation is built as one Laravel/Vue application with role-based candidate and employer experiences.
+- **JobFlow** — for job seekers. It includes resumes, job search, applications, job matching, interview practice, salary tools, development resources, and account settings.
+- **HRFlow** — for employers. It includes vacancy management, candidate applications, communication, and interview scheduling.
 
-> Current interface language: **English**.
+The current interface is in **English**.
 
-## Current Functionality
+## Why I Built FLOW
 
-### Candidate / JobFlow
+When I started working on this project, I noticed that many career platforms solve only one part of the problem. A person may need one website for a resume, another one for vacancies, another one for interview preparation, and a separate system for tracking applications.
 
-| Area | Current implementation |
-|---|---|
-| **Dashboard** | Candidate overview built from stored application and interview data, with quick access to the main JobFlow workflows. |
-| **Resume management** | Create, rename, duplicate, delete, and select a **Primary Resume**. The primary resume is used as the default context for vacancy matching. |
-| **Structured Resume Editor** | Stores contact information, work experience, education, skills, projects, volunteer/community experience, leadership and extracurricular activities, publications, awards and honors, languages, certifications, interests, and additional information. Resume items can be included/excluded and reordered per resume. |
-| **AI Resume Assistant** | Guided per-resume conversation that helps build and improve structured resume content through controlled application tools rather than unrestricted database access. |
-| **AI Resume Analysis** | Reviews a saved resume and returns strengths, weaknesses, recommendations, and professional-summary guidance based on the stored resume. |
-| **AI Resume Scoring** | Compares a selected resume with a supplied job description and returns structured scoring feedback. |
-| **Job Selection** | Displays published vacancies from the application database and supports filtering by keyword, company, industry, position level, employment type, location, work arrangement, salary range, and posting date. Candidate views include **All Jobs**, **Saved**, and **Applied**, with newest and salary sorting. |
-| **Saved jobs** | Candidates can save or unsave vacancies. The bookmark state is stored per authenticated user and the Saved view filters to that user's saved vacancies. |
-| **Job Match** | Uses the candidate's Primary Resume (or most recently updated resume as fallback) to calculate vacancy compatibility. The current deterministic match considers **Skills (45%)**, **Role relevance (30%)**, **Experience (15%)**, and **Education (10% when the vacancy specifies an education requirement)**. Experience can draw from work experience, projects, leadership, and volunteer activities. Education is shown as N/A when the employer has not specified an education requirement. |
-| **Applications** | Candidates can open a vacancy and apply using one of their own resumes. Duplicate applications to the same vacancy are prevented by the application data model/workflow. |
-| **Application Tracker** | Displays submitted applications and their stored statuses and allows the candidate to open or remove an application. |
-| **Candidate–Employer Chat** | Authenticated messaging is available in the context of a job application. |
-| **AI Interview Practice** | Supports interview preparation and live interview sessions using a selected resume and optional vacancy context. The workflow includes generated questions, answer transcription, feedback, audio responses, session persistence, completion, and final results. |
-| **Salary** | Dedicated salary workflow with resume salary analysis support. |
-| **Development** | Curated development resources available from the candidate navigation. |
-| **Support Center** | Working Support page with direct access to account and security functions: **Change password**, **Two-factor authentication**, **Profile settings**, and **Appearance**. No fake support-ticket backend is presented. |
-| **Account & security** | Registration/login flows, password recovery and change, two-factor authentication and recovery codes, protected routes, profile settings, appearance settings, and logout. |
+I wanted to connect these steps in one place and make the process easier to understand. The main goal of FLOW is not to replace a recruiter or make decisions instead of a person. It is meant to organize information, show useful comparisons, and help users prepare better.
 
-### Employer / HRFlow
+## JobFlow — Candidate Side
 
-The repository now includes an authenticated employer role and real employer-side recruitment workflows.
+### Dashboard
 
-| Area | Current implementation |
-|---|---|
-| **Employer access** | Role-protected employer workspace separate from candidate-only JobFlow routes. |
-| **Vacancy management** | Employers can list, create, view, edit, update, and delete their vacancies. |
-| **Candidate applications** | Employers can open applications submitted to their vacancies and update application status. Scoped route bindings keep an application constrained to its parent vacancy. |
-| **Interview scheduling** | Employers can create and remove interview schedules for applications. |
-| **Employer–Candidate Chat** | Employers and candidates can use the shared authenticated application chat workflow. |
+The dashboard gives the user a quick overview of their activity and provides shortcuts to the main parts of the platform.
 
-HRFlow is still an evolving module. Broader HR functions such as onboarding, training, performance management, workforce analytics, and retention remain part of the longer-term FLOW product vision rather than claims about the current repository.
+### Resume Management
 
-## Job Matching Method
+A user can create several resumes, rename them, duplicate them, delete them, and choose one resume as the **Primary Resume**. The Primary Resume is used as the default resume for job matching.
 
-Job Selection contains a deterministic, explainable matching layer. It does not invent candidate credentials and does not treat unrelated extra skills as a penalty.
+The structured resume editor supports:
 
-The current weighting is:
+- personal and contact information;
+- work experience;
+- education;
+- skills;
+- projects;
+- volunteer and community experience;
+- leadership and extracurricular activities;
+- publications;
+- awards and honors;
+- languages;
+- certifications;
+- interests;
+- additional information.
 
-| Criterion | Weight | How it is evaluated |
-|---|---:|---|
-| **Skills** | 45% | Compares resume skills with structured vacancy technologies when available; otherwise uses positive skill evidence found in vacancy text. Common variants such as `Python Programming` and `Python` are normalized for comparison. |
-| **Role relevance** | 30% | Compares the vacancy title with the resume title and role/title evidence from work experience, leadership, volunteering, and projects. |
-| **Experience** | 15% | Uses relevant work experience plus project, leadership, and volunteer evidence, combining role-title similarity with text overlap. |
-| **Education** | 10% | Used when the vacancy explicitly specifies an education requirement. Degree level and technology-related fields of study can be compared. If the vacancy does not specify an education requirement, the UI displays **N/A** and the criterion does not artificially raise or lower the match. |
+Resume items can also be included, excluded, and reordered for different resume versions.
 
-The UI exposes the criteria through **Why this matches**, so the user can see the component scores rather than receiving only an unexplained percentage.
+### AI Resume Assistant
 
-## AI System
+The AI Resume Assistant helps the user improve a selected resume through a conversation. It asks questions and can save answers into the correct resume sections through controlled tools.
 
-FLOW uses the Laravel AI integration for AI-assisted career workflows. AI requests are executed on the server; provider credentials are not exposed to the browser.
+Each resume has its own context, so the assistant works with the selected resume instead of mixing information from different versions.
 
-The AI functionality is separated by task so each workflow receives only the instructions and application context it needs:
+### AI Resume Analysis
 
-- **Resume Assistant** — guided collection and improvement of structured resume information through controlled tools.
-- **Resume Analysis** — strengths, weaknesses, improvement recommendations, and professional-summary guidance.
-- **Resume Scoring** — structured comparison of resume evidence with a supplied job description.
-- **Resume Salary Analysis** — AI-assisted salary analysis based on resume context.
-- **Interview workflows** — interview guidance, generated questions, transcription, feedback, audio responses, and final evaluation.
+The platform can analyze a saved resume and return:
 
-The deterministic Job Match described above is separate from the generative AI workflows. This makes the vacancy-match criteria easier to explain, test, and reproduce.
+- strengths;
+- weaknesses;
+- practical recommendations;
+- suggestions for a professional summary.
+
+### AI Resume Scoring
+
+A user can compare a resume with a job description. The system returns structured feedback and a score showing how well the resume fits the supplied description.
+
+## Job Selection
+
+The Job Selection page shows published vacancies stored in the platform database.
+
+Users can filter jobs by:
+
+- keyword;
+- company;
+- industry;
+- position level;
+- employment type;
+- location;
+- work arrangement;
+- minimum and maximum salary;
+- date posted.
+
+There are also three views:
+
+- **All Jobs**;
+- **Saved**;
+- **Applied**.
+
+Vacancies can be sorted by newest first or by salary.
+
+### Saved Jobs
+
+Users can save and unsave vacancies. The saved state is stored separately for each authenticated user.
+
+### Job Match
+
+The platform compares a vacancy with the user's Primary Resume.
+
+The current matching system uses four main criteria:
+
+| Criterion | Weight |
+|---|---:|
+| Skills | 45% |
+| Role relevance | 30% |
+| Experience | 15% |
+| Education | 10% |
+
+The system checks skills against structured vacancy technologies when they are available. It also normalizes some common skill-name differences, for example `Python Programming` and `Python`.
+
+Role relevance compares the vacancy title with role-related information from the resume.
+
+Experience can include not only formal work experience, but also relevant projects, leadership activities, and volunteer experience. This is important for students and young applicants who may already have useful experience even if they have not had a full-time job yet.
+
+Education is included only when the employer actually specifies an education requirement. If the vacancy does not mention education, the interface shows **N/A** instead of treating it as a mismatch.
+
+The user can open **Why this matches** and see separate scores for each criterion. I wanted the result to be understandable instead of showing only one unexplained percentage.
+
+## Applications and Tracker
+
+A candidate can open a vacancy and apply using one of their own resumes.
+
+The platform also includes an Application Tracker where users can see submitted applications, dates, and current statuses.
+
+## Candidate–Employer Chat
+
+Candidates and employers can communicate through an authenticated chat connected to a job application.
+
+## AI Interview Practice
+
+The interview section lets a user practice interviews using a selected resume and, if needed, a vacancy as context.
+
+The workflow can include:
+
+- AI-generated questions;
+- voice-answer transcription;
+- feedback;
+- audio responses;
+- saved interview sessions;
+- final results and evaluation.
+
+The current system evaluates the information in the answer. It is not a biometric or psychological assessment and does not claim to measure a person's personality from their voice.
+
+## Salary and Development
+
+JobFlow also has a Salary section with resume salary analysis support and a Development section with curated learning resources.
+
+## Support and Account Settings
+
+The Support Center gives users direct access to real account settings:
+
+- Change password;
+- Two-factor authentication;
+- Profile settings;
+- Appearance.
+
+I intentionally did not add a fake support-ticket form because there is no real support backend for it yet.
+
+## HRFlow — Employer Side
+
+HRFlow is the employer part of FLOW.
+
+At the current stage, employers can:
+
+- create vacancies;
+- view vacancies;
+- edit vacancies;
+- delete vacancies;
+- review candidate applications;
+- update application status;
+- schedule interviews;
+- remove interview schedules;
+- communicate with candidates through chat.
+
+Employer routes are protected separately from candidate routes.
+
+HRFlow is still developing. Features such as onboarding, training, performance management, workforce analytics, and retention are future ideas and are not presented as finished functions.
+
+## AI in the Project
+
+FLOW uses Laravel AI integration for several AI-assisted features.
+
+The main AI workflows are:
+
+- **Resume Assistant** — helps collect and improve resume information;
+- **Resume Analysis** — gives feedback on a saved resume;
+- **Resume Scoring** — compares a resume with a job description;
+- **Resume Salary Analysis** — supports salary-related analysis;
+- **Interview workflows** — generate questions, process answers, and give feedback.
+
+AI requests are handled on the server, so provider credentials are not exposed to the browser.
+
+The Job Match system is separate from the generative AI features. I chose this because I wanted the matching logic to be more transparent and easier to test.
 
 ## Technical Architecture
 
-FLOW is implemented as a **modular monolithic web application**: candidate, employer, resume, vacancy, application, chat, interview, salary, and settings workflows are separated in code while being built and deployed as one application.
+FLOW is built as a **modular monolithic web application**. Different parts of the platform are separated by controllers, services, models, routes, and Vue pages, but the project is still deployed as one application.
 
 ```mermaid
 flowchart LR
@@ -91,59 +204,60 @@ flowchart LR
     L <--> AI[AI Services]
 ```
 
-### Core stack
+### Main Technologies
 
 - **Backend:** PHP 8.4, Laravel 13, Laravel Fortify, Laravel AI, Laravel Wayfinder, Eloquent ORM, Spatie Laravel Permission.
 - **Frontend:** Vue 3.5, TypeScript, Inertia.js 3, Tailwind CSS 4, Reka UI, Lucide icons, VueUse.
-- **Build:** Vite 8, npm, Composer.
-- **Database:** environment-configured database; SQLite is supported for local development. Relationships, foreign keys, constraints, and authorization rules protect application data.
-- **Deployment:** Docker-based production deployment with the web application served through the VPS environment.
-- **Quality:** Pest, Laravel Pint, ESLint, Prettier, Vue TypeScript checks, and Playwright tooling.
+- **Build tools:** Vite 8, npm, Composer.
+- **Database:** configured through environment settings; SQLite is supported for local development.
+- **Deployment:** Docker-based deployment on a VPS.
+- **Testing and code quality:** Pest, Laravel Pint, ESLint, Prettier, Vue TypeScript checks, and Playwright tooling.
 
-## Security and Data Boundaries
+## Security
 
-- Candidate and employer routes are separated by authenticated role middleware.
-- Resume/application operations are server-authorized rather than trusted to browser state alone.
-- Candidates can apply only with resumes that belong to their account.
-- Saved-job and application state is scoped to the authenticated user.
-- Employer application routes use scoped bindings to prevent accessing an application through the wrong vacancy.
-- Password management uses the existing Laravel/Fortify security workflow.
-- Two-factor authentication and recovery-code functionality are preserved in the Security settings.
-- AI provider credentials remain server-side.
+Some important security rules in the project are:
+
+- candidate and employer routes use different role protection;
+- users can only apply with resumes that belong to their own account;
+- saved jobs and applications are connected to the authenticated user;
+- employer application routes use scoped bindings so an application cannot be opened through the wrong vacancy;
+- password changes use the existing Laravel/Fortify security workflow;
+- two-factor authentication and recovery codes are available in Security settings;
+- AI provider credentials stay on the server.
 
 ## Project Structure
 
 ```text
 app/Ai/                       AI agents and controlled tools
 app/Http/Controllers/         Candidate and shared application workflows
-app/Http/Controllers/Employer Employer vacancy/application/interview workflows
-app/Http/Requests/            Validated request objects
-app/Models/                   Eloquent models and relationships
-app/Services/                 Matching and domain services
-database/migrations/          Database schema and constraints
-resources/js/components/      Shared Vue UI components
+app/Http/Controllers/Employer Employer workflows
+app/Http/Requests/            Request validation
+app/Models/                   Database models and relationships
+app/Services/                 Matching and domain logic
+database/migrations/          Database schema
+resources/js/components/      Shared Vue components
 resources/js/pages/           Candidate, employer, settings and support pages
-routes/                       Application, authentication and settings routes
-tests/                        Pest tests and browser/feature test suites
+routes/                       Application and settings routes
+tests/                        Pest and feature tests
 ```
 
-## Important Current Boundaries
+## Current Limitations
 
-This README intentionally distinguishes implemented functionality from future plans.
+I think it is important to show clearly what is finished and what is still being developed.
 
-- **HRFlow** has working employer vacancy/application/interview workflows, but it is not yet a complete HRIS. Onboarding, training, performance management, workforce analytics, and retention are future directions.
-- **Job Match** is a deterministic explainable matcher, not a claim of perfect semantic recruitment prediction. Its purpose is transparent candidate guidance using stored resume and vacancy evidence.
-- **Interview evaluation** evaluates the information available to the interview workflow; it should not be described as a full biometric or psychological assessment.
-- **Development resources** are curated resources rather than an autonomous AI content-search system.
-- **External calendar synchronization** is not claimed unless explicitly implemented and tested.
-- **Support Center** currently routes users to real account/security functions; it does not claim a support-ticket system that is not implemented.
-- The product interface is currently **English-only**; multilingual UI is not claimed.
+- HRFlow currently focuses on recruitment and is not a complete HR information system.
+- Job Match is an explainable matching model, but it is not a perfect prediction of whether a person will get a job.
+- Interview evaluation is based on the available answer content and is not a psychological assessment.
+- Development resources are curated and are not automatically searched or verified by AI.
+- External calendar synchronization is not presented as implemented unless it is actually connected and tested.
+- The Support Center links to real settings, but there is no support-ticket system yet.
+- The interface is currently English-only.
 
-## Testing and Validation
+## Testing
 
-The repository contains Pest feature/unit tests and frontend quality tooling. Recent Job Selection work also adds focused regression coverage for matching behavior such as skill normalization and education requirements.
+The project includes backend and frontend tests and code-quality checks.
 
-Useful project checks include:
+Useful commands include:
 
 ```bash
 composer test
@@ -154,17 +268,17 @@ npm run build
 npm run test:e2e
 ```
 
-Production/VPS validation is performed after feature changes before they are merged into the main deployment branch.
+I also test important changes on the VPS before merging them into the main branch.
 
-## Development Roadmap
+## What I Want to Improve Next
 
-Near-term priorities include:
+My next priorities are:
 
-1. Continue validating and improving explainable Job Match behavior against real candidate/vacancy examples.
-2. Expand HRFlow beyond recruitment into selected employer HR workflows.
-3. Improve automated regression and browser coverage for critical candidate and employer journeys.
-4. Expand scheduling/calendar capabilities where they provide real user value.
-5. Continue privacy, backup, monitoring, accessibility, and recovery hardening.
+1. continue improving Job Match and testing it with more real resume/vacancy combinations;
+2. develop HRFlow beyond the recruitment stage;
+3. add more automated tests for important user flows;
+4. improve scheduling and calendar functions;
+5. continue working on privacy, backups, accessibility, monitoring, and recovery.
 
 ## Project Information
 
