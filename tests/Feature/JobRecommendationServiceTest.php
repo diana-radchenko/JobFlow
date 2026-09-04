@@ -56,7 +56,7 @@ test('structured vacancy technologies are scored against required skills rather 
         ->and($match['gaps'])->toContain('Missing requirement: Scratch');
 });
 
-test('resume education remains visible when employer has no education requirement', function () {
+test('education is neutral when employer has no education requirement', function () {
     $user = User::factory()->create();
     $resume = Resume::create(['user_id' => $user->id, 'title' => 'Coding Instructor', 'is_primary' => true]);
     $education = Education::create([
@@ -70,11 +70,9 @@ test('resume education remains visible when employer has no education requiremen
     $match = app(JobRecommendationService::class)->forJob($resume->fresh(), jobMatchVacancy());
     $educationCriterion = collect($match['criteria'])->firstWhere('label', 'Education');
 
-    expect($educationCriterion['status'])->toBe('informational')
+    expect($educationCriterion['status'])->toBe('not_required')
         ->and($educationCriterion['score'])->toBeNull()
-        ->and($educationCriterion['detail'])->toContain('Information Technology')
-        ->and($educationCriterion['detail'])->toContain('Dostoevsky School')
-        ->and($educationCriterion['detail'])->toContain('no employer requirement');
+        ->and($educationCriterion)->not->toHaveKey('detail');
 });
 
 test('college student requirement is satisfied only by college level education records', function () {
@@ -92,7 +90,7 @@ test('college student requirement is satisfied only by college level education r
         'requirements' => 'Applicants must be currently enrolled as a college or university student.',
     ]);
     $match = app(JobRecommendationService::class)->forJob($resume->fresh(), $job);
-    $educationCriterion = collect($match['criteria'])->firstWhere('label', 'Education requirement');
+    $educationCriterion = collect($match['criteria'])->firstWhere('label', 'Education');
 
     expect($educationCriterion['status'])->toBe('available')
         ->and($educationCriterion['score'])->toBe(100);
@@ -113,7 +111,7 @@ test('bachelors requirement is not satisfied by high school education', function
         'requirements' => "Bachelor's degree in Computer Science required.",
     ]);
     $match = app(JobRecommendationService::class)->forJob($resume->fresh(), $job);
-    $educationCriterion = collect($match['criteria'])->firstWhere('label', 'Education requirement');
+    $educationCriterion = collect($match['criteria'])->firstWhere('label', 'Education');
 
     expect($educationCriterion['status'])->toBe('available')
         ->and($educationCriterion['score'])->toBe(0);
