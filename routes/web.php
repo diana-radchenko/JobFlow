@@ -25,6 +25,9 @@ use Inertia\Inertia;
 
 Route::get('/', [ModuleEntryController::class, 'home'])->name('home');
 
+// Public project showcase for university admissions; no authentication required.
+Route::view('/showcase', 'showcase')->name('showcase');
+
 Route::get('/jobflow', [ModuleEntryController::class, 'jobflow'])->name('jobflow');
 Route::get('/hrflow', [ModuleEntryController::class, 'hrflow'])->name('hrflow');
 Route::post('/module-entry/{module}/{action}', [ModuleEntryController::class, 'switch'])
